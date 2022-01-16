@@ -17,7 +17,7 @@ Auth = namedtuple("Auth", [
 ])
 
 
-def init_auth(auth_url: str, api_key: str, token_verification_metadata: TokenVerificationMetadata = None) -> Auth:
+def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: TokenVerificationMetadata = None) -> Auth:
     """Fetches metadata required to validate access tokens and returns auth decorators and utilities"""
     auth_url = _validate_url(auth_url)
     token_verification_metadata = _fetch_token_verification_metadata(auth_url, api_key, token_verification_metadata)

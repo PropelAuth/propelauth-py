@@ -6,7 +6,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="propelauth-py",
-    version="1.1.0",
+    version="2.0.0",
     description="A python authentication library",
     long_description=README,
     long_description_content_type="text/markdown",

@@ -5,7 +5,7 @@ import requests_mock
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import generate_private_key
 
-from propelauth_py import init_auth
+from propelauth_py import init_base_auth
 
 TestRsaKeys = namedtuple("TestRsaKeys", ["public_pem", "private_pem"])
 
@@ -47,4 +47,4 @@ def mock_api_and_init_auth(auth_url, status_code, json):
               request_headers={'Authorization': 'Bearer ' + api_key},
               json=json,
               status_code=status_code)
-        return init_auth(auth_url, api_key)
+        return init_base_auth(auth_url, api_key)
