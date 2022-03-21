@@ -4,7 +4,7 @@ import requests
 from requests.auth import AuthBase
 
 TokenVerificationMetadata = namedtuple("TokenVerificationMetadata", [
-    "verifier_key", "issuer"
+    "verifier_key", "issuer", "role_name_to_index",
 ])
 
 
@@ -25,9 +25,15 @@ def _fetch_token_verification_metadata(auth_url: str, api_key: str,
         raise RuntimeError("Unknown error when fetching token verification metadata")
 
     json_response = response.json()
+
+    role_name_to_index = {}
+    for (index, role) in enumerate(json_response["roles"]):
+        role_name_to_index[role["name"]] = index
+
     return TokenVerificationMetadata(
         verifier_key=json_response["verifier_key_pem"],
         issuer=auth_url,
+        role_name_to_index=role_name_to_index,
     )
 
 

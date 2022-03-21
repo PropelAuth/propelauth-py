@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from propelauth_py.user import _to_user, User, OrgMemberInfo, UserRole
+from propelauth_py.user import _to_user, User, OrgMemberInfo
 
 
 def test_to_user_without_orgs():
@@ -39,17 +39,17 @@ def test_to_user():
         org_a["org_id"]: OrgMemberInfo(
             org_id=org_a["org_id"],
             org_name=org_a["org_name"],
-            user_role=UserRole.Owner,
+            user_role_name=org_a["user_role"],
         ),
         org_b["org_id"]: OrgMemberInfo(
             org_id=org_b["org_id"],
             org_name=org_b["org_name"],
-            user_role=UserRole.Admin,
+            user_role_name=org_b["user_role"],
         ),
         org_c["org_id"]: OrgMemberInfo(
             org_id=org_c["org_id"],
             org_name=org_c["org_name"],
-            user_role=UserRole.Member,
+            user_role_name=org_c["user_role"],
         )
     }
     expected_user = User(user_id, expected_org_id_to_org_member_info)
