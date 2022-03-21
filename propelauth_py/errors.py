@@ -41,7 +41,13 @@ class UnexpectedException(Exception):
     @staticmethod
     def invalid_minimum_required_role():
         return UnexpectedException(
-            "minimum_required_role must be one of UserRole.Owner, UserRole.Admin, UserRole.Member, or None"
+            "Unknown minimum required role"
+        )
+
+    @staticmethod
+    def invalid_user_role():
+        return UnexpectedException(
+            "Invalid user role. Try restarting the server to get the latest role config"
         )
 
 
