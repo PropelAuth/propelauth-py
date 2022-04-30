@@ -3,6 +3,16 @@ class CreateUserException(Exception):
         self.field_to_errors = field_to_errors
 
 
+class UpdateUserMetadataException(Exception):
+    def __init__(self, field_to_errors):
+        self.field_to_errors = field_to_errors
+
+
+class UpdateUserEmailException(Exception):
+    def __init__(self, field_to_errors):
+        self.field_to_errors = field_to_errors
+
+
 class UnauthorizedException(Exception):
     def __init__(self, message):
         self.message = message

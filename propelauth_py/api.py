@@ -1,10 +1,11 @@
 from collections import namedtuple
 from enum import Enum
+from uuid import UUID
 
 import requests
 from requests.auth import AuthBase
 
-from propelauth_py.errors import CreateUserException
+from propelauth_py.errors import CreateUserException, UpdateUserMetadataException, UpdateUserEmailException
 
 TokenVerificationMetadata = namedtuple("TokenVerificationMetadata", [
     "verifier_key", "issuer"
@@ -35,6 +36,9 @@ def _fetch_token_verification_metadata(auth_url: str, api_key: str,
 
 
 def _fetch_user_metadata_by_user_id(auth_url, api_key, user_id, include_orgs=False):
+    if not _is_valid_id(user_id):
+        return None
+
     user_info_url = auth_url + "/api/backend/v1/user/{}".format(user_id)
     query = {"include_orgs": include_orgs}
     return _fetch_user_metadata_by_query(api_key, user_info_url, query)
@@ -105,6 +109,9 @@ def _fetch_batch_user_metadata_by_query(user_info_url, api_key, params, body, ke
 
 
 def _fetch_org(auth_url, api_key, org_id):
+    if not _is_valid_id(org_id):
+        return None
+
     url = auth_url + "/api/backend/v1/org/{}".format(org_id)
     response = requests.get(url, auth=_ApiKeyAuth(api_key))
     if response.status_code == 401:
@@ -122,12 +129,12 @@ def _fetch_org(auth_url, api_key, org_id):
 
 def _fetch_org_by_query(auth_url, api_key, page_size, page_number, order_by):
     url = auth_url + "/api/backend/v1/org/query"
-    json = {
+    params = {
         "page_size": page_size,
         "page_number": page_number,
         "order_by": order_by,
     }
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(api_key))
+    response = requests.get(url, params=_format_params(params), auth=_ApiKeyAuth(api_key))
     if response.status_code == 401:
         raise ValueError("api_key is incorrect")
     elif response.status_code == 400:
@@ -165,6 +172,15 @@ def _fetch_users_by_query(auth_url, api_key, page_size, page_number, order_by, e
 
 
 def _fetch_users_in_org(auth_url, api_key, org_id, page_size, page_number, include_orgs):
+    if not _is_valid_id(org_id):
+        return {
+            "users": [],
+            "total_users": 0,
+            "current_page": page_number,
+            "page_size": page_size,
+            "has_more_results": False
+        }
+
     url = auth_url + "/api/backend/v1/user/org/{}".format(org_id)
     params = {
         "page_size": page_size,
@@ -209,6 +225,55 @@ def _create_user(auth_url, api_key, email, email_confirmed, send_email_to_confir
     return response.json()
 
 
+def _update_user_metadata(auth_url, api_key, user_id, username=None, first_name=None, last_name=None):
+    if not _is_valid_id(user_id):
+        return False
+
+    url = auth_url + "/api/backend/v1/user/{}".format(user_id)
+    json = {}
+    if username is not None:
+        json["username"] = username
+    if first_name is not None:
+        json["first_name"] = first_name
+    if last_name is not None:
+        json["last_name"] = last_name
+
+    response = requests.put(url, json=json, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise UpdateUserMetadataException(response.json())
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when updating metadata")
+
+    return True
+
+
+def _update_user_email(auth_url, api_key, user_id, new_email, require_email_confirmation):
+    if not _is_valid_id(user_id):
+        return False
+
+    url = auth_url + "/api/backend/v1/user/{}/email".format(user_id)
+    json = {
+        "new_email": new_email,
+        "require_email_confirmation": require_email_confirmation,
+    }
+
+    response = requests.put(url, json=json, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise UpdateUserEmailException(response.json())
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when updating user email")
+
+    return True
+
+
 class OrgQueryOrderBy(str, Enum):
     CREATED_AT_ASC = "CREATED_AT_ASC"
     CREATED_AT_DESC = "CREATED_AT_DESC"
@@ -247,3 +312,11 @@ def _format_param(param):
             return "false"
     else:
         return param
+
+
+def _is_valid_id(identifier):
+    try:
+        uuid_obj = UUID(identifier, version=4)
+        return str(uuid_obj) == identifier
+    except ValueError:
+        return False

@@ -4,7 +4,8 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _fetch_user_metadata_by_user_id, \
     _fetch_user_metadata_by_email, _fetch_user_metadata_by_username, _fetch_batch_user_metadata_by_user_ids, \
     _fetch_batch_user_metadata_by_emails, _fetch_batch_user_metadata_by_usernames, OrgQueryOrderBy, UserQueryOrderBy, \
-    _fetch_org, _fetch_org_by_query, _fetch_users_by_query, _fetch_users_in_org, _create_user
+    _fetch_org, _fetch_org_by_query, _fetch_users_by_query, _fetch_users_in_org, _create_user, _update_user_email, \
+    _update_user_metadata
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
     wrap_validate_access_token_and_get_user_with_org, validate_org_access_and_get_org
 from propelauth_py.errors import UnauthorizedException
@@ -18,7 +19,9 @@ Auth = namedtuple("Auth", [
     "fetch_batch_user_metadata_by_emails",
     "fetch_batch_user_metadata_by_usernames",
     "fetch_org", "fetch_org_by_query", "fetch_users_by_query", "fetch_users_in_org",
-    "create_user"
+    "create_user",
+    "update_user_email",
+    "update_user_metadata",
 ])
 
 
@@ -64,6 +67,12 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
         return _create_user(auth_url, api_key, email, email_confirmed, send_email_to_confirm_email_address,
                             password, username, first_name, last_name)
 
+    def update_user_email(user_id, new_email, require_email_confirmation):
+        return _update_user_email(auth_url, api_key, user_id, new_email, require_email_confirmation)
+
+    def update_user_metadata(user_id, username=None, first_name=None, last_name=None):
+        return _update_user_metadata(auth_url, api_key, user_id, username, first_name, last_name)
+
     validate_access_token_and_get_user = wrap_validate_access_token_and_get_user(token_verification_metadata)
     validate_access_token_and_get_user_with_org = wrap_validate_access_token_and_get_user_with_org(
         token_verification_metadata
@@ -83,4 +92,6 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
         fetch_users_by_query=fetch_users_by_query,
         fetch_users_in_org=fetch_users_in_org,
         create_user=create_user,
+        update_user_email=update_user_email,
+        update_user_metadata=update_user_metadata,
     )
