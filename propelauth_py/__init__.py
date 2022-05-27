@@ -7,7 +7,7 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _fetch_org, _fetch_org_by_query, _fetch_users_by_query, _fetch_users_in_org, _create_user, _update_user_email, \
     _update_user_metadata
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
-    wrap_validate_access_token_and_get_user_with_org, validate_org_access_and_get_org
+    wrap_validate_access_token_and_get_user_with_org, wrap_validate_org_access_and_get_org
 from propelauth_py.errors import UnauthorizedException
 from propelauth_py.validation import _validate_url
 
@@ -77,6 +77,8 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
     validate_access_token_and_get_user_with_org = wrap_validate_access_token_and_get_user_with_org(
         token_verification_metadata
     )
+    validate_org_access_and_get_org = wrap_validate_org_access_and_get_org(token_verification_metadata)
+
     return Auth(
         validate_access_token_and_get_user=validate_access_token_and_get_user,
         validate_access_token_and_get_user_with_org=validate_access_token_and_get_user_with_org,

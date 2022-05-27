@@ -38,9 +38,18 @@ def validate_org_access_and_get_org(user, required_org_id, minimum_required_role
         raise ForbiddenException.user_not_member_of_org(required_org_id)
 
     if minimum_required_role is not None:
-        _validate_user_role_is_at_least_minimum(org_member_info.user_role_name, minimum_required_role, role_name_to_index)
+        _validate_user_role_is_at_least_minimum(org_member_info.user_role_name, minimum_required_role,
+                                                role_name_to_index)
 
     return org_member_info
+
+
+def wrap_validate_org_access_and_get_org(token_verification_metadata):
+    def _validate_org_access_and_get_org(user, required_org_id, minimum_required_role=None):
+        return validate_org_access_and_get_org(user, required_org_id, minimum_required_role,
+                                               token_verification_metadata.role_name_to_index)
+
+    return _validate_org_access_and_get_org
 
 
 def _extract_token_from_authorization_header(authorization_header):
