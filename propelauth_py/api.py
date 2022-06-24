@@ -8,7 +8,7 @@ from requests.auth import AuthBase
 from propelauth_py.errors import CreateUserException, UpdateUserMetadataException, UpdateUserEmailException
 
 TokenVerificationMetadata = namedtuple("TokenVerificationMetadata", [
-    "verifier_key", "issuer", "role_name_to_index",
+    "verifier_key", "issuer"
 ])
 
 
@@ -30,14 +30,9 @@ def _fetch_token_verification_metadata(auth_url: str, api_key: str,
 
     json_response = response.json()
 
-    role_name_to_index = {}
-    for (index, role) in enumerate(json_response["roles"]):
-        role_name_to_index[role["name"]] = index
-
     return TokenVerificationMetadata(
         verifier_key=json_response["verifier_key_pem"],
         issuer=auth_url,
-        role_name_to_index=role_name_to_index,
     )
 
 

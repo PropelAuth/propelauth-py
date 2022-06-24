@@ -77,6 +77,20 @@ def test_validate_org_member_with_auth_but_no_permission(auth, rsa_keys):
         auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"], "Admin")
 
 
+def test_validate_org_member_with_auth_but_no_permission_2(auth, rsa_keys):
+    user_id = random_user_id()
+    org = random_org("Member")
+    org_id_to_org_member_info = orgs_to_org_id_map([org])
+    access_token = create_access_token({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info
+    }, rsa_keys.private_pem)
+
+    # Require at least othermember, but the user is a member. Different branches at the same level
+    with pytest.raises(ForbiddenException):
+        auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"], "OtherMember")
+
+
 def test_validate_org_member_with_auth_with_permission(auth, rsa_keys):
     user_id = random_user_id()
     org = random_org("Admin")
@@ -93,6 +107,88 @@ def test_validate_org_member_with_auth_with_permission(auth, rsa_keys):
     assert user_and_org.org_member_info.org_id == org["org_id"]
     assert user_and_org.org_member_info.org_name == org["org_name"]
     assert user_and_org.org_member_info.user_role_name == org["user_role"]
+
+
+def test_validate_org_member_with_auth_with_permission_2(auth, rsa_keys):
+    user_id = random_user_id()
+    org = random_org("Owner")
+    org_id_to_org_member_info = orgs_to_org_id_map([org])
+    access_token = create_access_token({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info
+    }, rsa_keys.private_pem)
+
+    user_and_org = auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"],
+                                                                    "Admin")
+
+    assert user_and_org.user.user_id == user_id
+    assert user_and_org.org_member_info.org_id == org["org_id"]
+    assert user_and_org.org_member_info.org_name == org["org_name"]
+    assert user_and_org.org_member_info.user_role_name == org["user_role"]
+
+
+def test_validate_org_member_with_permissions(auth, rsa_keys):
+    user_id = random_user_id()
+    org = random_org("Owner")
+    org_id_to_org_member_info = orgs_to_org_id_map([org])
+    access_token = create_access_token({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info
+    }, rsa_keys.private_pem)
+
+    user_and_org = auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"],
+                                                                    required_permissions=["owner_perm", "admin_perm"])
+
+    assert user_and_org.user.user_id == user_id
+    assert user_and_org.org_member_info.org_id == org["org_id"]
+    assert user_and_org.org_member_info.org_name == org["org_name"]
+    assert user_and_org.org_member_info.user_role_name == org["user_role"]
+
+
+def test_validate_org_member_with_permissions_2(auth, rsa_keys):
+    user_id = random_user_id()
+    org = random_org("OtherMember")
+    org_id_to_org_member_info = orgs_to_org_id_map([org])
+    access_token = create_access_token({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info
+    }, rsa_keys.private_pem)
+
+    user_and_org = auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"],
+                                                                    required_permissions=[])
+
+    assert user_and_org.user.user_id == user_id
+    assert user_and_org.org_member_info.org_id == org["org_id"]
+    assert user_and_org.org_member_info.org_name == org["org_name"]
+    assert user_and_org.org_member_info.user_role_name == org["user_role"]
+
+
+def test_validate_org_member_without_permissions(auth, rsa_keys):
+    user_id = random_user_id()
+    org = random_org("Admin")
+    org_id_to_org_member_info = orgs_to_org_id_map([org])
+    access_token = create_access_token({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info
+    }, rsa_keys.private_pem)
+
+    with pytest.raises(ForbiddenException):
+        auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"],
+                                                         required_permissions=["owner_perm", "admin_perm"])
+
+
+def test_validate_org_member_without_permissions_2(auth, rsa_keys):
+    user_id = random_user_id()
+    org = random_org("OtherMember")
+    org_id_to_org_member_info = orgs_to_org_id_map([org])
+    access_token = create_access_token({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info
+    }, rsa_keys.private_pem)
+
+    with pytest.raises(ForbiddenException):
+        auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"],
+                                                         required_permissions=["nothing"])
 
 
 def test_validate_org_member_fails_for_invalid_role(auth, rsa_keys):

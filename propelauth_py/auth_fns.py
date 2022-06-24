@@ -12,20 +12,26 @@ def wrap_validate_access_token_and_get_user(token_verification_metadata):
     return validate_access_token_and_get_user
 
 
-def wrap_validate_access_token_and_get_user_with_org(token_verification_metadata):
-    def validate_access_token_and_get_user_with_org(authorization_header, required_org_id, minimum_required_role=None):
+def wrap_validate_access_token_and_get_user_with_org(token_verification_metadata, role_helper):
+    def validate_access_token_and_get_user_with_org(authorization_header,
+                                                    required_org_id,
+                                                    minimum_required_role=None,
+                                                    required_permissions=None):
+        if required_permissions is None:
+            required_permissions = []
         access_token = _extract_token_from_authorization_header(authorization_header)
         user = _validate_access_token_and_get_user(access_token, token_verification_metadata)
         org_member_info = validate_org_access_and_get_org(user,
                                                           required_org_id,
                                                           minimum_required_role,
-                                                          token_verification_metadata.role_name_to_index)
+                                                          required_permissions,
+                                                          role_helper)
         return UserAndOrgMemberInfo(user, org_member_info)
 
     return validate_access_token_and_get_user_with_org
 
 
-def validate_org_access_and_get_org(user, required_org_id, minimum_required_role, role_name_to_index):
+def validate_org_access_and_get_org(user, required_org_id, minimum_required_role, required_permissions, role_helper):
     if required_org_id is None:
         raise ForbiddenException.unknown_required_org()
 
@@ -38,16 +44,20 @@ def validate_org_access_and_get_org(user, required_org_id, minimum_required_role
         raise ForbiddenException.user_not_member_of_org(required_org_id)
 
     if minimum_required_role is not None:
-        _validate_user_role_is_at_least_minimum(org_member_info.user_role_name, minimum_required_role,
-                                                role_name_to_index)
+        _validate_user_role_is_at_least_minimum(org_member_info.user_role_name, minimum_required_role, role_helper)
+
+    if required_permissions is not None and len(required_permissions) > 0:
+        _validate_user_permissions_includes(org_member_info.user_role_name, required_permissions, role_helper)
 
     return org_member_info
 
 
-def wrap_validate_org_access_and_get_org(token_verification_metadata):
-    def _validate_org_access_and_get_org(user, required_org_id, minimum_required_role=None):
-        return validate_org_access_and_get_org(user, required_org_id, minimum_required_role,
-                                               token_verification_metadata.role_name_to_index)
+def wrap_validate_org_access_and_get_org(role_helper):
+    def _validate_org_access_and_get_org(user, required_org_id, minimum_required_role=None, required_permissions=None):
+        if required_permissions is None:
+            required_permissions = []
+        return validate_org_access_and_get_org(user, required_org_id, minimum_required_role, required_permissions,
+                                               role_helper)
 
     return _validate_org_access_and_get_org
 
@@ -63,15 +73,20 @@ def _extract_token_from_authorization_header(authorization_header):
     return auth_header_parts[1]
 
 
-def _validate_user_role_is_at_least_minimum(user_role, minimum_required_role, role_name_to_index):
-    user_role_index = role_name_to_index.get(user_role)
-    if user_role_index is None:
+def _validate_user_role_is_at_least_minimum(user_role, minimum_required_role, role_helper):
+    if not role_helper.is_valid_role(user_role):
         raise UnexpectedException.invalid_user_role()
 
-    minimum_required_role_index = role_name_to_index.get(minimum_required_role)
-    if minimum_required_role_index is None:
+    if not role_helper.is_valid_role(minimum_required_role):
         raise UnexpectedException.invalid_minimum_required_role()
 
-    # If the minimum required role is before the user role in the list, error out
-    if minimum_required_role_index < user_role_index:
+    if not role_helper.is_parent_or_equal_to(user_role, minimum_required_role):
         raise ForbiddenException.user_less_than_minimum_role()
+
+
+def _validate_user_permissions_includes(user_role, required_permissions, role_helper):
+    if not role_helper.is_valid_role(user_role):
+        raise UnexpectedException.invalid_user_role()
+
+    if not role_helper.role_includes_all_permissions(user_role, required_permissions):
+        raise ForbiddenException.user_missing_permission()

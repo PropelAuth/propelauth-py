@@ -66,3 +66,7 @@ class ForbiddenException(Exception):
     @staticmethod
     def user_less_than_minimum_role():
         return ForbiddenException("User's role in org doesn't meet minimum required role")
+
+    @staticmethod
+    def user_missing_permission():
+        return ForbiddenException("User doesn't include all required permissions")

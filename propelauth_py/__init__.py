@@ -1,4 +1,5 @@
 from collections import namedtuple
+from typing import List
 
 from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificationMetadata, \
     _fetch_user_metadata_by_user_id, \
@@ -9,6 +10,7 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
     wrap_validate_access_token_and_get_user_with_org, wrap_validate_org_access_and_get_org
 from propelauth_py.errors import UnauthorizedException
+from propelauth_py.role import RoleMetadata, create_role_helper
 from propelauth_py.validation import _validate_url
 
 Auth = namedtuple("Auth", [
@@ -25,10 +27,12 @@ Auth = namedtuple("Auth", [
 ])
 
 
-def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: TokenVerificationMetadata = None) -> Auth:
+def init_base_auth(auth_url: str, api_key: str, roles: List[RoleMetadata],
+                   token_verification_metadata: TokenVerificationMetadata = None) -> Auth:
     """Fetches metadata required to validate access tokens and returns auth decorators and utilities"""
     auth_url = _validate_url(auth_url)
     token_verification_metadata = _fetch_token_verification_metadata(auth_url, api_key, token_verification_metadata)
+    role_helper = create_role_helper(roles)
 
     def fetch_user_metadata_by_user_id(user_id, include_orgs=False):
         return _fetch_user_metadata_by_user_id(auth_url, api_key, user_id, include_orgs)
@@ -75,9 +79,9 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
 
     validate_access_token_and_get_user = wrap_validate_access_token_and_get_user(token_verification_metadata)
     validate_access_token_and_get_user_with_org = wrap_validate_access_token_and_get_user_with_org(
-        token_verification_metadata
+        token_verification_metadata, role_helper
     )
-    validate_org_access_and_get_org = wrap_validate_org_access_and_get_org(token_verification_metadata)
+    validate_org_access_and_get_org = wrap_validate_org_access_and_get_org(role_helper)
 
     return Auth(
         validate_access_token_and_get_user=validate_access_token_and_get_user,
