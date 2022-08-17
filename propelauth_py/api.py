@@ -5,7 +5,8 @@ from uuid import UUID
 import requests
 from requests.auth import AuthBase
 
-from propelauth_py.errors import CreateUserException, UpdateUserMetadataException, UpdateUserEmailException
+from propelauth_py.errors import CreateUserException, UpdateUserMetadataException, UpdateUserEmailException, \
+    BadRequestException
 
 TokenVerificationMetadata = namedtuple("TokenVerificationMetadata", [
     "verifier_key", "issuer"
@@ -270,6 +271,88 @@ def _update_user_email(auth_url, api_key, user_id, new_email, require_email_conf
         return False
     elif not response.ok:
         raise RuntimeError("Unknown error when updating user email")
+
+    return True
+
+
+def _create_magic_link(auth_url, api_key, email,
+                       redirect_to_url=None, expires_in_hours=None, create_new_user_if_one_doesnt_exist=None):
+    url = auth_url + "/api/backend/v1/magic_link"
+    json = {"email": email}
+    if redirect_to_url is not None:
+        json["redirect_to_url"] = redirect_to_url
+    if expires_in_hours is not None:
+        json["expires_in_hours"] = expires_in_hours
+    if create_new_user_if_one_doesnt_exist is not None:
+        json["create_new_user_if_one_doesnt_exist"] = create_new_user_if_one_doesnt_exist
+
+    response = requests.post(url, json=json, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif not response.ok:
+        raise RuntimeError("Unknown error when creating magic link")
+
+    return response.json()
+
+
+def _migrate_user_from_external_source(auth_url, api_key, email, email_confirmed,
+                                       existing_user_id=None, existing_password_hash=None,
+                                       existing_mfa_base32_encoded_secret=None,
+                                       enabled=None, first_name=None, last_name=None, username=None):
+    url = auth_url + "/api/backend/v1/migrate_user/"
+    json = {
+        "email": email,
+        "email_confirmed": email_confirmed,
+        "existing_user_id": existing_user_id,
+        "existing_password_hash": existing_password_hash,
+        "existing_mfa_base32_encoded_secret": existing_mfa_base32_encoded_secret,
+        "enabled": enabled,
+        "first_name": first_name,
+        "last_name": last_name,
+        "username": username
+    }
+
+    response = requests.post(url, json=json, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif not response.ok:
+        raise RuntimeError("Unknown error when migrating user")
+
+    return response.json()
+
+
+def _create_org(auth_url, api_key, name):
+    url = auth_url + "/api/backend/v1/org/"
+    json = {"name": name}
+
+    response = requests.post(url, json=json, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif not response.ok:
+        raise RuntimeError("Unknown error when creating an org")
+
+    return response.json()
+
+
+def _add_user_to_org(auth_url, api_key, user_id, org_id, role):
+    url = auth_url + "/api/backend/v1/org/add_user"
+    json = {"user_id": user_id, "org_id": org_id, "role": role}
+
+    response = requests.post(url, json=json, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when adding a user to the org")
 
     return True
 

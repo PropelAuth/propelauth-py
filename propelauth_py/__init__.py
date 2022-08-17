@@ -5,7 +5,7 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _fetch_user_metadata_by_email, _fetch_user_metadata_by_username, _fetch_batch_user_metadata_by_user_ids, \
     _fetch_batch_user_metadata_by_emails, _fetch_batch_user_metadata_by_usernames, OrgQueryOrderBy, UserQueryOrderBy, \
     _fetch_org, _fetch_org_by_query, _fetch_users_by_query, _fetch_users_in_org, _create_user, _update_user_email, \
-    _update_user_metadata
+    _update_user_metadata, _create_magic_link, _migrate_user_from_external_source, _create_org, _add_user_to_org
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
     wrap_validate_access_token_and_get_user_with_org, validate_org_access_and_get_org
 from propelauth_py.errors import UnauthorizedException
@@ -22,6 +22,7 @@ Auth = namedtuple("Auth", [
     "create_user",
     "update_user_email",
     "update_user_metadata",
+    "create_magic_link", "migrate_user_from_external_source", "create_org", "add_user_to_org"
 ])
 
 
@@ -73,6 +74,25 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
     def update_user_metadata(user_id, username=None, first_name=None, last_name=None):
         return _update_user_metadata(auth_url, api_key, user_id, username, first_name, last_name)
 
+    def create_magic_link(email, redirect_to_url=None, expires_in_hours=None, create_new_user_if_one_doesnt_exist=None):
+        return _create_magic_link(auth_url, api_key, email, redirect_to_url, expires_in_hours,
+                                  create_new_user_if_one_doesnt_exist)
+
+    def migrate_user_from_external_source(email, email_confirmed,
+                                          existing_user_id=None, existing_password_hash=None,
+                                          existing_mfa_base32_encoded_secret=None,
+                                          enabled=None, first_name=None, last_name=None, username=None):
+        return _migrate_user_from_external_source(auth_url, api_key, email, email_confirmed,
+                                                  existing_user_id, existing_password_hash,
+                                                  existing_mfa_base32_encoded_secret,
+                                                  enabled, first_name, last_name, username)
+
+    def create_org(name):
+        return _create_org(auth_url, api_key, name)
+
+    def add_user_to_org(user_id, org_id, role):
+        return _add_user_to_org(auth_url, api_key, user_id, org_id, role)
+
     validate_access_token_and_get_user = wrap_validate_access_token_and_get_user(token_verification_metadata)
     validate_access_token_and_get_user_with_org = wrap_validate_access_token_and_get_user_with_org(
         token_verification_metadata
@@ -94,4 +114,8 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
         create_user=create_user,
         update_user_email=update_user_email,
         update_user_metadata=update_user_metadata,
+        create_magic_link=create_magic_link,
+        migrate_user_from_external_source=migrate_user_from_external_source,
+        create_org=create_org,
+        add_user_to_org=add_user_to_org,
     )
