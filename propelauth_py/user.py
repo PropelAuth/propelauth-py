@@ -4,7 +4,7 @@ from propelauth_py.errors import UnauthorizedException
 
 
 class User:
-    def __init__(self, user_id, org_id_to_org_member_info, legacy_user_id):
+    def __init__(self, user_id, org_id_to_org_member_info, legacy_user_id=None):
         self.user_id = user_id
         self.org_id_to_org_member_info = org_id_to_org_member_info
         self.legacy_user_id = legacy_user_id
