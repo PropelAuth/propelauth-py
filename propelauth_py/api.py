@@ -357,6 +357,86 @@ def _add_user_to_org(auth_url, api_key, user_id, org_id, role):
     return True
 
 
+def _delete_user(auth_url, api_key, user_id):
+    if not _is_valid_id(user_id):
+        return False
+
+    url = auth_url + "/api/backend/v1/user/{}".format(user_id)
+    response = requests.delete(url, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when deleting user")
+
+    return True
+
+
+def _disable_user(auth_url, api_key, user_id):
+    if not _is_valid_id(user_id):
+        return False
+
+    url = auth_url + "/api/backend/v1/user/{}/disable".format(user_id)
+    response = requests.post(url, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when disabling user")
+
+    return True
+
+
+def _enable_user(auth_url, api_key, user_id):
+    if not _is_valid_id(user_id):
+        return False
+
+    url = auth_url + "/api/backend/v1/user/{}/enable".format(user_id)
+    response = requests.post(url, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when enabling user")
+
+    return True
+
+
+def _allow_org_to_setup_saml_connection(auth_url, api_key, org_id):
+    if not _is_valid_id(org_id):
+        return False
+
+    url = auth_url + "/api/backend/v1/org/{}/allow_saml".format(org_id)
+    response = requests.post(url, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when allowing org to setup SAML connection")
+
+    return True
+
+
+def _disallow_org_to_setup_saml_connection(auth_url, api_key, org_id):
+    if not _is_valid_id(org_id):
+        return False
+
+    url = auth_url + "/api/backend/v1/org/{}/disallow_saml".format(org_id)
+    response = requests.post(url, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when allowing org to setup SAML connection")
+
+    return True
+
+
 class OrgQueryOrderBy(str, Enum):
     CREATED_AT_ASC = "CREATED_AT_ASC"
     CREATED_AT_DESC = "CREATED_AT_DESC"

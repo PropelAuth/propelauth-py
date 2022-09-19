@@ -5,7 +5,9 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _fetch_user_metadata_by_email, _fetch_user_metadata_by_username, _fetch_batch_user_metadata_by_user_ids, \
     _fetch_batch_user_metadata_by_emails, _fetch_batch_user_metadata_by_usernames, OrgQueryOrderBy, UserQueryOrderBy, \
     _fetch_org, _fetch_org_by_query, _fetch_users_by_query, _fetch_users_in_org, _create_user, _update_user_email, \
-    _update_user_metadata, _create_magic_link, _migrate_user_from_external_source, _create_org, _add_user_to_org
+    _update_user_metadata, _create_magic_link, _migrate_user_from_external_source, _create_org, _add_user_to_org, \
+    _delete_user, _disable_user, _enable_user, _allow_org_to_setup_saml_connection, \
+    _disallow_org_to_setup_saml_connection
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
     wrap_validate_access_token_and_get_user_with_org, validate_org_access_and_get_org
 from propelauth_py.errors import UnauthorizedException
@@ -22,7 +24,9 @@ Auth = namedtuple("Auth", [
     "create_user",
     "update_user_email",
     "update_user_metadata",
-    "create_magic_link", "migrate_user_from_external_source", "create_org", "add_user_to_org"
+    "create_magic_link", "migrate_user_from_external_source", "create_org", "add_user_to_org",
+    "delete_user", "disable_user", "enable_user",
+    "allow_org_to_setup_saml_connection", "disallow_org_to_setup_saml_connection"
 ])
 
 
@@ -93,6 +97,21 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
     def add_user_to_org(user_id, org_id, role):
         return _add_user_to_org(auth_url, api_key, user_id, org_id, role)
 
+    def delete_user(user_id):
+        return _delete_user(auth_url, api_key, user_id)
+
+    def disable_user(user_id):
+        return _disable_user(auth_url, api_key, user_id)
+
+    def enable_user(user_id):
+        return _enable_user(auth_url, api_key, user_id)
+
+    def allow_org_to_setup_saml_connection(org_id):
+        return _allow_org_to_setup_saml_connection(auth_url, api_key, org_id)
+
+    def disallow_org_to_setup_saml_connection(org_id):
+        return _disallow_org_to_setup_saml_connection(auth_url, api_key, org_id)
+
     validate_access_token_and_get_user = wrap_validate_access_token_and_get_user(token_verification_metadata)
     validate_access_token_and_get_user_with_org = wrap_validate_access_token_and_get_user_with_org(
         token_verification_metadata
@@ -118,4 +137,9 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
         migrate_user_from_external_source=migrate_user_from_external_source,
         create_org=create_org,
         add_user_to_org=add_user_to_org,
+        enable_user=enable_user,
+        disable_user=disable_user,
+        delete_user=delete_user,
+        allow_org_to_setup_saml_connection=allow_org_to_setup_saml_connection,
+        disallow_org_to_setup_saml_connection=disallow_org_to_setup_saml_connection,
     )
