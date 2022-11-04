@@ -39,17 +39,6 @@ class UnauthorizedException(Exception):
         return UnauthorizedException("Invalid payload in token")
 
 
-class UnexpectedException(Exception):
-    def __init__(self, message):
-        self.message = message
-
-    @staticmethod
-    def invalid_minimum_required_role():
-        return UnexpectedException(
-            "minimum_required_role must be one of UserRole.Owner, UserRole.Admin, UserRole.Member, or None"
-        )
-
-
 class ForbiddenException(Exception):
     def __init__(self, message):
         self.message = message
@@ -63,5 +52,5 @@ class ForbiddenException(Exception):
         return ForbiddenException("User is not a member of org {}".format(org_id))
 
     @staticmethod
-    def user_less_than_minimum_role():
-        return ForbiddenException("User's role in org doesn't meet minimum required role")
+    def user_doesnt_have_required_role():
+        return ForbiddenException("User doesn't have required role")

@@ -24,10 +24,13 @@ def random_org_id():
 
 
 def random_org(user_role_str):
+    # represents the incoming JSON from the auth server
     return {
         "org_id": random_org_id(),
         "org_name": str(uuid4()),
-        "user_role": user_role_str
+        "user_role": user_role_str,
+        "user_roles": [user_role_str],
+        "user_permissions": [],
     }
 
 

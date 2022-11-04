@@ -4,7 +4,6 @@ import pytest
 
 from propelauth_py import UnauthorizedException
 from propelauth_py.errors import ForbiddenException
-from propelauth_py.user import UserRole
 from tests.auth_helpers import create_access_token, orgs_to_org_id_map, random_org, random_user_id, random_org_id
 from tests.conftest import HTTP_BASE_AUTH_URL, generate_rsa_keys
 
@@ -46,7 +45,7 @@ def test_validate_org_member_with_auth_and_org_member(auth, rsa_keys):
     assert user_and_org.user.user_id == user_id
     assert user_and_org.org_member_info.org_id == org["org_id"]
     assert user_and_org.org_member_info.org_name == org["org_name"]
-    assert user_and_org.org_member_info.user_role == UserRole.Owner
+    assert user_and_org.org_member_info.user_assigned_role == "Owner"
 
 
 def test_validate_org_member_with_auth_but_wrong_org_id(auth, rsa_keys):
@@ -75,7 +74,7 @@ def test_validate_org_member_with_auth_but_no_permission(auth, rsa_keys):
 
     # Require at least admin, but the user is a member
     with pytest.raises(ForbiddenException):
-        auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"], UserRole.Admin)
+        auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"], "Admin")
 
 
 def test_validate_org_member_with_auth_with_permission(auth, rsa_keys):
@@ -87,13 +86,12 @@ def test_validate_org_member_with_auth_with_permission(auth, rsa_keys):
         "org_id_to_org_member_info": org_id_to_org_member_info
     }, rsa_keys.private_pem)
 
-    user_and_org = auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"],
-                                                                    UserRole.Admin)
+    user_and_org = auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"], "Admin")
 
     assert user_and_org.user.user_id == user_id
     assert user_and_org.org_member_info.org_id == org["org_id"]
     assert user_and_org.org_member_info.org_name == org["org_name"]
-    assert user_and_org.org_member_info.user_role == UserRole.Admin
+    assert user_and_org.org_member_info.user_assigned_role == "Admin"
 
 
 def test_validate_org_member_with_bad_header(auth, rsa_keys):
