@@ -16,21 +16,21 @@ def test_to_user():
         "org_id": str(uuid4()),
         "org_name": "orgA",
         "user_role": "Owner",
-        "user_roles": ["Owner", "Admin", "Member"],
+        "inherited_user_roles_plus_current_role": ["Owner", "Admin", "Member"],
         "user_permissions": ["View", "Edit", "Delete"],
     }
     org_b = {
         "org_id": str(uuid4()),
         "org_name": "orgB",
         "user_role": "Admin",
-        "user_roles": ["Admin", "Member"],
+        "inherited_user_roles_plus_current_role": ["Admin", "Member"],
         "user_permissions": ["View", "Edit"],
     }
     org_c = {
         "org_id": str(uuid4()),
         "org_name": "orgC",
         "user_role": "Member",
-        "user_roles": ["Member"],
+        "inherited_user_roles_plus_current_role": ["Member"],
         "user_permissions": ["View"],
     }
     org_id_to_org_member_info = {
@@ -46,21 +46,21 @@ def test_to_user():
             org_id=org_a["org_id"],
             org_name=org_a["org_name"],
             user_assigned_role="Owner",
-            user_roles=["Owner", "Admin", "Member"],
+            user_inherited_roles_plus_current_role=["Owner", "Admin", "Member"],
             user_permissions=["View", "Edit", "Delete"],
         ),
         org_b["org_id"]: OrgMemberInfo(
             org_id=org_b["org_id"],
             org_name=org_b["org_name"],
             user_assigned_role="Admin",
-            user_roles=["Admin", "Member"],
+            user_inherited_roles_plus_current_role=["Admin", "Member"],
             user_permissions=["View", "Edit"],
         ),
         org_c["org_id"]: OrgMemberInfo(
             org_id=org_c["org_id"],
             org_name=org_c["org_name"],
             user_assigned_role="Member",
-            user_roles=["Member"],
+            user_inherited_roles_plus_current_role=["Member"],
             user_permissions=["View"],
         )
     }

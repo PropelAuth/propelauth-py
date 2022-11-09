@@ -29,7 +29,7 @@ def random_org(user_role_str):
         "org_id": random_org_id(),
         "org_name": str(uuid4()),
         "user_role": user_role_str,
-        "user_roles": [user_role_str],
+        "inherited_user_roles_plus_current_role": [user_role_str],
         "user_permissions": [],
     }
 

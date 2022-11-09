@@ -54,3 +54,7 @@ class ForbiddenException(Exception):
     @staticmethod
     def user_doesnt_have_required_role():
         return ForbiddenException("User doesn't have required role")
+
+    @staticmethod
+    def user_doesnt_have_required_permission():
+        return ForbiddenException("User doesn't have required permission")

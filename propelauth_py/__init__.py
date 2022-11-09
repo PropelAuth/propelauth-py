@@ -9,24 +9,49 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _delete_user, _disable_user, _enable_user, _allow_org_to_setup_saml_connection, \
     _disallow_org_to_setup_saml_connection
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
-    wrap_validate_access_token_and_get_user_with_org, validate_org_access_and_get_org
+    wrap_validate_access_token_and_get_user_with_org_by_minimum_role, \
+    wrap_validate_access_token_and_get_user_with_org_by_exact_role, \
+    wrap_validate_access_token_and_get_user_with_org_by_permission, \
+    wrap_validate_access_token_and_get_user_with_org_by_all_permissions, \
+    validate_minimum_org_role_and_get_org, \
+    validate_exact_org_role_and_get_org, \
+    validate_permission_and_get_org, \
+    validate_all_permissions_and_get_org
 from propelauth_py.errors import UnauthorizedException
 from propelauth_py.validation import _validate_url
 
 Auth = namedtuple("Auth", [
-    "validate_access_token_and_get_user", "validate_access_token_and_get_user_with_org",
-    "validate_org_access_and_get_org",
-    "fetch_user_metadata_by_user_id", "fetch_user_metadata_by_email", "fetch_user_metadata_by_username",
+    "validate_access_token_and_get_user",
+    "validate_access_token_and_get_user_with_org_by_minimum_role",
+    "validate_access_token_and_get_user_with_org_by_exact_role",
+    "validate_access_token_and_get_user_with_org_by_permission",
+    "validate_access_token_and_get_user_with_org_by_all_permissions",
+    "validate_minimum_org_role_and_get_org",
+    "validate_exact_org_role_and_get_org",
+    "validate_permission_and_get_org",
+    "validate_all_permissions_and_get_org",    
+    "fetch_user_metadata_by_user_id",
+    "fetch_user_metadata_by_email",
+    "fetch_user_metadata_by_username",
     "fetch_batch_user_metadata_by_user_ids",
     "fetch_batch_user_metadata_by_emails",
     "fetch_batch_user_metadata_by_usernames",
-    "fetch_org", "fetch_org_by_query", "fetch_users_by_query", "fetch_users_in_org",
+    "fetch_org",
+    "fetch_org_by_query",
+    "fetch_users_by_query",
+    "fetch_users_in_org",
     "create_user",
     "update_user_email",
     "update_user_metadata",
-    "create_magic_link", "migrate_user_from_external_source", "create_org", "add_user_to_org",
-    "delete_user", "disable_user", "enable_user",
-    "allow_org_to_setup_saml_connection", "disallow_org_to_setup_saml_connection"
+    "create_magic_link",
+    "migrate_user_from_external_source",
+    "create_org",
+    "add_user_to_org",
+    "delete_user",
+    "disable_user",
+    "enable_user",
+    "allow_org_to_setup_saml_connection",
+    "disallow_org_to_setup_saml_connection"
 ])
 
 
@@ -113,13 +138,37 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
         return _disallow_org_to_setup_saml_connection(auth_url, api_key, org_id)
 
     validate_access_token_and_get_user = wrap_validate_access_token_and_get_user(token_verification_metadata)
-    validate_access_token_and_get_user_with_org = wrap_validate_access_token_and_get_user_with_org(
+
+    validate_access_token_and_get_user_with_org_by_minimum_role = wrap_validate_access_token_and_get_user_with_org_by_minimum_role(
         token_verification_metadata
     )
+
+    validate_access_token_and_get_user_with_org_by_exact_role = wrap_validate_access_token_and_get_user_with_org_by_exact_role(
+        token_verification_metadata
+    )
+
+    validate_access_token_and_get_user_with_org_by_permission= wrap_validate_access_token_and_get_user_with_org_by_permission(
+        token_verification_metadata
+    )
+
+    validate_access_token_and_get_user_with_org_by_all_permissions = wrap_validate_access_token_and_get_user_with_org_by_all_permissions(
+        token_verification_metadata
+    )
+
     return Auth(
+        # validation functions
+        validate_minimum_org_role_and_get_org=validate_minimum_org_role_and_get_org,
+        validate_exact_org_role_and_get_org=validate_exact_org_role_and_get_org,
+        validate_permission_and_get_org=validate_permission_and_get_org,
+        validate_all_permissions_and_get_org=validate_all_permissions_and_get_org,
+
+        # wrappers for the validation functions
         validate_access_token_and_get_user=validate_access_token_and_get_user,
-        validate_access_token_and_get_user_with_org=validate_access_token_and_get_user_with_org,
-        validate_org_access_and_get_org=validate_org_access_and_get_org,
+        validate_access_token_and_get_user_with_org_by_minimum_role=validate_access_token_and_get_user_with_org_by_minimum_role,
+        validate_access_token_and_get_user_with_org_by_exact_role=validate_access_token_and_get_user_with_org_by_exact_role,
+        validate_access_token_and_get_user_with_org_by_permission=validate_access_token_and_get_user_with_org_by_permission,
+        validate_access_token_and_get_user_with_org_by_all_permissions=validate_access_token_and_get_user_with_org_by_all_permissions,
+
         fetch_user_metadata_by_user_id=fetch_user_metadata_by_user_id,
         fetch_user_metadata_by_email=fetch_user_metadata_by_email,
         fetch_user_metadata_by_username=fetch_user_metadata_by_username,
