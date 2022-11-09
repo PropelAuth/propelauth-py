@@ -13,7 +13,7 @@ A python library for managing authentication, backed by [PropelAuth](https://www
 
 ## Documentation
 
-- Full reference this library is [here](https://docs.propelauth.com/reference/backend-apis/python.html)
+- Full reference this library is [here](https://docs.propelauth.com/reference/backend-apis/python)
 - Getting started guides for PropelAuth are [here](https://docs.propelauth.com/)
 
 ## Questions?

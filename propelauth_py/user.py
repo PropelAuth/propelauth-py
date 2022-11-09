@@ -1,5 +1,3 @@
-from enum import Enum
-
 from propelauth_py.errors import UnauthorizedException
 
 
@@ -17,17 +15,39 @@ class User:
 
 
 class OrgMemberInfo:
-    def __init__(self, org_id, org_name, user_role):
+    def __init__(self, org_id, org_name, user_assigned_role, user_inherited_roles_plus_current_role, user_permissions):
         self.org_id = org_id
         self.org_name = org_name
-        self.user_role = user_role
+        self.user_assigned_role = user_assigned_role
+        self.user_inherited_roles_plus_current_role = user_inherited_roles_plus_current_role
+        self.user_permissions = user_permissions
 
     def __eq__(self, other):
         if isinstance(other, OrgMemberInfo):
             return self.org_id == other.org_id and \
                    self.org_name == other.org_name and \
-                   self.user_role == other.user_role
+                   self.user_assigned_role == other.user_assigned_role
         return False
+    
+    def user_is_role(self, role):
+        """returns true if the user is the role"""
+        return role == self.user_assigned_role
+    
+    def user_is_at_least_role(self, role):
+        """returns true if the user can act as the role"""
+        return role in self.user_inherited_roles_plus_current_role
+    
+    def user_has_permission(self, permission):
+        """returns true if user has the permission"""
+        return permission in self.user_permissions
+
+    def user_has_all_permissions(self, permissions):
+        """returns true if user has the all the permissions listed"""
+        for permission in permissions:
+            if not self.user_has_permission(permission):
+                return False
+        
+        return True
 
 
 class UserAndOrgMemberInfo:
@@ -42,26 +62,16 @@ def _to_org_member_info(org_id_to_org_member_info_json):
 
     org_id_to_org_member_info = {}
     for org_id, org_member_info_json in org_id_to_org_member_info_json.items():
-        user_role = _to_user_role(org_member_info_json["user_role"])
-        if user_role is not None:
+        user_assigned_role = org_member_info_json["user_role"]
+        if user_assigned_role is not None:
             org_id_to_org_member_info[org_id] = OrgMemberInfo(
                 org_id=org_member_info_json["org_id"],
                 org_name=org_member_info_json["org_name"],
-                user_role=user_role
+                user_assigned_role=user_assigned_role,
+                user_inherited_roles_plus_current_role=org_member_info_json["inherited_user_roles_plus_current_role"],
+                user_permissions=org_member_info_json["user_permissions"],
             )
     return org_id_to_org_member_info
-
-
-def _to_user_role(user_role):
-    if user_role == "Owner":
-        return UserRole.Owner
-    elif user_role == "Admin":
-        return UserRole.Admin
-    elif user_role == "Member":
-        return UserRole.Member
-    else:
-        return None
-
 
 def _to_user(decoded_token):
     user_id = decoded_token.get("user_id")
@@ -70,31 +80,3 @@ def _to_user(decoded_token):
 
     org_id_to_org_member_info = _to_org_member_info(decoded_token.get("org_id_to_org_member_info"))
     return User(user_id, org_id_to_org_member_info, decoded_token.get("legacy_user_id"))
-
-
-class _OrderedEnum(Enum):
-    def __ge__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value >= other.value
-        return NotImplemented
-
-    def __gt__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value > other.value
-        return NotImplemented
-
-    def __le__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value <= other.value
-        return NotImplemented
-
-    def __lt__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value < other.value
-        return NotImplemented
-
-
-class UserRole(_OrderedEnum):
-    Member = 0,
-    Admin = 1,
-    Owner = 2,
