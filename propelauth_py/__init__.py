@@ -9,6 +9,7 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _delete_user, _disable_user, _enable_user, _allow_org_to_setup_saml_connection, \
     _disallow_org_to_setup_saml_connection
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
+    wrap_validate_access_token_and_get_user_with_org, \
     wrap_validate_access_token_and_get_user_with_org_by_minimum_role, \
     wrap_validate_access_token_and_get_user_with_org_by_exact_role, \
     wrap_validate_access_token_and_get_user_with_org_by_permission, \
@@ -22,6 +23,7 @@ from propelauth_py.validation import _validate_url
 
 Auth = namedtuple("Auth", [
     "validate_access_token_and_get_user",
+    "validate_access_token_and_get_user_with_org",
     "validate_access_token_and_get_user_with_org_by_minimum_role",
     "validate_access_token_and_get_user_with_org_by_exact_role",
     "validate_access_token_and_get_user_with_org_by_permission",
@@ -139,6 +141,8 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
 
     validate_access_token_and_get_user = wrap_validate_access_token_and_get_user(token_verification_metadata)
 
+    validate_access_token_and_get_user_with_org = wrap_validate_access_token_and_get_user_with_org(token_verification_metadata)
+
     validate_access_token_and_get_user_with_org_by_minimum_role = wrap_validate_access_token_and_get_user_with_org_by_minimum_role(
         token_verification_metadata
     )
@@ -164,6 +168,7 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
 
         # wrappers for the validation functions
         validate_access_token_and_get_user=validate_access_token_and_get_user,
+        validate_access_token_and_get_user_with_org=validate_access_token_and_get_user_with_org,
         validate_access_token_and_get_user_with_org_by_minimum_role=validate_access_token_and_get_user_with_org_by_minimum_role,
         validate_access_token_and_get_user_with_org_by_exact_role=validate_access_token_and_get_user_with_org_by_exact_role,
         validate_access_token_and_get_user_with_org_by_permission=validate_access_token_and_get_user_with_org_by_permission,

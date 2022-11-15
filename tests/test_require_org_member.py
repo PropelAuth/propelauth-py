@@ -12,14 +12,14 @@ def test_validate_without_auth(auth, rsa_keys):
     required_org_id = random_org_id()
 
     with pytest.raises(UnauthorizedException):
-        auth.validate_access_token_and_get_user_with_org_by_minimum_role(None, required_org_id)
+        auth.validate_access_token_and_get_user_with_org(None, required_org_id)
 
 
 def test_validate_without_auth_2(auth, rsa_keys):
     required_org_id = random_org_id()
 
     with pytest.raises(UnauthorizedException):
-        auth.validate_access_token_and_get_user_with_org_by_minimum_role("", required_org_id)
+        auth.validate_access_token_and_get_user_with_org("", required_org_id)
 
 
 def test_validate_org_member_with_auth_but_no_org_membership(auth, rsa_keys):
@@ -28,7 +28,7 @@ def test_validate_org_member_with_auth_but_no_org_membership(auth, rsa_keys):
     access_token = create_access_token({"user_id": user_id}, rsa_keys.private_pem)
 
     with pytest.raises(ForbiddenException):
-        auth.validate_access_token_and_get_user_with_org_by_minimum_role("Bearer " + access_token, required_org_id)
+        auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, required_org_id)
 
 
 def test_validate_org_member_with_auth_and_org_member(auth, rsa_keys):
@@ -40,7 +40,7 @@ def test_validate_org_member_with_auth_and_org_member(auth, rsa_keys):
         "org_id_to_org_member_info": org_id_to_org_member_info
     }, rsa_keys.private_pem)
 
-    user_and_org = auth.validate_access_token_and_get_user_with_org_by_minimum_role("Bearer " + access_token, org["org_id"])
+    user_and_org = auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"])
 
     assert user_and_org.user.user_id == user_id
     assert user_and_org.org_member_info.org_id == org["org_id"]
@@ -60,7 +60,7 @@ def test_validate_org_member_with_auth_but_wrong_org_id(auth, rsa_keys):
     # Pass wrong org_id as required
     wrong_org_id = random_org_id()
     with pytest.raises(ForbiddenException):
-        auth.validate_access_token_and_get_user_with_org_by_minimum_role("Bearer " + access_token, wrong_org_id)
+        auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, wrong_org_id)
 
 
 def test_validate_org_member_with_auth_but_no_permission(auth, rsa_keys):
@@ -94,6 +94,61 @@ def test_validate_org_member_with_auth_with_permission(auth, rsa_keys):
     assert user_and_org.org_member_info.user_assigned_role == "Admin"
 
 
+def test_validate_org_member_with_auth_by_permissions(auth, rsa_keys):
+    user_id = random_user_id()
+    org = random_org("Admin", ["permA"])
+    org_id_to_org_member_info = orgs_to_org_id_map([org])
+    access_token = create_access_token({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info
+    }, rsa_keys.private_pem)
+
+    user_and_org = auth.validate_access_token_and_get_user_with_org_by_permission("Bearer " + access_token, org["org_id"], "permA")
+
+    assert user_and_org.user.user_id == user_id
+    assert user_and_org.org_member_info.org_id == org["org_id"]
+    assert user_and_org.org_member_info.org_name == org["org_name"]
+    assert user_and_org.org_member_info.user_assigned_role == "Admin"
+
+
+def test_validate_org_member_by_missing_permission(auth, rsa_keys):
+    user_id = random_user_id()
+    org = random_org("Admin")
+    org_id_to_org_member_info = orgs_to_org_id_map([org])
+    access_token = create_access_token({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info
+    }, rsa_keys.private_pem)
+
+    with pytest.raises(ForbiddenException):
+        auth.validate_access_token_and_get_user_with_org_by_permission("Bearer " + access_token, org["org_id"], "permission")
+
+
+def test_validate_org_member_with_auth_by_batch_permissions(auth, rsa_keys):
+    user_id = random_user_id()
+    org = random_org("Admin", ["permA", "permB"])
+    org_id_to_org_member_info = orgs_to_org_id_map([org])
+    access_token = create_access_token({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info
+    }, rsa_keys.private_pem)
+
+    user_and_org = auth.validate_access_token_and_get_user_with_org_by_all_permissions("Bearer " + access_token, org["org_id"], ["permA"])
+    assert user_and_org.user.user_id == user_id
+    assert user_and_org.org_member_info.org_id == org["org_id"]
+    assert user_and_org.org_member_info.org_name == org["org_name"]
+    assert user_and_org.org_member_info.user_assigned_role == "Admin"
+
+    user_and_org = auth.validate_access_token_and_get_user_with_org_by_all_permissions("Bearer " + access_token, org["org_id"], ["permA", "permB"])
+    assert user_and_org.user.user_id == user_id
+    assert user_and_org.org_member_info.org_id == org["org_id"]
+    assert user_and_org.org_member_info.org_name == org["org_name"]
+    assert user_and_org.org_member_info.user_assigned_role == "Admin"
+
+    with pytest.raises(ForbiddenException):
+        auth.validate_access_token_and_get_user_with_org_by_all_permissions("Bearer " + access_token, org["org_id"], ["permA", "missing"])
+
+
 def test_validate_org_member_with_bad_header(auth, rsa_keys):
     user_id = random_user_id()
     org = random_org("Admin")
@@ -104,14 +159,14 @@ def test_validate_org_member_with_bad_header(auth, rsa_keys):
     }, rsa_keys.private_pem)
 
     with pytest.raises(UnauthorizedException):
-        auth.validate_access_token_and_get_user_with_org_by_minimum_role("token " + access_token, org["org_id"])
+        auth.validate_access_token_and_get_user_with_org("token " + access_token, org["org_id"])
 
 
 def test_validate_org_member_with_wrong_token(auth, rsa_keys):
     required_org_id = random_org_id()
 
     with pytest.raises(UnauthorizedException):
-        auth.validate_access_token_and_get_user_with_org_by_minimum_role("Bearer whatisthis", required_org_id)
+        auth.validate_access_token_and_get_user_with_org("Bearer whatisthis", required_org_id)
 
 
 def test_validate_org_member_with_expired_token(auth, rsa_keys):
@@ -124,7 +179,7 @@ def test_validate_org_member_with_expired_token(auth, rsa_keys):
     }, rsa_keys.private_pem, expires_in=timedelta(minutes=-1))
 
     with pytest.raises(UnauthorizedException):
-        auth.validate_access_token_and_get_user_with_org_by_minimum_role("Bearer" + access_token, org["org_id"])
+        auth.validate_access_token_and_get_user_with_org("Bearer" + access_token, org["org_id"])
 
 
 def test_validate_org_member_with_bad_issuer(auth, rsa_keys):
@@ -137,7 +192,7 @@ def test_validate_org_member_with_bad_issuer(auth, rsa_keys):
     }, rsa_keys.private_pem, issuer=HTTP_BASE_AUTH_URL)
 
     with pytest.raises(UnauthorizedException):
-        auth.validate_access_token_and_get_user_with_org_by_minimum_role("Bearer" + access_token, org["org_id"])
+        auth.validate_access_token_and_get_user_with_org("Bearer" + access_token, org["org_id"])
 
 
 def test_validate_org_member_with_wrong_key(auth, rsa_keys):
@@ -152,4 +207,4 @@ def test_validate_org_member_with_wrong_key(auth, rsa_keys):
     }, incorrect_rsa_keys.private_pem, issuer=HTTP_BASE_AUTH_URL)
 
     with pytest.raises(UnauthorizedException):
-        auth.validate_access_token_and_get_user_with_org_by_minimum_role("Bearer " + access_token, org["org_id"])
+        auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"])
