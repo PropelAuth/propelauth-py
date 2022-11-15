@@ -94,6 +94,61 @@ def test_validate_org_member_with_auth_with_permission(auth, rsa_keys):
     assert user_and_org.org_member_info.user_assigned_role == "Admin"
 
 
+def test_validate_org_member_with_auth_by_permissions(auth, rsa_keys):
+    user_id = random_user_id()
+    org = random_org("Admin", ["permA"])
+    org_id_to_org_member_info = orgs_to_org_id_map([org])
+    access_token = create_access_token({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info
+    }, rsa_keys.private_pem)
+
+    user_and_org = auth.validate_access_token_and_get_user_with_org_by_permission("Bearer " + access_token, org["org_id"], "permA")
+
+    assert user_and_org.user.user_id == user_id
+    assert user_and_org.org_member_info.org_id == org["org_id"]
+    assert user_and_org.org_member_info.org_name == org["org_name"]
+    assert user_and_org.org_member_info.user_assigned_role == "Admin"
+
+
+def test_validate_org_member_by_missing_permission(auth, rsa_keys):
+    user_id = random_user_id()
+    org = random_org("Admin")
+    org_id_to_org_member_info = orgs_to_org_id_map([org])
+    access_token = create_access_token({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info
+    }, rsa_keys.private_pem)
+
+    with pytest.raises(ForbiddenException):
+        auth.validate_access_token_and_get_user_with_org_by_permission("Bearer " + access_token, org["org_id"], "permission")
+
+
+def test_validate_org_member_with_auth_by_batch_permissions(auth, rsa_keys):
+    user_id = random_user_id()
+    org = random_org("Admin", ["permA", "permB"])
+    org_id_to_org_member_info = orgs_to_org_id_map([org])
+    access_token = create_access_token({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info
+    }, rsa_keys.private_pem)
+
+    user_and_org = auth.validate_access_token_and_get_user_with_org_by_all_permissions("Bearer " + access_token, org["org_id"], ["permA"])
+    assert user_and_org.user.user_id == user_id
+    assert user_and_org.org_member_info.org_id == org["org_id"]
+    assert user_and_org.org_member_info.org_name == org["org_name"]
+    assert user_and_org.org_member_info.user_assigned_role == "Admin"
+
+    user_and_org = auth.validate_access_token_and_get_user_with_org_by_all_permissions("Bearer " + access_token, org["org_id"], ["permA", "permB"])
+    assert user_and_org.user.user_id == user_id
+    assert user_and_org.org_member_info.org_id == org["org_id"]
+    assert user_and_org.org_member_info.org_name == org["org_name"]
+    assert user_and_org.org_member_info.user_assigned_role == "Admin"
+
+    with pytest.raises(ForbiddenException):
+        auth.validate_access_token_and_get_user_with_org_by_all_permissions("Bearer " + access_token, org["org_id"], ["permA", "missing"])
+
+
 def test_validate_org_member_with_bad_header(auth, rsa_keys):
     user_id = random_user_id()
     org = random_org("Admin")

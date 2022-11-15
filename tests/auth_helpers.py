@@ -23,14 +23,14 @@ def random_org_id():
     return str(uuid4())
 
 
-def random_org(user_role_str):
+def random_org(user_role_str, permissions=None):
     # represents the incoming JSON from the auth server
     return {
         "org_id": random_org_id(),
         "org_name": str(uuid4()),
         "user_role": user_role_str,
         "inherited_user_roles_plus_current_role": [user_role_str],
-        "user_permissions": [],
+        "user_permissions": [] if permissions is None else permissions,
     }
 
 
