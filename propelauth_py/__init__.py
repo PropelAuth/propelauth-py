@@ -9,6 +9,7 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _delete_user, _disable_user, _enable_user, _allow_org_to_setup_saml_connection, \
     _disallow_org_to_setup_saml_connection
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
+    wrap_validate_access_token_and_get_user_with_org, \
     wrap_validate_access_token_and_get_user_with_org_by_minimum_role, \
     wrap_validate_access_token_and_get_user_with_org_by_exact_role, \
     wrap_validate_access_token_and_get_user_with_org_by_permission, \
@@ -16,7 +17,7 @@ from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
     validate_minimum_org_role_and_get_org, \
     validate_exact_org_role_and_get_org, \
     validate_permission_and_get_org, \
-    validate_all_permissions_and_get_org, wrap_validate_access_token_and_get_user_with_org
+    validate_all_permissions_and_get_org
 from propelauth_py.errors import UnauthorizedException
 from propelauth_py.validation import _validate_url
 
