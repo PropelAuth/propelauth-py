@@ -14,6 +14,7 @@ from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
     wrap_validate_access_token_and_get_user_with_org_by_exact_role, \
     wrap_validate_access_token_and_get_user_with_org_by_permission, \
     wrap_validate_access_token_and_get_user_with_org_by_all_permissions, \
+    validate_org_access_and_get_org_member_info, \
     validate_minimum_org_role_and_get_org, \
     validate_exact_org_role_and_get_org, \
     validate_permission_and_get_org, \
@@ -28,10 +29,11 @@ Auth = namedtuple("Auth", [
     "validate_access_token_and_get_user_with_org_by_exact_role",
     "validate_access_token_and_get_user_with_org_by_permission",
     "validate_access_token_and_get_user_with_org_by_all_permissions",
+    "validate_org_access_and_get_org",
     "validate_minimum_org_role_and_get_org",
     "validate_exact_org_role_and_get_org",
     "validate_permission_and_get_org",
-    "validate_all_permissions_and_get_org",    
+    "validate_all_permissions_and_get_org",
     "fetch_user_metadata_by_user_id",
     "fetch_user_metadata_by_email",
     "fetch_user_metadata_by_username",
@@ -151,7 +153,7 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
         token_verification_metadata
     )
 
-    validate_access_token_and_get_user_with_org_by_permission= wrap_validate_access_token_and_get_user_with_org_by_permission(
+    validate_access_token_and_get_user_with_org_by_permission = wrap_validate_access_token_and_get_user_with_org_by_permission(
         token_verification_metadata
     )
 
@@ -161,6 +163,7 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
 
     return Auth(
         # validation functions
+        validate_org_access_and_get_org=validate_org_access_and_get_org_member_info,
         validate_minimum_org_role_and_get_org=validate_minimum_org_role_and_get_org,
         validate_exact_org_role_and_get_org=validate_exact_org_role_and_get_org,
         validate_permission_and_get_org=validate_permission_and_get_org,
