@@ -6,7 +6,7 @@ import requests
 from requests.auth import AuthBase
 
 from propelauth_py.errors import CreateUserException, UpdateUserMetadataException, UpdateUserEmailException, \
-    BadRequestException
+    BadRequestException, UpdateUserPasswordException
 
 TokenVerificationMetadata = namedtuple("TokenVerificationMetadata", [
     "verifier_key", "issuer"
@@ -203,10 +203,12 @@ def _fetch_users_in_org(auth_url, api_key, org_id, page_size, page_number, inclu
 
 
 def _create_user(auth_url, api_key, email, email_confirmed, send_email_to_confirm_email_address,
+                 ask_user_to_update_password_on_login,
                  password, username, first_name, last_name):
     url = auth_url + "/api/backend/v1/user/"
     json = {"email": email, "email_confirmed": email_confirmed,
-            "send_email_to_confirm_email_address": send_email_to_confirm_email_address}
+            "send_email_to_confirm_email_address": send_email_to_confirm_email_address,
+            "ask_user_to_update_password_on_login": ask_user_to_update_password_on_login}
     if password is not None:
         json["password"] = password
     if username is not None:
@@ -251,6 +253,26 @@ def _update_user_metadata(auth_url, api_key, user_id, username=None, first_name=
 
     return True
 
+def _update_user_password(auth_url, api_key, user_id, password, ask_user_to_update_password_on_login):
+    if not _is_valid_id(user_id):
+        return False
+
+    url = auth_url + "/api/backend/v1/user/{}/password".format(user_id)
+    json = {"password": password}
+    if ask_user_to_update_password_on_login is not None:
+        json["ask_user_to_update_password_on_login"] = ask_user_to_update_password_on_login
+
+    response = requests.put(url, json=json, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise UpdateUserPasswordException(response.json())
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when updating password")
+
+    return True
 
 def _update_user_email(auth_url, api_key, user_id, new_email, require_email_confirmation):
     if not _is_valid_id(user_id):
@@ -300,6 +322,7 @@ def _create_magic_link(auth_url, api_key, email,
 def _migrate_user_from_external_source(auth_url, api_key, email, email_confirmed,
                                        existing_user_id=None, existing_password_hash=None,
                                        existing_mfa_base32_encoded_secret=None,
+                                       ask_user_to_update_password_on_login=False,
                                        enabled=None, first_name=None, last_name=None, username=None):
     url = auth_url + "/api/backend/v1/migrate_user/"
     json = {
@@ -308,6 +331,7 @@ def _migrate_user_from_external_source(auth_url, api_key, email, email_confirmed
         "existing_user_id": existing_user_id,
         "existing_password_hash": existing_password_hash,
         "existing_mfa_base32_encoded_secret": existing_mfa_base32_encoded_secret,
+        "ask_user_to_update_password_on_login": ask_user_to_update_password_on_login,
         "enabled": enabled,
         "first_name": first_name,
         "last_name": last_name,
