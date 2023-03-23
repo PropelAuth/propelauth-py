@@ -7,9 +7,11 @@ class UpdateUserMetadataException(Exception):
     def __init__(self, field_to_errors):
         self.field_to_errors = field_to_errors
 
+
 class UpdateUserPasswordException(Exception):
     def __init__(self, field_to_errors):
         self.field_to_errors = field_to_errors
+
 
 class UpdateUserEmailException(Exception):
     def __init__(self, field_to_errors):
@@ -19,6 +21,10 @@ class UpdateUserEmailException(Exception):
 class BadRequestException(Exception):
     def __init__(self, field_to_errors):
         self.field_to_errors = field_to_errors
+
+
+class UserNotFoundException(Exception):
+    pass
 
 
 class UnauthorizedException(Exception):

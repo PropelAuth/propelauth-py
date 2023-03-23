@@ -7,7 +7,7 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _fetch_org, _fetch_org_by_query, _fetch_users_by_query, _fetch_users_in_org, _create_user, _update_user_email, \
     _update_user_metadata, _create_magic_link, _migrate_user_from_external_source, _create_org, _add_user_to_org, \
     _delete_user, _disable_user, _enable_user, _allow_org_to_setup_saml_connection, \
-    _disallow_org_to_setup_saml_connection, _update_user_password
+    _disallow_org_to_setup_saml_connection, _update_user_password, _create_access_token
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
     wrap_validate_access_token_and_get_user_with_org, \
     wrap_validate_access_token_and_get_user_with_org_by_minimum_role, \
@@ -49,6 +49,7 @@ Auth = namedtuple("Auth", [
     "update_user_metadata",
     "update_user_password",
     "create_magic_link",
+    "create_access_token",
     "migrate_user_from_external_source",
     "create_org",
     "add_user_to_org",
@@ -116,6 +117,9 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
     def create_magic_link(email, redirect_to_url=None, expires_in_hours=None, create_new_user_if_one_doesnt_exist=None):
         return _create_magic_link(auth_url, api_key, email, redirect_to_url, expires_in_hours,
                                   create_new_user_if_one_doesnt_exist)
+
+    def create_access_token(user_id, duration_in_minutes):
+        return _create_access_token(auth_url, api_key, user_id, duration_in_minutes)
 
     def migrate_user_from_external_source(email, email_confirmed,
                                           existing_user_id=None, existing_password_hash=None,
@@ -200,6 +204,7 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
         update_user_metadata=update_user_metadata,
         update_user_password=update_user_password,
         create_magic_link=create_magic_link,
+        create_access_token=create_access_token,
         migrate_user_from_external_source=migrate_user_from_external_source,
         create_org=create_org,
         add_user_to_org=add_user_to_org,

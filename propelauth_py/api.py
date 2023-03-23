@@ -6,7 +6,7 @@ import requests
 from requests.auth import AuthBase
 
 from propelauth_py.errors import CreateUserException, UpdateUserMetadataException, UpdateUserEmailException, \
-    BadRequestException, UpdateUserPasswordException
+    BadRequestException, UpdateUserPasswordException, UserNotFoundException
 
 TokenVerificationMetadata = namedtuple("TokenVerificationMetadata", [
     "verifier_key", "issuer"
@@ -317,6 +317,25 @@ def _create_magic_link(auth_url, api_key, email,
         raise RuntimeError("Unknown error when creating magic link")
 
     return response.json()
+
+
+def _create_access_token(auth_url, api_key, user_id, duration_in_minutes):
+    if not _is_valid_id(user_id):
+        raise UserNotFoundException()
+
+    url = auth_url + "/api/backend/v1/access_token"
+    json = {"user_id": user_id, "duration_in_minutes": duration_in_minutes}
+    response = requests.post(url, json=json, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 403:
+        raise UserNotFoundException()
+    elif response.status_code == 404:
+        raise RuntimeError("Access token creation is not enabled")
+    elif not response.ok:
+        raise RuntimeError("Unknown error when creating access token")
 
 
 def _migrate_user_from_external_source(auth_url, api_key, email, email_confirmed,
