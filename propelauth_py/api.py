@@ -226,7 +226,7 @@ def _create_user(auth_url, api_key, email, email_confirmed, send_email_to_confir
     return response.json()
 
 
-def _update_user_metadata(auth_url, api_key, user_id, username=None, first_name=None, last_name=None):
+def _update_user_metadata(auth_url, api_key, user_id, username=None, first_name=None, last_name=None, metadata=None):
     if not _is_valid_id(user_id):
         return False
 
@@ -238,6 +238,8 @@ def _update_user_metadata(auth_url, api_key, user_id, username=None, first_name=
         json["first_name"] = first_name
     if last_name is not None:
         json["last_name"] = last_name
+    if metadata is not None:
+        json["metadata"] = metadata
 
     response = requests.put(url, json=json, auth=_ApiKeyAuth(api_key))
     if response.status_code == 401:
@@ -338,6 +340,32 @@ def _create_org(auth_url, api_key, name):
         raise RuntimeError("Unknown error when creating an org")
 
     return response.json()
+
+
+def _update_org_metadata(auth_url, api_key, org_id, name=None, can_setup_saml=None, metadata=None):
+    if not _is_valid_id(org_id):
+        return False
+
+    url = auth_url + "/api/backend/v1/org/{}".format(org_id)
+    json = {}
+    if name is not None:
+        json["name"] = name
+    if can_setup_saml is not None:
+        json["can_setup_saml"] = can_setup_saml
+    if metadata is not None:
+        json["metadata"] = metadata
+
+    response = requests.put(url, json=json, auth=_ApiKeyAuth(api_key))
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise UpdateUserMetadataException(response.json())
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when updating org metadata")
+
+    return True
 
 
 def _add_user_to_org(auth_url, api_key, user_id, org_id, role):

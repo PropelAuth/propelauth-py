@@ -5,8 +5,8 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _fetch_user_metadata_by_email, _fetch_user_metadata_by_username, _fetch_batch_user_metadata_by_user_ids, \
     _fetch_batch_user_metadata_by_emails, _fetch_batch_user_metadata_by_usernames, OrgQueryOrderBy, UserQueryOrderBy, \
     _fetch_org, _fetch_org_by_query, _fetch_users_by_query, _fetch_users_in_org, _create_user, _update_user_email, \
-    _update_user_metadata, _create_magic_link, _migrate_user_from_external_source, _create_org, _add_user_to_org, \
-    _delete_user, _disable_user, _enable_user, _allow_org_to_setup_saml_connection, \
+    _update_user_metadata, _create_magic_link, _migrate_user_from_external_source, _create_org, _update_org_metadata, \
+    _add_user_to_org, _delete_user, _disable_user, _enable_user, _allow_org_to_setup_saml_connection, \
     _disallow_org_to_setup_saml_connection
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
     wrap_validate_access_token_and_get_user_with_org, \
@@ -50,6 +50,7 @@ Auth = namedtuple("Auth", [
     "create_magic_link",
     "migrate_user_from_external_source",
     "create_org",
+    "update_org_metadata",
     "add_user_to_org",
     "delete_user",
     "disable_user",
@@ -104,8 +105,8 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
     def update_user_email(user_id, new_email, require_email_confirmation):
         return _update_user_email(auth_url, api_key, user_id, new_email, require_email_confirmation)
 
-    def update_user_metadata(user_id, username=None, first_name=None, last_name=None):
-        return _update_user_metadata(auth_url, api_key, user_id, username, first_name, last_name)
+    def update_user_metadata(user_id, username=None, first_name=None, last_name=None, metadata=None):
+        return _update_user_metadata(auth_url, api_key, user_id, username, first_name, last_name, metadata)
 
     def create_magic_link(email, redirect_to_url=None, expires_in_hours=None, create_new_user_if_one_doesnt_exist=None):
         return _create_magic_link(auth_url, api_key, email, redirect_to_url, expires_in_hours,
@@ -122,6 +123,9 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
 
     def create_org(name):
         return _create_org(auth_url, api_key, name)
+
+    def update_org_metadata(org_id, name=None, can_setup_saml=None, metadata=None):
+        return _update_org_metadata(auth_url, api_key, org_id, name, can_setup_saml, metadata)
 
     def add_user_to_org(user_id, org_id, role):
         return _add_user_to_org(auth_url, api_key, user_id, org_id, role)
@@ -193,6 +197,7 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
         create_magic_link=create_magic_link,
         migrate_user_from_external_source=migrate_user_from_external_source,
         create_org=create_org,
+        update_org_metadata=update_org_metadata,
         add_user_to_org=add_user_to_org,
         enable_user=enable_user,
         disable_user=disable_user,

@@ -2,10 +2,12 @@ from propelauth_py.errors import UnauthorizedException
 
 
 class User:
-    def __init__(self, user_id, org_id_to_org_member_info, legacy_user_id=None):
+    def __init__(self, user_id, org_id_to_org_member_info, legacy_user_id=None, impersonator_user_id=None, metadata=None):
         self.user_id = user_id
         self.org_id_to_org_member_info = org_id_to_org_member_info
         self.legacy_user_id = legacy_user_id
+        self.impersonator_user_id = impersonator_user_id
+        self.metadata = metadata
 
     def __eq__(self, other):
         if isinstance(other, User):
@@ -13,11 +15,16 @@ class User:
                    and self.legacy_user_id == other.legacy_user_id
         return False
 
+    def is_impersonated(self):
+        """returns true if the user is impersonated"""
+        return self.impersonator_user_id is not None
+
 
 class OrgMemberInfo:
-    def __init__(self, org_id, org_name, user_assigned_role, user_inherited_roles_plus_current_role, user_permissions):
+    def __init__(self, org_id, org_name, org_metadata, user_assigned_role, user_inherited_roles_plus_current_role, user_permissions):
         self.org_id = org_id
         self.org_name = org_name
+        self.org_metadata = org_metadata
         self.user_assigned_role = user_assigned_role
         self.user_inherited_roles_plus_current_role = user_inherited_roles_plus_current_role
         self.user_permissions = user_permissions
@@ -67,6 +74,7 @@ def _to_org_member_info(org_id_to_org_member_info_json):
             org_id_to_org_member_info[org_id] = OrgMemberInfo(
                 org_id=org_member_info_json["org_id"],
                 org_name=org_member_info_json["org_name"],
+                org_metadata=org_member_info_json["org_metadata"],
                 user_assigned_role=user_assigned_role,
                 user_inherited_roles_plus_current_role=org_member_info_json["inherited_user_roles_plus_current_role"],
                 user_permissions=org_member_info_json["user_permissions"],
@@ -79,4 +87,4 @@ def _to_user(decoded_token):
         raise UnauthorizedException.invalid_payload_in_access_token()
 
     org_id_to_org_member_info = _to_org_member_info(decoded_token.get("org_id_to_org_member_info"))
-    return User(user_id, org_id_to_org_member_info, decoded_token.get("legacy_user_id"))
+    return User(user_id, org_id_to_org_member_info, decoded_token.get("legacy_user_id"), decoded_token.get("impersonator_user_id"), decoded_token.get("metadata"))
