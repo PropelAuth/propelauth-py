@@ -5,13 +5,18 @@ from propelauth_py.user import _to_user, User, OrgMemberInfo
 
 def test_to_user_without_orgs():
     user_id = str(uuid4())
-    user = _to_user({"user_id": user_id})
-    expected_user = User(user_id, None)
+    email = str(uuid4())
+    user = _to_user({"user_id": user_id, "email": email})
+    expected_user = User(user_id, None, email)
     assert user == expected_user
 
 
 def test_to_user():
     user_id = str(uuid4())
+    email = str(uuid4())
+    first_name = str(uuid4())
+    last_name = str(uuid4())
+    username = str(uuid4())
     org_a = {
         "org_id": str(uuid4()),
         "org_name": "orgA",
@@ -42,7 +47,14 @@ def test_to_user():
         org_c["org_id"]: org_c,
     }
 
-    user = _to_user({"user_id": user_id, "org_id_to_org_member_info": org_id_to_org_member_info})
+    user = _to_user({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info,
+        "email": email,
+        "first_name": first_name,
+        "last_name": last_name,
+        "username": username,
+    })
 
     expected_org_id_to_org_member_info = {
         org_a["org_id"]: OrgMemberInfo(
@@ -70,6 +82,6 @@ def test_to_user():
             user_permissions=["View"],
         )
     }
-    expected_user = User(user_id, expected_org_id_to_org_member_info)
+    expected_user = User(user_id, expected_org_id_to_org_member_info, email, first_name, last_name, username)
 
     assert user == expected_user
