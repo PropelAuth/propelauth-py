@@ -2,17 +2,21 @@ from propelauth_py.errors import UnauthorizedException
 
 
 class User:
-    def __init__(self, user_id, org_id_to_org_member_info, legacy_user_id=None, impersonator_user_id=None, metadata=None):
+    def __init__(self, user_id, org_id_to_org_member_info, legacy_user_id=None, impersonator_user_id=None, metadata=None, email=None, username=None, first_name=None, last_name=None):
         self.user_id = user_id
         self.org_id_to_org_member_info = org_id_to_org_member_info
         self.legacy_user_id = legacy_user_id
         self.impersonator_user_id = impersonator_user_id
         self.metadata = metadata
+        self.email = email
+        self.username = username
+        self.first_name = first_name
+        self.last_name = last_name
 
     def __eq__(self, other):
         if isinstance(other, User):
             return self.user_id == other.user_id and self.org_id_to_org_member_info == other.org_id_to_org_member_info \
-                   and self.legacy_user_id == other.legacy_user_id
+                   and self.legacy_user_id == other.legacy_user_id and self.email == other.email
         return False
 
     def is_impersonated(self):
@@ -87,4 +91,15 @@ def _to_user(decoded_token):
         raise UnauthorizedException.invalid_payload_in_access_token()
 
     org_id_to_org_member_info = _to_org_member_info(decoded_token.get("org_id_to_org_member_info"))
-    return User(user_id, org_id_to_org_member_info, decoded_token.get("legacy_user_id"), decoded_token.get("impersonator_user_id"), decoded_token.get("metadata"))
+
+    return User(
+        user_id,
+        org_id_to_org_member_info,
+        decoded_token.get("legacy_user_id"),
+        decoded_token.get("impersonator_user_id"),
+        decoded_token.get("metadata"),
+        decoded_token.get("email"),
+        decoded_token.get("username"),
+        decoded_token.get("first_name"),
+        decoded_token.get("last_name"),
+    )

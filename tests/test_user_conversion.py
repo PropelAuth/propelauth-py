@@ -42,7 +42,12 @@ def test_to_user():
         org_c["org_id"]: org_c,
     }
 
-    user = _to_user({"user_id": user_id, "org_id_to_org_member_info": org_id_to_org_member_info})
+    user = _to_user({
+        "user_id": user_id,
+        "org_id_to_org_member_info": org_id_to_org_member_info,
+        "email": "easteregg@propelauth.com",
+        "first_name": "easter",
+    })
 
     expected_org_id_to_org_member_info = {
         org_a["org_id"]: OrgMemberInfo(
@@ -70,6 +75,6 @@ def test_to_user():
             user_permissions=["View"],
         )
     }
-    expected_user = User(user_id, expected_org_id_to_org_member_info)
+    expected_user = User(user_id, expected_org_id_to_org_member_info, None, None, None, "easteregg@propelauth.com", None, "easter", None)
 
     assert user == expected_user
