@@ -1,3 +1,5 @@
+import datetime
+
 import jwt
 
 from propelauth_py.errors import UnauthorizedException
@@ -18,7 +20,8 @@ def _validate_access_token_and_get_user(access_token, token_verification_metadat
                                    token_verification_metadata.verifier_key,
                                    options=OPTIONS,
                                    issuer=token_verification_metadata.issuer,
-                                   algorithms=["RS256"])
+                                   algorithms=["RS256"],
+                                   leeway=datetime.timedelta(seconds=60))
         return _to_user(decoded_token)
     except UnauthorizedException as e:
         raise e
