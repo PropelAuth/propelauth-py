@@ -339,6 +339,8 @@ def _create_access_token(auth_url, api_key, user_id, duration_in_minutes):
     elif not response.ok:
         raise RuntimeError("Unknown error when creating access token")
 
+    return response.json()
+
 
 def _migrate_user_from_external_source(auth_url, api_key, email, email_confirmed,
                                        existing_user_id=None, existing_password_hash=None,
