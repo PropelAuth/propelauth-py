@@ -8,9 +8,9 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _update_user_metadata, _create_magic_link, _migrate_user_from_external_source, _create_org, _update_org_metadata, \
     _add_user_to_org, _delete_user, _disable_user, _enable_user, _allow_org_to_setup_saml_connection, \
     _disallow_org_to_setup_saml_connection, _update_user_password, _create_access_token, _disable_user_2fa, \
-    _enable_user_can_create_orgs, _disable_user_can_create_orgs, _fetch_end_user_api_key, \
-    _fetch_current_end_user_api_keys, _fetch_archived_end_user_api_keys, _create_end_user_api_key, \
-    _update_end_user_api_key, _delete_end_user_api_key, _validate_end_user_api_key
+    _enable_user_can_create_orgs, _disable_user_can_create_orgs, _fetch_api_key, \
+    _fetch_current_api_keys, _fetch_archived_api_keys, _create_api_key, \
+    _update_api_key, _delete_api_key, _validate_api_key
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
     wrap_validate_access_token_and_get_user_with_org, \
     wrap_validate_access_token_and_get_user_with_org_by_minimum_role, \
@@ -65,142 +65,142 @@ Auth = namedtuple("Auth", [
     "disable_user_can_create_orgs",
     "allow_org_to_setup_saml_connection",
     "disallow_org_to_setup_saml_connection",
-    "fetch_end_user_api_key",
-    "fetch_current_end_user_api_keys",
-    "fetch_archived_end_user_api_keys",
-    "create_end_user_api_key",
-    "update_end_user_api_key",
-    "delete_end_user_api_key",
-    "validate_end_user_api_key",
+    "fetch_api_key",
+    "fetch_current_api_keys",
+    "fetch_archived_api_keys",
+    "create_api_key",
+    "update_api_key",
+    "delete_api_key",
+    "validate_api_key",
 ])
 
 
-def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: TokenVerificationMetadata = None) -> Auth:
+def init_base_auth(auth_url: str, integration_api_key: str, token_verification_metadata: TokenVerificationMetadata = None) -> Auth:
     """Fetches metadata required to validate access tokens and returns auth decorators and utilities"""
     auth_url = _validate_url(auth_url)
-    token_verification_metadata = _fetch_token_verification_metadata(auth_url, api_key, token_verification_metadata)
+    token_verification_metadata = _fetch_token_verification_metadata(auth_url, integration_api_key, token_verification_metadata)
 
     def fetch_user_metadata_by_user_id(user_id, include_orgs=False):
-        return _fetch_user_metadata_by_user_id(auth_url, api_key, user_id, include_orgs)
+        return _fetch_user_metadata_by_user_id(auth_url, integration_api_key, user_id, include_orgs)
 
     def fetch_user_metadata_by_email(email, include_orgs=False):
-        return _fetch_user_metadata_by_email(auth_url, api_key, email, include_orgs)
+        return _fetch_user_metadata_by_email(auth_url, integration_api_key, email, include_orgs)
 
     def fetch_user_metadata_by_username(username, include_orgs=False):
-        return _fetch_user_metadata_by_username(auth_url, api_key, username, include_orgs)
+        return _fetch_user_metadata_by_username(auth_url, integration_api_key, username, include_orgs)
 
     def fetch_batch_user_metadata_by_user_ids(user_ids, include_orgs=False):
-        return _fetch_batch_user_metadata_by_user_ids(auth_url, api_key, user_ids, include_orgs)
+        return _fetch_batch_user_metadata_by_user_ids(auth_url, integration_api_key, user_ids, include_orgs)
 
     def fetch_batch_user_metadata_by_emails(emails, include_orgs=False):
-        return _fetch_batch_user_metadata_by_emails(auth_url, api_key, emails, include_orgs)
+        return _fetch_batch_user_metadata_by_emails(auth_url, integration_api_key, emails, include_orgs)
 
     def fetch_batch_user_metadata_by_usernames(usernames, include_orgs=False):
-        return _fetch_batch_user_metadata_by_usernames(auth_url, api_key, usernames, include_orgs)
+        return _fetch_batch_user_metadata_by_usernames(auth_url, integration_api_key, usernames, include_orgs)
 
     def fetch_org(org_id):
-        return _fetch_org(auth_url, api_key, org_id)
+        return _fetch_org(auth_url, integration_api_key, org_id)
 
     def fetch_org_by_query(page_size=10, page_number=0, order_by=OrgQueryOrderBy.CREATED_AT_ASC):
-        return _fetch_org_by_query(auth_url, api_key, page_size, page_number, order_by)
+        return _fetch_org_by_query(auth_url, integration_api_key, page_size, page_number, order_by)
 
     def fetch_users_by_query(page_size=10, page_number=0, order_by=UserQueryOrderBy.CREATED_AT_ASC,
                              email_or_username=None, include_orgs=False):
-        return _fetch_users_by_query(auth_url, api_key, page_size, page_number, order_by, email_or_username,
+        return _fetch_users_by_query(auth_url, integration_api_key, page_size, page_number, order_by, email_or_username,
                                      include_orgs)
 
     def fetch_users_in_org(org_id, page_size=10, page_number=0, include_orgs=False):
-        return _fetch_users_in_org(auth_url, api_key, org_id, page_size, page_number, include_orgs)
+        return _fetch_users_in_org(auth_url, integration_api_key, org_id, page_size, page_number, include_orgs)
 
     def create_user(email, email_confirmed=False, send_email_to_confirm_email_address=True,
                     ask_user_to_update_password_on_login=False,
                     password=None, username=None, first_name=None, last_name=None):
-        return _create_user(auth_url, api_key, email, email_confirmed, send_email_to_confirm_email_address,
+        return _create_user(auth_url, integration_api_key, email, email_confirmed, send_email_to_confirm_email_address,
                             ask_user_to_update_password_on_login,
                             password, username, first_name, last_name)
 
     def update_user_email(user_id, new_email, require_email_confirmation):
-        return _update_user_email(auth_url, api_key, user_id, new_email, require_email_confirmation)
+        return _update_user_email(auth_url, integration_api_key, user_id, new_email, require_email_confirmation)
 
     def update_user_metadata(user_id, username=None, first_name=None, last_name=None, metadata=None):
-        return _update_user_metadata(auth_url, api_key, user_id, username, first_name, last_name, metadata)
+        return _update_user_metadata(auth_url, integration_api_key, user_id, username, first_name, last_name, metadata)
 
     def update_user_password(user_id, password, ask_user_to_update_password_on_login=False):
-        return _update_user_password(auth_url, api_key, user_id, password, ask_user_to_update_password_on_login)
+        return _update_user_password(auth_url, integration_api_key, user_id, password, ask_user_to_update_password_on_login)
 
     def create_magic_link(email, redirect_to_url=None, expires_in_hours=None, create_new_user_if_one_doesnt_exist=None):
-        return _create_magic_link(auth_url, api_key, email, redirect_to_url, expires_in_hours,
+        return _create_magic_link(auth_url, integration_api_key, email, redirect_to_url, expires_in_hours,
                                   create_new_user_if_one_doesnt_exist)
 
     def create_access_token(user_id, duration_in_minutes):
-        return _create_access_token(auth_url, api_key, user_id, duration_in_minutes)
+        return _create_access_token(auth_url, integration_api_key, user_id, duration_in_minutes)
 
     def migrate_user_from_external_source(email, email_confirmed,
                                           existing_user_id=None, existing_password_hash=None,
                                           existing_mfa_base32_encoded_secret=None,
                                           ask_user_to_update_password_on_login=False,
                                           enabled=None, first_name=None, last_name=None, username=None):
-        return _migrate_user_from_external_source(auth_url, api_key, email, email_confirmed,
+        return _migrate_user_from_external_source(auth_url, integration_api_key, email, email_confirmed,
                                                   existing_user_id, existing_password_hash,
                                                   existing_mfa_base32_encoded_secret,
                                                   ask_user_to_update_password_on_login,
                                                   enabled, first_name, last_name, username)
 
     def create_org(name):
-        return _create_org(auth_url, api_key, name)
+        return _create_org(auth_url, integration_api_key, name)
 
     def update_org_metadata(org_id, name=None, can_setup_saml=None, metadata=None):
-        return _update_org_metadata(auth_url, api_key, org_id, name, can_setup_saml, metadata)
+        return _update_org_metadata(auth_url, integration_api_key, org_id, name, can_setup_saml, metadata)
 
     def add_user_to_org(user_id, org_id, role):
-        return _add_user_to_org(auth_url, api_key, user_id, org_id, role)
+        return _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role)
 
     def delete_user(user_id):
-        return _delete_user(auth_url, api_key, user_id)
+        return _delete_user(auth_url, integration_api_key, user_id)
 
     def disable_user(user_id):
-        return _disable_user(auth_url, api_key, user_id)
+        return _disable_user(auth_url, integration_api_key, user_id)
 
     def enable_user(user_id):
-        return _enable_user(auth_url, api_key, user_id)
+        return _enable_user(auth_url, integration_api_key, user_id)
 
     def disable_user_2fa(user_id):
-        return _disable_user_2fa(auth_url, api_key, user_id)
+        return _disable_user_2fa(auth_url, integration_api_key, user_id)
 
     def enable_user_can_create_orgs(user_id):
-        return _enable_user_can_create_orgs(auth_url, api_key, user_id)
+        return _enable_user_can_create_orgs(auth_url, integration_api_key, user_id)
 
     def disable_user_can_create_orgs(user_id):
-        return _disable_user_can_create_orgs(auth_url, api_key, user_id)
+        return _disable_user_can_create_orgs(auth_url, integration_api_key, user_id)
 
     def allow_org_to_setup_saml_connection(org_id):
-        return _allow_org_to_setup_saml_connection(auth_url, api_key, org_id)
+        return _allow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id)
 
     def disallow_org_to_setup_saml_connection(org_id):
-        return _disallow_org_to_setup_saml_connection(auth_url, api_key, org_id)
+        return _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id)
 
     # functions for end user api keys
-    
-    def fetch_end_user_api_key(end_user_api_key):
-        return _fetch_end_user_api_key(auth_url, api_key, end_user_api_key)
 
-    def fetch_current_end_user_api_keys(org_id: None, user_id: None, user_email: None, page_size: None, page_number: None):
-        return _fetch_current_end_user_api_keys(auth_url, api_key, org_id, user_id, user_email, page_size, page_number)
+    def fetch_api_key(api_key):
+        return _fetch_api_key(auth_url, integration_api_key, api_key)
 
-    def fetch_archived_end_user_api_keys(org_id: None, user_id: None, user_email: None, page_size: None, page_number: None):
-        return _fetch_archived_end_user_api_keys(auth_url, api_key, org_id, user_id, user_email, page_size, page_number)
+    def fetch_current_api_keys(org_id: None, user_id: None, user_email: None, page_size: None, page_number: None):
+        return _fetch_current_api_keys(auth_url, integration_api_key, org_id, user_id, user_email, page_size, page_number)
 
-    def create_end_user_api_key(org_id=None, user_id=None, expires_at_seconds=None, metadata=None):
-        return _create_end_user_api_key(auth_url, api_key, org_id, user_id, expires_at_seconds, metadata)
+    def fetch_archived_api_keys(org_id: None, user_id: None, user_email: None, page_size: None, page_number: None):
+        return _fetch_archived_api_keys(auth_url, integration_api_key, org_id, user_id, user_email, page_size, page_number)
 
-    def update_end_user_api_key(end_user_api_key, expires_at_seconds=None, metadata=None):
-        return _update_end_user_api_key(auth_url, api_key, end_user_api_key, expires_at_seconds, metadata)
+    def create_api_key(org_id=None, user_id=None, expires_at_seconds=None, metadata=None):
+        return _create_api_key(auth_url, integration_api_key, org_id, user_id, expires_at_seconds, metadata)
 
-    def delete_end_user_api_key(end_user_api_key):
-        return _delete_end_user_api_key(auth_url, api_key, end_user_api_key)
+    def update_api_key(api_key, expires_at_seconds=None, metadata=None):
+        return _update_api_key(auth_url, integration_api_key, api_key, expires_at_seconds, metadata)
 
-    def validate_end_user_api_key(end_user_api_key):
-        return _validate_end_user_api_key(auth_url, api_key, end_user_api_key)
+    def delete_api_key(api_key):
+        return _delete_api_key(auth_url, integration_api_key, api_key)
+
+    def validate_api_key(api_key):
+        return _validate_api_key(auth_url, integration_api_key, api_key)
 
     validate_access_token_and_get_user = wrap_validate_access_token_and_get_user(token_verification_metadata)
 
@@ -268,11 +268,11 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
         allow_org_to_setup_saml_connection=allow_org_to_setup_saml_connection,
         disallow_org_to_setup_saml_connection=disallow_org_to_setup_saml_connection,
         # api key functions
-        fetch_end_user_api_key=fetch_end_user_api_key,
-        fetch_current_end_user_api_keys=fetch_current_end_user_api_keys,
-        fetch_archived_end_user_api_keys=fetch_archived_end_user_api_keys,
-        create_end_user_api_key=create_end_user_api_key,
-        update_end_user_api_key=update_end_user_api_key,
-        delete_end_user_api_key=delete_end_user_api_key,
-        validate_end_user_api_key=validate_end_user_api_key,
+        fetch_api_key=fetch_api_key,
+        fetch_current_api_keys=fetch_current_api_keys,
+        fetch_archived_api_keys=fetch_archived_api_keys,
+        create_api_key=create_api_key,
+        update_api_key=update_api_key,
+        delete_api_key=delete_api_key,
+        validate_api_key=validate_api_key,
     )
