@@ -7,7 +7,10 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _fetch_org, _fetch_org_by_query, _fetch_users_by_query, _fetch_users_in_org, _create_user, _update_user_email, \
     _update_user_metadata, _create_magic_link, _migrate_user_from_external_source, _create_org, _update_org_metadata, \
     _add_user_to_org, _delete_user, _disable_user, _enable_user, _allow_org_to_setup_saml_connection, \
-    _disallow_org_to_setup_saml_connection, _update_user_password, _create_access_token
+    _disallow_org_to_setup_saml_connection, _update_user_password, _create_access_token, _disable_user_2fa, \
+    _enable_user_can_create_orgs, _disable_user_can_create_orgs, _fetch_end_user_api_key, \
+    _fetch_current_end_user_api_keys, _fetch_archived_end_user_api_keys, _create_end_user_api_key, \
+    _update_end_user_api_key, _delete_end_user_api_key, _validate_end_user_api_key
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
     wrap_validate_access_token_and_get_user_with_org, \
     wrap_validate_access_token_and_get_user_with_org_by_minimum_role, \
@@ -57,8 +60,18 @@ Auth = namedtuple("Auth", [
     "delete_user",
     "disable_user",
     "enable_user",
+    "disable_user_2fa",
+    "enable_user_can_create_orgs",
+    "disable_user_can_create_orgs",
     "allow_org_to_setup_saml_connection",
-    "disallow_org_to_setup_saml_connection"
+    "disallow_org_to_setup_saml_connection",
+    "fetch_end_user_api_key",
+    "fetch_current_end_user_api_keys",
+    "fetch_archived_end_user_api_keys",
+    "create_end_user_api_key",
+    "update_end_user_api_key",
+    "delete_end_user_api_key",
+    "validate_end_user_api_key",
 ])
 
 
@@ -151,15 +164,48 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
     def enable_user(user_id):
         return _enable_user(auth_url, api_key, user_id)
 
+    def disable_user_2fa(user_id):
+        return _disable_user_2fa(auth_url, api_key, user_id)
+
+    def enable_user_can_create_orgs(user_id):
+        return _enable_user_can_create_orgs(auth_url, api_key, user_id)
+
+    def disable_user_can_create_orgs(user_id):
+        return _disable_user_can_create_orgs(auth_url, api_key, user_id)
+
     def allow_org_to_setup_saml_connection(org_id):
         return _allow_org_to_setup_saml_connection(auth_url, api_key, org_id)
 
     def disallow_org_to_setup_saml_connection(org_id):
         return _disallow_org_to_setup_saml_connection(auth_url, api_key, org_id)
 
+    # functions for end user api keys
+    
+    def fetch_end_user_api_key(end_user_api_key):
+        return _fetch_end_user_api_key(auth_url, api_key, end_user_api_key)
+
+    def fetch_current_end_user_api_keys(org_id: None, user_id: None, user_email: None, page_size: None, page_number: None):
+        return _fetch_current_end_user_api_keys(auth_url, api_key, org_id, user_id, user_email, page_size, page_number)
+
+    def fetch_archived_end_user_api_keys(org_id: None, user_id: None, user_email: None, page_size: None, page_number: None):
+        return _fetch_archived_end_user_api_keys(auth_url, api_key, org_id, user_id, user_email, page_size, page_number)
+
+    def create_end_user_api_key(org_id=None, user_id=None, expires_at_seconds=None, metadata=None):
+        return _create_end_user_api_key(auth_url, api_key, org_id, user_id, expires_at_seconds, metadata)
+
+    def update_end_user_api_key(end_user_api_key, expires_at_seconds=None, metadata=None):
+        return _update_end_user_api_key(auth_url, api_key, end_user_api_key, expires_at_seconds, metadata)
+
+    def delete_end_user_api_key(end_user_api_key):
+        return _delete_end_user_api_key(auth_url, api_key, end_user_api_key)
+
+    def validate_end_user_api_key(end_user_api_key):
+        return _validate_end_user_api_key(auth_url, api_key, end_user_api_key)
+
     validate_access_token_and_get_user = wrap_validate_access_token_and_get_user(token_verification_metadata)
 
-    validate_access_token_and_get_user_with_org = wrap_validate_access_token_and_get_user_with_org(token_verification_metadata)
+    validate_access_token_and_get_user_with_org = wrap_validate_access_token_and_get_user_with_org(
+        token_verification_metadata)
 
     validate_access_token_and_get_user_with_org_by_minimum_role = wrap_validate_access_token_and_get_user_with_org_by_minimum_role(
         token_verification_metadata
@@ -216,6 +262,17 @@ def init_base_auth(auth_url: str, api_key: str, token_verification_metadata: Tok
         enable_user=enable_user,
         disable_user=disable_user,
         delete_user=delete_user,
+        disable_user_2fa=disable_user_2fa,
+        enable_user_can_create_orgs=enable_user_can_create_orgs,
+        disable_user_can_create_orgs=disable_user_can_create_orgs,
         allow_org_to_setup_saml_connection=allow_org_to_setup_saml_connection,
         disallow_org_to_setup_saml_connection=disallow_org_to_setup_saml_connection,
+        # api key functions
+        fetch_end_user_api_key=fetch_end_user_api_key,
+        fetch_current_end_user_api_keys=fetch_current_end_user_api_keys,
+        fetch_archived_end_user_api_keys=fetch_archived_end_user_api_keys,
+        create_end_user_api_key=create_end_user_api_key,
+        update_end_user_api_key=update_end_user_api_key,
+        delete_end_user_api_key=delete_end_user_api_key,
+        validate_end_user_api_key=validate_end_user_api_key,
     )

@@ -6,7 +6,8 @@ import requests
 from requests.auth import AuthBase
 
 from propelauth_py.errors import CreateUserException, UpdateUserMetadataException, UpdateUserEmailException, \
-    BadRequestException, UpdateUserPasswordException, UserNotFoundException
+    BadRequestException, UpdateUserPasswordException, UserNotFoundException, EndUserApiKeyException, \
+    EndUserApiKeyNotFoundException
 
 TokenVerificationMetadata = namedtuple("TokenVerificationMetadata", [
     "verifier_key", "issuer"
@@ -255,6 +256,7 @@ def _update_user_metadata(auth_url, api_key, user_id, username=None, first_name=
 
     return True
 
+
 def _update_user_password(auth_url, api_key, user_id, password, ask_user_to_update_password_on_login):
     if not _is_valid_id(user_id):
         return False
@@ -275,6 +277,7 @@ def _update_user_password(auth_url, api_key, user_id, password, ask_user_to_upda
         raise RuntimeError("Unknown error when updating password")
 
     return True
+
 
 def _update_user_email(auth_url, api_key, user_id, new_email, require_email_confirmation):
     if not _is_valid_id(user_id):
@@ -370,9 +373,11 @@ def _migrate_user_from_external_source(auth_url, api_key, email, email_confirmed
     return response.json()
 
 
-def _create_org(auth_url, api_key, name):
+def _create_org(auth_url, api_key, name, max_users=None):
     url = auth_url + "/api/backend/v1/org/"
     json = {"name": name}
+    if max_users is not None:
+        json["max_users"] = max_users
 
     response = requests.post(url, json=json, auth=_ApiKeyAuth(api_key))
     if response.status_code == 401:
@@ -385,7 +390,7 @@ def _create_org(auth_url, api_key, name):
     return response.json()
 
 
-def _update_org_metadata(auth_url, api_key, org_id, name=None, can_setup_saml=None, metadata=None):
+def _update_org_metadata(auth_url, api_key, org_id, name=None, can_setup_saml=None, metadata=None, max_users=None):
     if not _is_valid_id(org_id):
         return False
 
@@ -397,6 +402,8 @@ def _update_org_metadata(auth_url, api_key, org_id, name=None, can_setup_saml=No
         json["can_setup_saml"] = can_setup_saml
     if metadata is not None:
         json["metadata"] = metadata
+    if max_users is not None:
+        json["max_users"] = max_users
 
     response = requests.put(url, json=json, auth=_ApiKeyAuth(api_key))
     if response.status_code == 401:
@@ -476,6 +483,57 @@ def _enable_user(auth_url, api_key, user_id):
     return True
 
 
+def _disable_user_2fa(auth_url, api_key, user_id):
+    if not _is_valid_id(user_id):
+        return False
+
+    url = auth_url + "/api/backend/v1/user/{}/disable_2fa".format(user_id)
+    response = requests.post(url, auth=_ApiKeyAuth(api_key))
+
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when enabling user")
+
+    return True
+
+
+def _enable_user_can_create_orgs(auth_url, api_key, user_id):
+    if not _is_valid_id(user_id):
+        return False
+
+    url = auth_url + "/api/backend/v1/user/{}/can_create_orgs/enable".format(user_id)
+    response = requests.put(url, auth=_ApiKeyAuth(api_key))
+
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when enabling can_create_orgs")
+
+    return True
+
+
+def _disable_user_can_create_orgs(auth_url, api_key, user_id):
+    if not _is_valid_id(user_id):
+        return False
+
+    url = auth_url + "/api/backend/v1/user/{}/can_create_orgs/disable".format(user_id)
+    response = requests.put(url, auth=_ApiKeyAuth(api_key))
+
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when disabling can_create_orgs")
+
+    return True
+
+
 def _allow_org_to_setup_saml_connection(auth_url, api_key, org_id):
     if not _is_valid_id(org_id):
         return False
@@ -506,6 +564,157 @@ def _disallow_org_to_setup_saml_connection(auth_url, api_key, org_id):
         raise RuntimeError("Unknown error when allowing org to setup SAML connection")
 
     return True
+
+
+def _fetch_end_user_api_key(auth_url, api_key, end_user_api_key):
+    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(end_user_api_key)
+    response = requests.get(url, auth=_ApiKeyAuth(api_key))
+
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif response.status_code == 404:
+        raise EndUserApiKeyNotFoundException()
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching end user api key")
+
+    return response.json()
+
+
+def _fetch_current_end_user_api_keys(auth_url, api_key, org_id, user_id, user_email, page_size, page_number):
+    url = auth_url + "/api/backend/v1/end_user_api_keys"
+    
+    query_params = {}
+    if org_id:
+        query_params["org_id"] = org_id
+    if user_id:
+        query_params["user_id"] = user_id
+    if user_email:
+        query_params["user_email"] = user_email
+    if page_size:
+        query_params["page_size"] = page_size
+    if page_number:
+        query_params["page_number"] = page_number
+        
+    response = requests.get(url, auth=_ApiKeyAuth(api_key), params=query_params)
+
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching current end user api keys")
+
+    return response.json()
+
+
+def _fetch_archived_end_user_api_keys(auth_url, api_key, org_id, user_id, user_email, page_size, page_number):
+    url = auth_url + "/api/backend/v1/end_user_api_keys/archived"
+    
+    query_params = {}
+    if org_id:
+        query_params["org_id"] = org_id
+    if user_id:
+        query_params["user_id"] = user_id
+    if user_email:
+        query_params["user_email"] = user_email
+    if page_size:
+        query_params["page_size"] = page_size
+    if page_number:
+        query_params["page_number"] = page_number
+
+    response = requests.get(url, auth=_ApiKeyAuth(api_key), params=query_params)
+
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching archived end user api keys")
+
+    return response.json()
+
+
+def _create_end_user_api_key(auth_url, api_key, org_id, user_id, expires_at_seconds, metadata):
+    url = auth_url + "/api/backend/v1/end_user_api_keys"
+    
+    json = {}
+    if org_id:
+        json["org_id"] = org_id
+    if user_id:
+        json["user_id"] = user_id
+    if expires_at_seconds:
+        json["expires_at_seconds"] = expires_at_seconds
+    if metadata:
+        json["metadata"] = metadata
+        
+    response = requests.post(url, auth=_ApiKeyAuth(api_key), json=json)
+
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif not response.ok:
+        raise RuntimeError("Unknown error when creating end user api key")
+
+    return response.json()
+
+
+def _update_end_user_api_key(auth_url, api_key, end_user_api_key, expires_at_seconds, metadata):
+    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(end_user_api_key)
+    
+    json = {}
+    if expires_at_seconds:
+        json["expires_at_seconds"] = expires_at_seconds
+    if metadata:
+        json["metadata"] = metadata
+    
+    response = requests.put(url, auth=_ApiKeyAuth(api_key), json=json)
+
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif response.status_code == 404:
+        raise EndUserApiKeyNotFoundException()
+    elif not response.ok:
+        raise RuntimeError("Unknown error when updating end user api key")
+
+    return True
+
+
+def _delete_end_user_api_key(auth_url, api_key, end_user_api_key):
+    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(end_user_api_key)
+    response = requests.delete(url, auth=_ApiKeyAuth(api_key))
+
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif response.status_code == 404:
+        raise EndUserApiKeyNotFoundException()
+    elif not response.ok:
+        raise RuntimeError("Unknown error when deleting end user api key")
+
+    return True
+
+
+def _validate_end_user_api_key(auth_url, api_key, end_user_api_key):
+    url = auth_url + "/api/backend/v1/end_user_api_keys"
+    json = {"api_key_token": end_user_api_key}
+    response = requests.post(url, auth=_ApiKeyAuth(api_key), json=json)
+    
+    if response.status_code == 401:
+        raise ValueError("api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif response.status_code == 404:
+        raise EndUserApiKeyNotFoundException()
+    elif not response.ok:
+        raise RuntimeError("Unknown error when validating end user api key")
+
+    return response.json()
 
 
 class OrgQueryOrderBy(str, Enum):
