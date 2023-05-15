@@ -735,11 +735,11 @@ class UserQueryOrderBy(str, Enum):
 class _ApiKeyAuth(AuthBase):
     """Attaches API Key Authentication to the given Request object."""
 
-    def __init__(self, api_key):
-        self.api_key = api_key
+    def __init__(self, integration_api_key):
+        self.integration_api_key = integration_api_key
 
     def __call__(self, r):
-        r.headers["Authorization"] = "Bearer " + self.api_key
+        r.headers["Authorization"] = "Bearer " + self.integration_api_key
         return r
 
 
