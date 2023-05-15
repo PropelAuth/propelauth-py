@@ -567,6 +567,9 @@ def _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id
 
 
 def _fetch_api_key(auth_url, integration_api_key, api_key):
+    if not _is_valid_hex(api_key):
+        return False
+
     url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key)
     response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
 
@@ -662,6 +665,9 @@ def _create_api_key(auth_url, integration_api_key, org_id, user_id, expires_at_s
 
 
 def _update_api_key(auth_url, integration_api_key, api_key, expires_at_seconds, metadata):
+    if not _is_valid_hex(api_key):
+        return False
+
     url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key)
 
     json = {}
@@ -685,6 +691,9 @@ def _update_api_key(auth_url, integration_api_key, api_key, expires_at_seconds, 
 
 
 def _delete_api_key(auth_url, integration_api_key, api_key):
+    if not _is_valid_hex(api_key):
+        return False
+
     url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key)
     response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key))
 
@@ -701,6 +710,9 @@ def _delete_api_key(auth_url, integration_api_key, api_key):
 
 
 def _validate_api_key(auth_url, integration_api_key, api_key):
+    if not _is_valid_hex(api_key):
+        return False
+
     url = auth_url + "/api/backend/v1/end_user_api_keys"
     json = {"api_key_token": api_key}
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key), json=json)
@@ -761,5 +773,12 @@ def _is_valid_id(identifier):
     try:
         uuid_obj = UUID(identifier, version=4)
         return str(uuid_obj) == identifier
+    except ValueError:
+        return False
+
+def _is_valid_hex(identifier):
+    try:
+        int(identifier, 16)
+        return True
     except ValueError:
         return False
