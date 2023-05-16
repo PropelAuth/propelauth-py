@@ -181,8 +181,8 @@ def init_base_auth(auth_url: str, integration_api_key: str, token_verification_m
 
     # functions for end user api keys
 
-    def fetch_api_key(api_key):
-        return _fetch_api_key(auth_url, integration_api_key, api_key)
+    def fetch_api_key(api_key_id):
+        return _fetch_api_key(auth_url, integration_api_key, api_key_id)
 
     def fetch_current_api_keys(org_id: None, user_id: None, user_email: None, page_size: None, page_number: None):
         return _fetch_current_api_keys(auth_url, integration_api_key, org_id, user_id, user_email, page_size, page_number)
@@ -193,14 +193,14 @@ def init_base_auth(auth_url: str, integration_api_key: str, token_verification_m
     def create_api_key(org_id=None, user_id=None, expires_at_seconds=None, metadata=None):
         return _create_api_key(auth_url, integration_api_key, org_id, user_id, expires_at_seconds, metadata)
 
-    def update_api_key(api_key, expires_at_seconds=None, metadata=None):
-        return _update_api_key(auth_url, integration_api_key, api_key, expires_at_seconds, metadata)
+    def update_api_key(api_key_id, expires_at_seconds=None, metadata=None):
+        return _update_api_key(auth_url, integration_api_key, api_key_id, expires_at_seconds, metadata)
 
-    def delete_api_key(api_key):
-        return _delete_api_key(auth_url, integration_api_key, api_key)
+    def delete_api_key(api_key_id):
+        return _delete_api_key(auth_url, integration_api_key, api_key_id)
 
-    def validate_api_key(api_key):
-        return _validate_api_key(auth_url, integration_api_key, api_key)
+    def validate_api_key(api_key_id):
+        return _validate_api_key(auth_url, integration_api_key, api_key_id)
 
     validate_access_token_and_get_user = wrap_validate_access_token_and_get_user(token_verification_metadata)
 
