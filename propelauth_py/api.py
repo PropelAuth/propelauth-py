@@ -711,12 +711,9 @@ def _delete_api_key(auth_url, integration_api_key, api_key_id):
     return True
 
 
-def _validate_api_key(auth_url, integration_api_key, api_key_id):
-    if not _is_valid_hex(api_key_id):
-        return False
-
+def _validate_api_key(auth_url, integration_api_key, api_key_token):
     url = auth_url + "/api/backend/v1/end_user_api_keys"
-    json = {"api_key_token": api_key_id}
+    json = {"api_key_token": api_key_token}
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key), json=json)
 
     if response.status_code == 401:

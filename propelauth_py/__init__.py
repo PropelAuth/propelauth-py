@@ -199,8 +199,8 @@ def init_base_auth(auth_url: str, integration_api_key: str, token_verification_m
     def delete_api_key(api_key_id):
         return _delete_api_key(auth_url, integration_api_key, api_key_id)
 
-    def validate_api_key(api_key_id):
-        return _validate_api_key(auth_url, integration_api_key, api_key_id)
+    def validate_api_key(api_key_token):
+        return _validate_api_key(auth_url, integration_api_key, api_key_token)
 
     validate_access_token_and_get_user = wrap_validate_access_token_and_get_user(token_verification_metadata)
 
