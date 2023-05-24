@@ -568,11 +568,11 @@ def _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id
     return True
 
 
-def _fetch_api_key(auth_url, integration_api_key, api_key):
-    if not _is_valid_hex(api_key):
+def _fetch_api_key(auth_url, integration_api_key, api_key_id):
+    if not _is_valid_hex(api_key_id):
         return False
 
-    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key)
+    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key_id)
     response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
 
     if response.status_code == 401:
@@ -666,11 +666,11 @@ def _create_api_key(auth_url, integration_api_key, org_id, user_id, expires_at_s
     return response.json()
 
 
-def _update_api_key(auth_url, integration_api_key, api_key, expires_at_seconds, metadata):
-    if not _is_valid_hex(api_key):
+def _update_api_key(auth_url, integration_api_key, api_key_id, expires_at_seconds, metadata):
+    if not _is_valid_hex(api_key_id):
         return False
 
-    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key)
+    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key_id)
 
     json = {}
     if expires_at_seconds:
@@ -692,11 +692,11 @@ def _update_api_key(auth_url, integration_api_key, api_key, expires_at_seconds, 
     return True
 
 
-def _delete_api_key(auth_url, integration_api_key, api_key):
-    if not _is_valid_hex(api_key):
+def _delete_api_key(auth_url, integration_api_key, api_key_id):
+    if not _is_valid_hex(api_key_id):
         return False
 
-    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key)
+    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key_id)
     response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key))
 
     if response.status_code == 401:
@@ -711,12 +711,9 @@ def _delete_api_key(auth_url, integration_api_key, api_key):
     return True
 
 
-def _validate_api_key(auth_url, integration_api_key, api_key):
-    if not _is_valid_hex(api_key):
-        return False
-
+def _validate_api_key(auth_url, integration_api_key, api_key_token):
     url = auth_url + "/api/backend/v1/end_user_api_keys"
-    json = {"api_key_token": api_key}
+    json = {"api_key_token": api_key_token}
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key), json=json)
 
     if response.status_code == 401:
@@ -777,6 +774,7 @@ def _is_valid_id(identifier):
         return str(uuid_obj) == identifier
     except ValueError:
         return False
+
 
 def _is_valid_hex(identifier):
     try:
