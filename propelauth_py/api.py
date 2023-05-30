@@ -90,11 +90,13 @@ def _fetch_batch_user_metadata_by_usernames(auth_url, integration_api_key, usern
     user_info_url = auth_url + "/api/backend/v1/user/usernames"
     params = {"include_orgs": include_orgs}
     body = {"usernames": usernames}
-    return _fetch_batch_user_metadata_by_query(user_info_url, integration_api_key, params, body, lambda x: x["username"])
+    return _fetch_batch_user_metadata_by_query(user_info_url, integration_api_key, params, body,
+                                               lambda x: x["username"])
 
 
 def _fetch_batch_user_metadata_by_query(user_info_url, integration_api_key, params, body, key_fn):
-    response = requests.post(user_info_url, params=_format_params(params), json=body, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.post(user_info_url, params=_format_params(params), json=body,
+                             auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 400:
@@ -150,7 +152,8 @@ def _fetch_org_by_query(auth_url, integration_api_key, page_size, page_number, o
     return response.json()
 
 
-def _fetch_users_by_query(auth_url, integration_api_key, page_size, page_number, order_by, email_or_username, include_orgs):
+def _fetch_users_by_query(auth_url, integration_api_key, page_size, page_number, order_by, email_or_username,
+                          include_orgs):
     url = auth_url + "/api/backend/v1/user/query"
     params = {
         "page_size": page_size,
@@ -229,7 +232,8 @@ def _create_user(auth_url, integration_api_key, email, email_confirmed, send_ema
     return response.json()
 
 
-def _update_user_metadata(auth_url, integration_api_key, user_id, username=None, first_name=None, last_name=None, metadata=None):
+def _update_user_metadata(auth_url, integration_api_key, user_id, username=None, first_name=None, last_name=None,
+                          metadata=None):
     if not _is_valid_id(user_id):
         return False
 
@@ -392,7 +396,8 @@ def _create_org(auth_url, integration_api_key, name, max_users=None):
     return response.json()
 
 
-def _update_org_metadata(auth_url, integration_api_key, org_id, name=None, can_setup_saml=None, metadata=None, max_users=None):
+def _update_org_metadata(auth_url, integration_api_key, org_id, name=None, can_setup_saml=None, metadata=None,
+                         max_users=None):
     if not _is_valid_id(org_id):
         return False
 
@@ -711,9 +716,31 @@ def _delete_api_key(auth_url, integration_api_key, api_key_id):
     return True
 
 
+def _validate_personal_api_key(auth_url, integration_api_key, api_key_token):
+    api_key_validation = _validate_api_key(auth_url, integration_api_key, api_key_token)
+    if not api_key_validation["user"] or api_key_validation["org"]:
+        raise EndUserApiKeyException({"api_key_token": ["Not a personal API Key"]})
+    return {
+        "user": api_key_validation["user"],
+        "metadata": api_key_validation["metadata"],
+    }
+
+
+def _validate_org_api_key(auth_url, integration_api_key, api_key_token):
+    api_key_validation = _validate_api_key(auth_url, integration_api_key, api_key_token)
+    if not api_key_validation["org"]:
+        raise EndUserApiKeyException({"api_key_token": ["Not an org API Key"]})
+    return {
+        "org": api_key_validation["org"],
+        "metadata": api_key_validation["metadata"],
+        "user": api_key_validation["user"],
+        "user_in_org": api_key_validation["user_in_org"],
+    }
+
+
 def _validate_api_key(auth_url, integration_api_key, api_key_token):
     url = auth_url + "/api/backend/v1/end_user_api_keys"
-    json = {"api_key_token": api_key_token}
+    json = {"api_key_token": remove_bearer_if_exists(api_key_token)}
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key), json=json)
 
     if response.status_code == 401:
@@ -752,6 +779,15 @@ class _ApiKeyAuth(AuthBase):
     def __call__(self, r):
         r.headers["Authorization"] = "Bearer " + self.integration_api_key
         return r
+
+
+def remove_bearer_if_exists(token: str) -> str:
+    if not token:
+        return token
+    elif token.lower().startswith("bearer "):
+        return token[7:]
+    else:
+        return token
 
 
 def _format_params(params):

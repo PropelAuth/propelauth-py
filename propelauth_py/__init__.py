@@ -10,7 +10,7 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _disallow_org_to_setup_saml_connection, _update_user_password, _create_access_token, _disable_user_2fa, \
     _enable_user_can_create_orgs, _disable_user_can_create_orgs, _fetch_api_key, \
     _fetch_current_api_keys, _fetch_archived_api_keys, _create_api_key, \
-    _update_api_key, _delete_api_key, _validate_api_key
+    _update_api_key, _delete_api_key, _validate_api_key, _validate_personal_api_key, _validate_org_api_key
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
     wrap_validate_access_token_and_get_user_with_org, \
     wrap_validate_access_token_and_get_user_with_org_by_minimum_role, \
@@ -71,6 +71,8 @@ Auth = namedtuple("Auth", [
     "create_api_key",
     "update_api_key",
     "delete_api_key",
+    "validate_personal_api_key",
+    "validate_org_api_key",
     "validate_api_key",
 ])
 
@@ -199,6 +201,12 @@ def init_base_auth(auth_url: str, integration_api_key: str, token_verification_m
     def delete_api_key(api_key_id):
         return _delete_api_key(auth_url, integration_api_key, api_key_id)
 
+    def validate_personal_api_key(api_key_token):
+        return _validate_personal_api_key(auth_url, integration_api_key, api_key_token)
+
+    def validate_org_api_key(api_key_token):
+        return _validate_org_api_key(auth_url, integration_api_key, api_key_token)
+
     def validate_api_key(api_key_token):
         return _validate_api_key(auth_url, integration_api_key, api_key_token)
 
@@ -275,4 +283,6 @@ def init_base_auth(auth_url: str, integration_api_key: str, token_verification_m
         update_api_key=update_api_key,
         delete_api_key=delete_api_key,
         validate_api_key=validate_api_key,
+        validate_personal_api_key=validate_personal_api_key,
+        validate_org_api_key=validate_org_api_key,
     )
