@@ -186,10 +186,10 @@ def init_base_auth(auth_url: str, integration_api_key: str, token_verification_m
     def fetch_api_key(api_key_id):
         return _fetch_api_key(auth_url, integration_api_key, api_key_id)
 
-    def fetch_current_api_keys(org_id: None, user_id: None, user_email: None, page_size: None, page_number: None):
+    def fetch_current_api_keys(org_id=None, user_id=None, user_email=None, page_size=None, page_number=None):
         return _fetch_current_api_keys(auth_url, integration_api_key, org_id, user_id, user_email, page_size, page_number)
 
-    def fetch_archived_api_keys(org_id: None, user_id: None, user_email: None, page_size: None, page_number: None):
+    def fetch_archived_api_keys(org_id=None, user_id=None, user_email=None, page_size=None, page_number=None):
         return _fetch_archived_api_keys(auth_url, integration_api_key, org_id, user_id, user_email, page_size, page_number)
 
     def create_api_key(org_id=None, user_id=None, expires_at_seconds=None, metadata=None):

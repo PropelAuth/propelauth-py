@@ -683,7 +683,7 @@ def _update_api_key(auth_url, integration_api_key, api_key_id, expires_at_second
     if metadata:
         json["metadata"] = metadata
 
-    response = requests.put(url, auth=_ApiKeyAuth(integration_api_key), json=json)
+    response = requests.patch(url, auth=_ApiKeyAuth(integration_api_key), json=json)
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -739,7 +739,7 @@ def _validate_org_api_key(auth_url, integration_api_key, api_key_token):
 
 
 def _validate_api_key(auth_url, integration_api_key, api_key_token):
-    url = auth_url + "/api/backend/v1/end_user_api_keys"
+    url = auth_url + "/api/backend/v1/end_user_api_keys/validate"
     json = {"api_key_token": remove_bearer_if_exists(api_key_token)}
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key), json=json)
 
