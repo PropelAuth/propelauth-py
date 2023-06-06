@@ -34,7 +34,7 @@ def test_validate_with_wrong_token(auth, rsa_keys):
 
 def test_validate_with_expired_token(auth, rsa_keys):
     user_id = random_user_id()
-    access_token = create_access_token({"user_id": user_id}, rsa_keys.private_pem, expires_in=timedelta(minutes=-1))
+    access_token = create_access_token({"user_id": user_id}, rsa_keys.private_pem, expires_in=timedelta(minutes=-5))
     with pytest.raises(UnauthorizedException):
         auth.validate_access_token_and_get_user("Bearer " + access_token)
 
