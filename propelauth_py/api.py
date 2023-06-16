@@ -93,11 +93,13 @@ def _fetch_batch_user_metadata_by_usernames(auth_url, integration_api_key, usern
     user_info_url = auth_url + "/api/backend/v1/user/usernames"
     params = {"include_orgs": include_orgs}
     body = {"usernames": usernames}
-    return _fetch_batch_user_metadata_by_query(user_info_url, integration_api_key, params, body, lambda x: x["username"])
+    return _fetch_batch_user_metadata_by_query(user_info_url, integration_api_key, params, body,
+                                               lambda x: x["username"])
 
 
 def _fetch_batch_user_metadata_by_query(user_info_url, integration_api_key, params, body, key_fn):
-    response = requests.post(user_info_url, params=_format_params(params), json=body, auth=_ApiKeyAuth(integration_api_key), headers=_add_normal_headers())
+    response = requests.post(user_info_url, params=_format_params(params), json=body,
+                             auth=_ApiKeyAuth(integration_api_key), headers=_add_normal_headers())
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -158,7 +160,8 @@ def _fetch_org_by_query(auth_url, integration_api_key, page_size, page_number, o
     return response.json()
 
 
-def _fetch_users_by_query(auth_url, integration_api_key, page_size, page_number, order_by, email_or_username, include_orgs):
+def _fetch_users_by_query(auth_url, integration_api_key, page_size, page_number, order_by, email_or_username,
+                          include_orgs):
     url = auth_url + "/api/backend/v1/user/query"
     params = {
         "page_size": page_size,
@@ -243,7 +246,8 @@ def _create_user(auth_url, integration_api_key, email, email_confirmed, send_ema
     return response.json()
 
 
-def _update_user_metadata(auth_url, integration_api_key, user_id, username=None, first_name=None, last_name=None, metadata=None):
+def _update_user_metadata(auth_url, integration_api_key, user_id, username=None, first_name=None, last_name=None,
+                          metadata=None):
     if not _is_valid_id(user_id):
         return False
 
@@ -413,7 +417,8 @@ def _create_org(auth_url, integration_api_key, name, max_users=None):
     return response.json()
 
 
-def _update_org_metadata(auth_url, integration_api_key, org_id, name=None, can_setup_saml=None, metadata=None, max_users=None):
+def _update_org_metadata(auth_url, integration_api_key, org_id, name=None, can_setup_saml=None, metadata=None,
+                         max_users=None):
     if not _is_valid_id(org_id):
         return False
 
@@ -596,11 +601,11 @@ def _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id
     return True
 
 
-def _fetch_api_key(auth_url, integration_api_key, api_key):
-    if not _is_valid_hex(api_key):
+def _fetch_api_key(auth_url, integration_api_key, api_key_id):
+    if not _is_valid_hex(api_key_id):
         return False
 
-    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key)
+    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key_id)
     response = requests.get(url, auth=_ApiKeyAuth(integration_api_key), headers=_add_normal_headers())
 
     if response.status_code == 401:
@@ -694,11 +699,11 @@ def _create_api_key(auth_url, integration_api_key, org_id, user_id, expires_at_s
     return response.json()
 
 
-def _update_api_key(auth_url, integration_api_key, api_key, expires_at_seconds, metadata):
-    if not _is_valid_hex(api_key):
+def _update_api_key(auth_url, integration_api_key, api_key_id, expires_at_seconds, metadata):
+    if not _is_valid_hex(api_key_id):
         return False
 
-    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key)
+    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key_id)
 
     json = {}
     if expires_at_seconds:
@@ -706,7 +711,7 @@ def _update_api_key(auth_url, integration_api_key, api_key, expires_at_seconds, 
     if metadata:
         json["metadata"] = metadata
 
-    response = requests.put(url, auth=_ApiKeyAuth(integration_api_key), json=json, headers=_add_normal_headers())
+    response = requests.patch(url, auth=_ApiKeyAuth(integration_api_key), json=json, headers=_add_normal_headers())
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -720,11 +725,11 @@ def _update_api_key(auth_url, integration_api_key, api_key, expires_at_seconds, 
     return True
 
 
-def _delete_api_key(auth_url, integration_api_key, api_key):
-    if not _is_valid_hex(api_key):
+def _delete_api_key(auth_url, integration_api_key, api_key_id):
+    if not _is_valid_hex(api_key_id):
         return False
 
-    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key)
+    url = auth_url + "/api/backend/v1/end_user_api_keys/{}".format(api_key_id)
     response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key), headers=_add_normal_headers())
 
     if response.status_code == 401:
@@ -739,12 +744,31 @@ def _delete_api_key(auth_url, integration_api_key, api_key):
     return True
 
 
-def _validate_api_key(auth_url, integration_api_key, api_key):
-    if not _is_valid_hex(api_key):
-        return False
+def _validate_personal_api_key(auth_url, integration_api_key, api_key_token):
+    api_key_validation = _validate_api_key(auth_url, integration_api_key, api_key_token)
+    if not api_key_validation["user"] or api_key_validation["org"]:
+        raise EndUserApiKeyException({"api_key_token": ["Not a personal API Key"]})
+    return {
+        "user": api_key_validation["user"],
+        "metadata": api_key_validation["metadata"],
+    }
 
-    url = auth_url + "/api/backend/v1/end_user_api_keys"
-    json = {"api_key_token": api_key}
+
+def _validate_org_api_key(auth_url, integration_api_key, api_key_token):
+    api_key_validation = _validate_api_key(auth_url, integration_api_key, api_key_token)
+    if not api_key_validation["org"]:
+        raise EndUserApiKeyException({"api_key_token": ["Not an org API Key"]})
+    return {
+        "org": api_key_validation["org"],
+        "metadata": api_key_validation["metadata"],
+        "user": api_key_validation["user"],
+        "user_in_org": api_key_validation["user_in_org"],
+    }
+
+
+def _validate_api_key(auth_url, integration_api_key, api_key_token):
+    url = auth_url + "/api/backend/v1/end_user_api_keys/validate"
+    json = {"api_key_token": remove_bearer_if_exists(api_key_token)}
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key), json=json, headers=_add_normal_headers())
 
     if response.status_code == 401:
@@ -785,6 +809,15 @@ class _ApiKeyAuth(AuthBase):
         return r
 
 
+def remove_bearer_if_exists(token: str) -> str:
+    if not token:
+        return token
+    elif token.lower().startswith("bearer "):
+        return token[7:]
+    else:
+        return token
+
+
 def _format_params(params):
     return {key: _format_param(value) for key, value in params.items() if value is not None}
 
@@ -800,7 +833,7 @@ def _format_param(param):
 
 
 def _add_normal_headers():
-    user_agent = "propelauth-py python/" + platform.python_version() + " " + platform.system()
+    user_agent = "propelauth-py/3.2 python/" + platform.python_version() + " " + platform.platform()
     return {"Content-Type": "application/json", "User-Agent": user_agent}
 
 

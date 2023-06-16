@@ -42,6 +42,7 @@ def test_validate_exact_org_role_and_get_org(auth, rsa_keys):
     with pytest.raises(ForbiddenException):
         auth.validate_access_token_and_get_user_with_org_by_exact_role("Bearer " + access_token, org["org_id"], "Member")
 
+
 def test_validate_permission_and_get_org(auth, rsa_keys):
     user_id = random_user_id()
     org = random_org("Admin")
