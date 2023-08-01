@@ -208,7 +208,7 @@ def _fetch_users_in_org(auth_url, integration_api_key, org_id, page_size, page_n
 
 def _create_user(auth_url, integration_api_key, email, email_confirmed, send_email_to_confirm_email_address,
                  ask_user_to_update_password_on_login,
-                 password, username, first_name, last_name):
+                 password, username, first_name, last_name, properties):
     url = auth_url + "/api/backend/v1/user/"
     json = {"email": email, "email_confirmed": email_confirmed,
             "send_email_to_confirm_email_address": send_email_to_confirm_email_address,
@@ -221,6 +221,8 @@ def _create_user(auth_url, integration_api_key, email, email_confirmed, send_ema
         json["first_name"] = first_name
     if last_name is not None:
         json["last_name"] = last_name
+    if properties is not None:
+        json["properties"] = properties
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -233,7 +235,7 @@ def _create_user(auth_url, integration_api_key, email, email_confirmed, send_ema
 
 
 def _update_user_metadata(auth_url, integration_api_key, user_id, username=None, first_name=None, last_name=None,
-                          metadata=None):
+                          metadata=None, properties=None):
     if not _is_valid_id(user_id):
         return False
 
@@ -247,6 +249,8 @@ def _update_user_metadata(auth_url, integration_api_key, user_id, username=None,
         json["last_name"] = last_name
     if metadata is not None:
         json["metadata"] = metadata
+    if properties is not None:
+        json["properties"] = properties
 
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
@@ -353,7 +357,8 @@ def _migrate_user_from_external_source(auth_url, integration_api_key, email, ema
                                        existing_user_id=None, existing_password_hash=None,
                                        existing_mfa_base32_encoded_secret=None,
                                        ask_user_to_update_password_on_login=False,
-                                       enabled=None, first_name=None, last_name=None, username=None):
+                                       enabled=None, first_name=None, last_name=None, username=None,
+                                       properties=None):
     url = auth_url + "/api/backend/v1/migrate_user/"
     json = {
         "email": email,
@@ -365,7 +370,8 @@ def _migrate_user_from_external_source(auth_url, integration_api_key, email, ema
         "enabled": enabled,
         "first_name": first_name,
         "last_name": last_name,
-        "username": username
+        "username": username,
+        "properties": properties
     }
 
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
