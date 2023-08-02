@@ -3,7 +3,7 @@ from propelauth_py.errors import UnauthorizedException
 
 class User:
     def __init__(self, user_id, org_id_to_org_member_info, email, first_name=None, last_name=None, username=None,
-                 legacy_user_id=None, impersonator_user_id=None, metadata=None):
+                 legacy_user_id=None, impersonator_user_id=None, metadata=None, properties=None):
         self.user_id = user_id
         self.org_id_to_org_member_info = org_id_to_org_member_info
         self.email = email
@@ -13,13 +13,14 @@ class User:
         self.legacy_user_id = legacy_user_id
         self.impersonator_user_id = impersonator_user_id
         self.metadata = metadata
+        self.properties = properties
 
     def __eq__(self, other):
         if isinstance(other, User):
             return self.user_id == other.user_id and self.org_id_to_org_member_info == other.org_id_to_org_member_info \
                 and self.legacy_user_id == other.legacy_user_id and self.impersonator_user_id == other.impersonator_user_id \
                 and self.email == other.email and self.first_name == other.first_name and self.last_name == other.last_name \
-                and self.username == other.username and self.metadata == other.metadata
+                and self.username == other.username and self.metadata == other.metadata and self.properties == other.properties
 
         return False
 
@@ -103,4 +104,5 @@ def _to_user(decoded_token):
                 username=decoded_token.get("username"),
                 legacy_user_id=decoded_token.get("legacy_user_id"),
                 impersonator_user_id=decoded_token.get("impersonator_user_id"),
-                metadata=decoded_token.get("metadata"))
+                metadata=decoded_token.get("metadata"),
+                properties=decoded_token.get("properties"))

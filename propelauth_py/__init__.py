@@ -116,16 +116,17 @@ def init_base_auth(auth_url: str, integration_api_key: str, token_verification_m
 
     def create_user(email, email_confirmed=False, send_email_to_confirm_email_address=True,
                     ask_user_to_update_password_on_login=False,
-                    password=None, username=None, first_name=None, last_name=None):
+                    password=None, username=None, first_name=None, last_name=None,
+                    properties=None):
         return _create_user(auth_url, integration_api_key, email, email_confirmed, send_email_to_confirm_email_address,
                             ask_user_to_update_password_on_login,
-                            password, username, first_name, last_name)
+                            password, username, first_name, last_name, properties)
 
     def update_user_email(user_id, new_email, require_email_confirmation):
         return _update_user_email(auth_url, integration_api_key, user_id, new_email, require_email_confirmation)
 
-    def update_user_metadata(user_id, username=None, first_name=None, last_name=None, metadata=None):
-        return _update_user_metadata(auth_url, integration_api_key, user_id, username, first_name, last_name, metadata)
+    def update_user_metadata(user_id, username=None, first_name=None, last_name=None, metadata=None, properties=None):
+        return _update_user_metadata(auth_url, integration_api_key, user_id, username, first_name, last_name, metadata, properties)
 
     def update_user_password(user_id, password, ask_user_to_update_password_on_login=False):
         return _update_user_password(auth_url, integration_api_key, user_id, password, ask_user_to_update_password_on_login)
@@ -141,12 +142,13 @@ def init_base_auth(auth_url: str, integration_api_key: str, token_verification_m
                                           existing_user_id=None, existing_password_hash=None,
                                           existing_mfa_base32_encoded_secret=None,
                                           ask_user_to_update_password_on_login=False,
-                                          enabled=None, first_name=None, last_name=None, username=None):
+                                          enabled=None, first_name=None, last_name=None, username=None,
+                                          properties=None):
         return _migrate_user_from_external_source(auth_url, integration_api_key, email, email_confirmed,
                                                   existing_user_id, existing_password_hash,
                                                   existing_mfa_base32_encoded_secret,
                                                   ask_user_to_update_password_on_login,
-                                                  enabled, first_name, last_name, username)
+                                                  enabled, first_name, last_name, username, properties)
 
     def create_org(name):
         return _create_org(auth_url, integration_api_key, name)
