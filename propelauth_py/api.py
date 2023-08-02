@@ -445,7 +445,7 @@ def _invite_user_to_org(auth_url, integration_api_key, email, org_id, role):
     url = auth_url + "/api/backend/v1/invite_user"
     json = {"email": email, "org_id": org_id, "role": role}
 
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key), headers=_add_normal_headers())
+    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
