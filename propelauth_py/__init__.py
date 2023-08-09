@@ -10,7 +10,8 @@ from propelauth_py.api import _fetch_token_verification_metadata, TokenVerificat
     _disallow_org_to_setup_saml_connection, _update_user_password, _create_access_token, _disable_user_2fa, \
     _enable_user_can_create_orgs, _disable_user_can_create_orgs, _fetch_api_key, \
     _fetch_current_api_keys, _fetch_archived_api_keys, _create_api_key, \
-    _update_api_key, _delete_api_key, _validate_api_key, _validate_personal_api_key, _validate_org_api_key
+    _update_api_key, _delete_api_key, _validate_api_key, _validate_personal_api_key, _validate_org_api_key, \
+    _delete_org
 from propelauth_py.auth_fns import wrap_validate_access_token_and_get_user, \
     wrap_validate_access_token_and_get_user_with_org, \
     wrap_validate_access_token_and_get_user_with_org_by_minimum_role, \
@@ -44,6 +45,7 @@ Auth = namedtuple("Auth", [
     "fetch_batch_user_metadata_by_emails",
     "fetch_batch_user_metadata_by_usernames",
     "fetch_org",
+    "delete_org",
     "fetch_org_by_query",
     "fetch_users_by_query",
     "fetch_users_in_org",
@@ -102,6 +104,9 @@ def init_base_auth(auth_url: str, integration_api_key: str, token_verification_m
 
     def fetch_org(org_id):
         return _fetch_org(auth_url, integration_api_key, org_id)
+
+    def delete_org(org_id):
+        return _delete_org(auth_url, integration_api_key, org_id)
 
     def fetch_org_by_query(page_size=10, page_number=0, order_by=OrgQueryOrderBy.CREATED_AT_ASC):
         return _fetch_org_by_query(auth_url, integration_api_key, page_size, page_number, order_by)
@@ -256,6 +261,7 @@ def init_base_auth(auth_url: str, integration_api_key: str, token_verification_m
         fetch_batch_user_metadata_by_emails=fetch_batch_user_metadata_by_emails,
         fetch_batch_user_metadata_by_usernames=fetch_batch_user_metadata_by_usernames,
         fetch_org=fetch_org,
+        delete_org=delete_org,
         fetch_org_by_query=fetch_org_by_query,
         fetch_users_by_query=fetch_users_by_query,
         fetch_users_in_org=fetch_users_in_org,

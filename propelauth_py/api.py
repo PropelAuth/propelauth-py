@@ -131,6 +131,25 @@ def _fetch_org(auth_url, integration_api_key, org_id):
     return response.json()
 
 
+def _delete_org(auth_url, integration_api_key, org_id):
+    if not _is_valid_id(org_id):
+        return None
+
+    url = auth_url + "/api/backend/v1/org/{}".format(org_id)
+    response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key))
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 404:
+        return None
+    elif response.status_code == 426:
+        raise RuntimeError("Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+                           "dashboard.")
+    elif not response.ok:
+        raise RuntimeError("Unknown error when deleting org")
+
+    return response.json()
+
+
 def _fetch_org_by_query(auth_url, integration_api_key, page_size, page_number, order_by):
     url = auth_url + "/api/backend/v1/org/query"
     params = {
