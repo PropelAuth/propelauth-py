@@ -403,7 +403,8 @@ def _create_org(auth_url, integration_api_key, name, max_users=None):
 
 
 def _update_org_metadata(auth_url, integration_api_key, org_id, name=None, can_setup_saml=None, metadata=None,
-                         max_users=None):
+                         max_users=None, domain=None, users_can_join_with_email_domain_match=None,
+                         members_must_have_matching_email_domain=None):
     if not _is_valid_id(org_id):
         return False
 
@@ -417,6 +418,12 @@ def _update_org_metadata(auth_url, integration_api_key, org_id, name=None, can_s
         json["metadata"] = metadata
     if max_users is not None:
         json["max_users"] = max_users
+    if domain is not None:
+        json["domain"] = domain
+    if users_can_join_with_email_domain_match is not None:
+        json["autojoin_by_domain"] = users_can_join_with_email_domain_match
+    if members_must_have_matching_email_domain is not None:
+        json["restrict_to_domain"] = members_must_have_matching_email_domain
 
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:

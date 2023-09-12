@@ -153,8 +153,10 @@ def init_base_auth(auth_url: str, integration_api_key: str, token_verification_m
     def create_org(name):
         return _create_org(auth_url, integration_api_key, name)
 
-    def update_org_metadata(org_id, name=None, can_setup_saml=None, metadata=None):
-        return _update_org_metadata(auth_url, integration_api_key, org_id, name, can_setup_saml, metadata)
+    def update_org_metadata(org_id, name=None, can_setup_saml=None, metadata=None, domain=None,
+                            users_can_join_with_email_domain_match=None, members_must_have_matching_email_domain=None):
+        return _update_org_metadata(auth_url, integration_api_key, org_id, name, can_setup_saml, metadata, domain,
+                                    users_can_join_with_email_domain_match, members_must_have_matching_email_domain)
 
     def add_user_to_org(user_id, org_id, role):
         return _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role)
