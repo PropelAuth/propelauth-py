@@ -5,22 +5,31 @@ from uuid import UUID
 import requests
 from requests.auth import AuthBase
 
-from propelauth_py.errors import CreateUserException, UpdateUserMetadataException, UpdateUserEmailException, \
-    BadRequestException, UpdateUserPasswordException, UserNotFoundException, EndUserApiKeyException, \
-    EndUserApiKeyNotFoundException
+from propelauth_py.errors import (
+    UpdateUserMetadataException,
+    BadRequestException,
+    UserNotFoundException,
+    EndUserApiKeyException,
+    EndUserApiKeyNotFoundException,
+)
 
-TokenVerificationMetadata = namedtuple("TokenVerificationMetadata", [
-    "verifier_key", "issuer"
-])
+TokenVerificationMetadata = namedtuple(
+    "TokenVerificationMetadata", ["verifier_key", "issuer"]
+)
 
 
-def _fetch_token_verification_metadata(auth_url: str, integration_api_key: str,
-                                       token_verification_metadata: TokenVerificationMetadata):
+def _fetch_token_verification_metadata(
+    auth_url: str,
+    integration_api_key: str,
+    token_verification_metadata: TokenVerificationMetadata,
+):
     if token_verification_metadata is not None:
         return token_verification_metadata
 
     token_verification_metadata_url = auth_url + "/api/v1/token_verification_metadata"
-    response = requests.get(token_verification_metadata_url, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.get(
+        token_verification_metadata_url, auth=_ApiKeyAuth(integration_api_key)
+    )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 400:
@@ -37,81 +46,6 @@ def _fetch_token_verification_metadata(auth_url: str, integration_api_key: str,
     )
 
 
-def _fetch_user_metadata_by_user_id(auth_url, integration_api_key, user_id, include_orgs=False):
-    if not _is_valid_id(user_id):
-        return None
-
-    user_info_url = auth_url + "/api/backend/v1/user/{}".format(user_id)
-    query = {"include_orgs": include_orgs}
-    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query)
-
-
-def _fetch_user_metadata_by_email(auth_url, integration_api_key, email, include_orgs=False):
-    user_info_url = auth_url + "/api/backend/v1/user/email"
-    query = {"include_orgs": include_orgs, "email": email}
-    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query)
-
-
-def _fetch_user_metadata_by_username(auth_url, integration_api_key, username, include_orgs=False):
-    user_info_url = auth_url + "/api/backend/v1/user/username"
-    query = {"include_orgs": include_orgs, "username": username}
-    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query)
-
-
-def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query):
-    response = requests.get(user_info_url, params=_format_params(query), auth=_ApiKeyAuth(integration_api_key))
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 400:
-        raise ValueError("Bad request: " + response.text)
-    elif response.status_code == 404:
-        return None
-    elif not response.ok:
-        raise RuntimeError("Unknown error when fetching user metadata")
-
-    return response.json()
-
-
-def _fetch_batch_user_metadata_by_user_ids(auth_url, integration_api_key, user_ids, include_orgs):
-    user_info_url = auth_url + "/api/backend/v1/user/user_ids"
-    params = {"include_orgs": include_orgs}
-    body = {"user_ids": user_ids}
-    return _fetch_batch_user_metadata_by_query(user_info_url, integration_api_key, params, body, lambda x: x["user_id"])
-
-
-def _fetch_batch_user_metadata_by_emails(auth_url, integration_api_key, emails, include_orgs):
-    user_info_url = auth_url + "/api/backend/v1/user/emails"
-    params = {"include_orgs": include_orgs}
-    body = {"emails": emails}
-    return _fetch_batch_user_metadata_by_query(user_info_url, integration_api_key, params, body, lambda x: x["email"])
-
-
-def _fetch_batch_user_metadata_by_usernames(auth_url, integration_api_key, usernames, include_orgs):
-    user_info_url = auth_url + "/api/backend/v1/user/usernames"
-    params = {"include_orgs": include_orgs}
-    body = {"usernames": usernames}
-    return _fetch_batch_user_metadata_by_query(user_info_url, integration_api_key, params, body,
-                                               lambda x: x["username"])
-
-
-def _fetch_batch_user_metadata_by_query(user_info_url, integration_api_key, params, body, key_fn):
-    response = requests.post(user_info_url, params=_format_params(params), json=body,
-                             auth=_ApiKeyAuth(integration_api_key))
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 400:
-        raise ValueError("Bad request: " + response.text)
-    elif not response.ok:
-        raise RuntimeError("Unknown error when fetching batch user metadata")
-
-    json_response = response.json()
-    return_value = {}
-    for single_item in json_response:
-        return_value[key_fn(single_item)] = single_item
-
-    return return_value
-
-
 def _fetch_org(auth_url, integration_api_key, org_id):
     if not _is_valid_id(org_id):
         return None
@@ -123,195 +57,51 @@ def _fetch_org(auth_url, integration_api_key, org_id):
     elif response.status_code == 404:
         return None
     elif response.status_code == 426:
-        raise RuntimeError("Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
-                           "dashboard.")
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
     elif not response.ok:
         raise RuntimeError("Unknown error when fetching org")
 
     return response.json()
 
 
-def _fetch_org_by_query(auth_url, integration_api_key, page_size, page_number, order_by):
+def _fetch_org_by_query(
+    auth_url, integration_api_key, page_size, page_number, order_by
+):
     url = auth_url + "/api/backend/v1/org/query"
     params = {
         "page_size": page_size,
         "page_number": page_number,
         "order_by": order_by,
     }
-    response = requests.get(url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key))
+    response = requests.get(
+        url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key)
+    )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 400:
         raise ValueError("Bad request: " + response.text)
     elif response.status_code == 426:
-        raise RuntimeError("Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
-                           "dashboard.")
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
     elif not response.ok:
         raise RuntimeError("Unknown error when fetching orgs by query")
 
     return response.json()
 
 
-def _fetch_users_by_query(auth_url, integration_api_key, page_size, page_number, order_by, email_or_username,
-                          include_orgs):
-    url = auth_url + "/api/backend/v1/user/query"
-    params = {
-        "page_size": page_size,
-        "page_number": page_number,
-        "order_by": order_by,
-        "email_or_username": email_or_username,
-        "include_orgs": include_orgs,
-    }
-    response = requests.get(url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key))
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 400:
-        raise ValueError("Bad request: " + response.text)
-    elif response.status_code == 426:
-        raise RuntimeError("Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
-                           "dashboard.")
-    elif not response.ok:
-        raise RuntimeError("Unknown error when fetching orgs by query")
-
-    return response.json()
-
-
-def _fetch_users_in_org(auth_url, integration_api_key, org_id, page_size, page_number, include_orgs):
-    if not _is_valid_id(org_id):
-        return {
-            "users": [],
-            "total_users": 0,
-            "current_page": page_number,
-            "page_size": page_size,
-            "has_more_results": False
-        }
-
-    url = auth_url + "/api/backend/v1/user/org/{}".format(org_id)
-    params = {
-        "page_size": page_size,
-        "page_number": page_number,
-        "include_orgs": include_orgs,
-    }
-    response = requests.get(url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key))
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 400:
-        raise ValueError("Bad request: " + response.text)
-    elif response.status_code == 426:
-        raise RuntimeError("Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
-                           "dashboard.")
-    elif not response.ok:
-        raise RuntimeError("Unknown error when fetching users in org")
-
-    return response.json()
-
-
-def _create_user(auth_url, integration_api_key, email, email_confirmed, send_email_to_confirm_email_address,
-                 ask_user_to_update_password_on_login,
-                 password, username, first_name, last_name, properties):
-    url = auth_url + "/api/backend/v1/user/"
-    json = {"email": email, "email_confirmed": email_confirmed,
-            "send_email_to_confirm_email_address": send_email_to_confirm_email_address,
-            "ask_user_to_update_password_on_login": ask_user_to_update_password_on_login}
-    if password is not None:
-        json["password"] = password
-    if username is not None:
-        json["username"] = username
-    if first_name is not None:
-        json["first_name"] = first_name
-    if last_name is not None:
-        json["last_name"] = last_name
-    if properties is not None:
-        json["properties"] = properties
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 400:
-        raise CreateUserException(response.json())
-    elif not response.ok:
-        raise RuntimeError("Unknown error when creating user")
-
-    return response.json()
-
-
-def _update_user_metadata(auth_url, integration_api_key, user_id, username=None, first_name=None, last_name=None,
-                          metadata=None, properties=None):
-    if not _is_valid_id(user_id):
-        return False
-
-    url = auth_url + "/api/backend/v1/user/{}".format(user_id)
-    json = {}
-    if username is not None:
-        json["username"] = username
-    if first_name is not None:
-        json["first_name"] = first_name
-    if last_name is not None:
-        json["last_name"] = last_name
-    if metadata is not None:
-        json["metadata"] = metadata
-    if properties is not None:
-        json["properties"] = properties
-
-    response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 400:
-        raise UpdateUserMetadataException(response.json())
-    elif response.status_code == 404:
-        return False
-    elif not response.ok:
-        raise RuntimeError("Unknown error when updating metadata")
-
-    return True
-
-
-def _update_user_password(auth_url, integration_api_key, user_id, password, ask_user_to_update_password_on_login):
-    if not _is_valid_id(user_id):
-        return False
-
-    url = auth_url + "/api/backend/v1/user/{}/password".format(user_id)
-    json = {"password": password}
-    if ask_user_to_update_password_on_login is not None:
-        json["ask_user_to_update_password_on_login"] = ask_user_to_update_password_on_login
-
-    response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 400:
-        raise UpdateUserPasswordException(response.json())
-    elif response.status_code == 404:
-        return False
-    elif not response.ok:
-        raise RuntimeError("Unknown error when updating password")
-
-    return True
-
-
-def _update_user_email(auth_url, integration_api_key, user_id, new_email, require_email_confirmation):
-    if not _is_valid_id(user_id):
-        return False
-
-    url = auth_url + "/api/backend/v1/user/{}/email".format(user_id)
-    json = {
-        "new_email": new_email,
-        "require_email_confirmation": require_email_confirmation,
-    }
-
-    response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 400:
-        raise UpdateUserEmailException(response.json())
-    elif response.status_code == 404:
-        return False
-    elif not response.ok:
-        raise RuntimeError("Unknown error when updating user email")
-
-    return True
-
-
-def _create_magic_link(auth_url, integration_api_key, email,
-                       redirect_to_url=None, expires_in_hours=None, create_new_user_if_one_doesnt_exist=None):
+def _create_magic_link(
+    auth_url,
+    integration_api_key,
+    email,
+    redirect_to_url=None,
+    expires_in_hours=None,
+    create_new_user_if_one_doesnt_exist=None,
+):
     url = auth_url + "/api/backend/v1/magic_link"
     json = {"email": email}
     if redirect_to_url is not None:
@@ -319,7 +109,9 @@ def _create_magic_link(auth_url, integration_api_key, email,
     if expires_in_hours is not None:
         json["expires_in_hours"] = expires_in_hours
     if create_new_user_if_one_doesnt_exist is not None:
-        json["create_new_user_if_one_doesnt_exist"] = create_new_user_if_one_doesnt_exist
+        json[
+            "create_new_user_if_one_doesnt_exist"
+        ] = create_new_user_if_one_doesnt_exist
 
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
@@ -353,12 +145,21 @@ def _create_access_token(auth_url, integration_api_key, user_id, duration_in_min
     return response.json()
 
 
-def _migrate_user_from_external_source(auth_url, integration_api_key, email, email_confirmed,
-                                       existing_user_id=None, existing_password_hash=None,
-                                       existing_mfa_base32_encoded_secret=None,
-                                       ask_user_to_update_password_on_login=False,
-                                       enabled=None, first_name=None, last_name=None, username=None,
-                                       properties=None):
+def _migrate_user_from_external_source(
+    auth_url,
+    integration_api_key,
+    email,
+    email_confirmed,
+    existing_user_id=None,
+    existing_password_hash=None,
+    existing_mfa_base32_encoded_secret=None,
+    ask_user_to_update_password_on_login=False,
+    enabled=None,
+    first_name=None,
+    last_name=None,
+    username=None,
+    properties=None,
+):
     url = auth_url + "/api/backend/v1/migrate_user/"
     json = {
         "email": email,
@@ -371,7 +172,7 @@ def _migrate_user_from_external_source(auth_url, integration_api_key, email, ema
         "first_name": first_name,
         "last_name": last_name,
         "username": username,
-        "properties": properties
+        "properties": properties,
     }
 
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
@@ -402,8 +203,15 @@ def _create_org(auth_url, integration_api_key, name, max_users=None):
     return response.json()
 
 
-def _update_org_metadata(auth_url, integration_api_key, org_id, name=None, can_setup_saml=None, metadata=None,
-                         max_users=None):
+def _update_org_metadata(
+    auth_url,
+    integration_api_key,
+    org_id,
+    name=None,
+    can_setup_saml=None,
+    metadata=None,
+    max_users=None,
+):
     if not _is_valid_id(org_id):
         return False
 
@@ -444,105 +252,6 @@ def _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role):
         return False
     elif not response.ok:
         raise RuntimeError("Unknown error when adding a user to the org")
-
-    return True
-
-
-def _delete_user(auth_url, integration_api_key, user_id):
-    if not _is_valid_id(user_id):
-        return False
-
-    url = auth_url + "/api/backend/v1/user/{}".format(user_id)
-    response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key))
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 404:
-        return False
-    elif not response.ok:
-        raise RuntimeError("Unknown error when deleting user")
-
-    return True
-
-
-def _disable_user(auth_url, integration_api_key, user_id):
-    if not _is_valid_id(user_id):
-        return False
-
-    url = auth_url + "/api/backend/v1/user/{}/disable".format(user_id)
-    response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 404:
-        return False
-    elif not response.ok:
-        raise RuntimeError("Unknown error when disabling user")
-
-    return True
-
-
-def _enable_user(auth_url, integration_api_key, user_id):
-    if not _is_valid_id(user_id):
-        return False
-
-    url = auth_url + "/api/backend/v1/user/{}/enable".format(user_id)
-    response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 404:
-        return False
-    elif not response.ok:
-        raise RuntimeError("Unknown error when enabling user")
-
-    return True
-
-
-def _disable_user_2fa(auth_url, integration_api_key, user_id):
-    if not _is_valid_id(user_id):
-        return False
-
-    url = auth_url + "/api/backend/v1/user/{}/disable_2fa".format(user_id)
-    response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
-
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 404:
-        return False
-    elif not response.ok:
-        raise RuntimeError("Unknown error when enabling user")
-
-    return True
-
-
-def _enable_user_can_create_orgs(auth_url, integration_api_key, user_id):
-    if not _is_valid_id(user_id):
-        return False
-
-    url = auth_url + "/api/backend/v1/user/{}/can_create_orgs/enable".format(user_id)
-    response = requests.put(url, auth=_ApiKeyAuth(integration_api_key))
-
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 404:
-        return False
-    elif not response.ok:
-        raise RuntimeError("Unknown error when enabling can_create_orgs")
-
-    return True
-
-
-def _disable_user_can_create_orgs(auth_url, integration_api_key, user_id):
-    if not _is_valid_id(user_id):
-        return False
-
-    url = auth_url + "/api/backend/v1/user/{}/can_create_orgs/disable".format(user_id)
-    response = requests.put(url, auth=_ApiKeyAuth(integration_api_key))
-
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 404:
-        return False
-    elif not response.ok:
-        raise RuntimeError("Unknown error when disabling can_create_orgs")
 
     return True
 
@@ -598,7 +307,9 @@ def _fetch_api_key(auth_url, integration_api_key, api_key_id):
     return response.json()
 
 
-def _fetch_current_api_keys(auth_url, integration_api_key, org_id, user_id, user_email, page_size, page_number):
+def _fetch_current_api_keys(
+    auth_url, integration_api_key, org_id, user_id, user_email, page_size, page_number
+):
     url = auth_url + "/api/backend/v1/end_user_api_keys"
 
     query_params = {}
@@ -613,7 +324,9 @@ def _fetch_current_api_keys(auth_url, integration_api_key, org_id, user_id, user
     if page_number:
         query_params["page_number"] = page_number
 
-    response = requests.get(url, auth=_ApiKeyAuth(integration_api_key), params=query_params)
+    response = requests.get(
+        url, auth=_ApiKeyAuth(integration_api_key), params=query_params
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -625,7 +338,9 @@ def _fetch_current_api_keys(auth_url, integration_api_key, org_id, user_id, user
     return response.json()
 
 
-def _fetch_archived_api_keys(auth_url, integration_api_key, org_id, user_id, user_email, page_size, page_number):
+def _fetch_archived_api_keys(
+    auth_url, integration_api_key, org_id, user_id, user_email, page_size, page_number
+):
     url = auth_url + "/api/backend/v1/end_user_api_keys/archived"
 
     query_params = {}
@@ -640,7 +355,9 @@ def _fetch_archived_api_keys(auth_url, integration_api_key, org_id, user_id, use
     if page_number:
         query_params["page_number"] = page_number
 
-    response = requests.get(url, auth=_ApiKeyAuth(integration_api_key), params=query_params)
+    response = requests.get(
+        url, auth=_ApiKeyAuth(integration_api_key), params=query_params
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -652,7 +369,9 @@ def _fetch_archived_api_keys(auth_url, integration_api_key, org_id, user_id, use
     return response.json()
 
 
-def _create_api_key(auth_url, integration_api_key, org_id, user_id, expires_at_seconds, metadata):
+def _create_api_key(
+    auth_url, integration_api_key, org_id, user_id, expires_at_seconds, metadata
+):
     url = auth_url + "/api/backend/v1/end_user_api_keys"
 
     json = {}
@@ -677,7 +396,9 @@ def _create_api_key(auth_url, integration_api_key, org_id, user_id, expires_at_s
     return response.json()
 
 
-def _update_api_key(auth_url, integration_api_key, api_key_id, expires_at_seconds, metadata):
+def _update_api_key(
+    auth_url, integration_api_key, api_key_id, expires_at_seconds, metadata
+):
     if not _is_valid_hex(api_key_id):
         return False
 
@@ -797,7 +518,9 @@ def remove_bearer_if_exists(token: str) -> str:
 
 
 def _format_params(params):
-    return {key: _format_param(value) for key, value in params.items() if value is not None}
+    return {
+        key: _format_param(value) for key, value in params.items() if value is not None
+    }
 
 
 def _format_param(param):
