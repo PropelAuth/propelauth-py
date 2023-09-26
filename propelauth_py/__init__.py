@@ -30,12 +30,12 @@ from propelauth_py.api_v2.org import (
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
 )
+from propelauth_py.api_v2.magic_link import _create_magic_link
 from propelauth_py.api import (
     _fetch_token_verification_metadata,
     TokenVerificationMetadata,
     OrgQueryOrderBy,
     UserQueryOrderBy,
-    _create_magic_link,
     _migrate_user_from_external_source,
     _create_access_token,
     _fetch_api_key,
