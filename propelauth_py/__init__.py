@@ -31,6 +31,7 @@ from propelauth_py.api.org import (
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
     _validate_org_api_key,
+    _change_user_role_in_org,
 )
 from propelauth_py.api.magic_link import _create_magic_link
 from propelauth_py.api.token_verification_metadata import (
@@ -102,6 +103,7 @@ Auth = namedtuple(
         "create_org",
         "update_org_metadata",
         "add_user_to_org",
+        "change_user_role_in_org",
         "remove_user_from_org",
         "delete_user",
         "disable_user",
@@ -324,6 +326,11 @@ def init_base_auth(
     def remove_user_from_org(user_id, org_id):
         return _remove_user_from_org(auth_url, integration_api_key, user_id, org_id)
 
+    def change_user_role_in_org(user_id, org_id, role):
+        return _change_user_role_in_org(
+            auth_url, integration_api_key, user_id, org_id, role
+        )
+
     def delete_user(user_id):
         return _delete_user(auth_url, integration_api_key, user_id)
 
@@ -473,6 +480,7 @@ def init_base_auth(
         create_org=create_org,
         update_org_metadata=update_org_metadata,
         add_user_to_org=add_user_to_org,
+        change_user_role_in_org=change_user_role_in_org,
         remove_user_from_org=remove_user_from_org,
         enable_user=enable_user,
         disable_user=disable_user,
