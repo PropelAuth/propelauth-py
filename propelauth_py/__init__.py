@@ -36,10 +36,10 @@ from propelauth_py.api_v2.token_verification_metadata import (
     TokenVerificationMetadata,
 )
 from propelauth_py.api_v2.access_token import _create_access_token
+from propelauth_py.api_v2.migrate_user import _migrate_user_from_external_source
 from propelauth_py.api import (
     OrgQueryOrderBy,
     UserQueryOrderBy,
-    _migrate_user_from_external_source,
     _fetch_api_key,
     _fetch_current_api_keys,
     _fetch_archived_api_keys,
