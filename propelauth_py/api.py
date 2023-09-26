@@ -12,38 +12,6 @@ from propelauth_py.errors import (
     EndUserApiKeyNotFoundException,
 )
 
-TokenVerificationMetadata = namedtuple(
-    "TokenVerificationMetadata", ["verifier_key", "issuer"]
-)
-
-
-def _fetch_token_verification_metadata(
-    auth_url: str,
-    integration_api_key: str,
-    token_verification_metadata: TokenVerificationMetadata,
-):
-    if token_verification_metadata is not None:
-        return token_verification_metadata
-
-    token_verification_metadata_url = auth_url + "/api/v1/token_verification_metadata"
-    response = requests.get(
-        token_verification_metadata_url, auth=_ApiKeyAuth(integration_api_key)
-    )
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 400:
-        raise ValueError("Bad request")
-    elif response.status_code == 404:
-        raise ValueError("auth_url is incorrect")
-    elif not response.ok:
-        raise RuntimeError("Unknown error when fetching token verification metadata")
-
-    json_response = response.json()
-    return TokenVerificationMetadata(
-        verifier_key=json_response["verifier_key_pem"],
-        issuer=auth_url,
-    )
-
 
 def _create_access_token(auth_url, integration_api_key, user_id, duration_in_minutes):
     if not _is_valid_id(user_id):
