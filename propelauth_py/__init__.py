@@ -20,6 +20,7 @@ from propelauth_py.api_v2.user import (
     _disable_user_2fa,
     _enable_user_can_create_orgs,
     _disable_user_can_create_orgs,
+    _validate_personal_api_key,
 )
 from propelauth_py.api_v2.org import (
     _fetch_org,
@@ -29,6 +30,7 @@ from propelauth_py.api_v2.org import (
     _add_user_to_org,
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
+    _validate_org_api_key,
 )
 from propelauth_py.api_v2.magic_link import _create_magic_link
 from propelauth_py.api_v2.token_verification_metadata import (
@@ -37,9 +39,7 @@ from propelauth_py.api_v2.token_verification_metadata import (
 )
 from propelauth_py.api_v2.access_token import _create_access_token
 from propelauth_py.api_v2.migrate_user import _migrate_user_from_external_source
-from propelauth_py.api import (
-    OrgQueryOrderBy,
-    UserQueryOrderBy,
+from propelauth_py.api_v2.end_user_api_keys import (
     _fetch_api_key,
     _fetch_current_api_keys,
     _fetch_archived_api_keys,
@@ -47,8 +47,10 @@ from propelauth_py.api import (
     _update_api_key,
     _delete_api_key,
     _validate_api_key,
-    _validate_personal_api_key,
-    _validate_org_api_key,
+)
+from propelauth_py.api import (
+    OrgQueryOrderBy,
+    UserQueryOrderBy,
 )
 from propelauth_py.auth_fns import (
     wrap_validate_access_token_and_get_user,

@@ -3,8 +3,10 @@ import requests
 from requests.auth import AuthBase
 
 from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id
+from propelauth_py.api_v2.end_user_api_keys import _validate_api_key
 from propelauth_py.errors import (
     CreateUserException,
+    EndUserApiKeyException,
     UpdateUserEmailException,
     UpdateUserMetadataException,
     UpdateUserPasswordException,
@@ -430,3 +432,18 @@ def _delete_user(auth_url, integration_api_key, user_id):
         raise RuntimeError("Unknown error when deleting user")
 
     return True
+
+
+####################
+#       HELPERS    #
+####################
+
+
+def _validate_personal_api_key(auth_url, integration_api_key, api_key_token):
+    api_key_validation = _validate_api_key(auth_url, integration_api_key, api_key_token)
+    if not api_key_validation["user"] or api_key_validation["org"]:
+        raise EndUserApiKeyException({"api_key_token": ["Not a personal API Key"]})
+    return {
+        "user": api_key_validation["user"],
+        "metadata": api_key_validation["metadata"],
+    }
