@@ -1,6 +1,6 @@
 import requests
 from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id
-from propelauth_py.api_v2.end_user_api_keys import _validate_api_key
+from propelauth_py.api.end_user_api_keys import _validate_api_key
 from propelauth_py.errors import (
     BadRequestException,
     EndUserApiKeyException,

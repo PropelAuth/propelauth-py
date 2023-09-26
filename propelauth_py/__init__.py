@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 # TODO: Rename to api after moving the apis.
-from propelauth_py.api_v2.user import (
+from propelauth_py.api.user import (
     _fetch_user_metadata_by_user_id,
     _fetch_user_metadata_by_email,
     _fetch_user_metadata_by_username,
@@ -22,7 +22,7 @@ from propelauth_py.api_v2.user import (
     _disable_user_can_create_orgs,
     _validate_personal_api_key,
 )
-from propelauth_py.api_v2.org import (
+from propelauth_py.api.org import (
     _fetch_org,
     _fetch_org_by_query,
     _create_org,
@@ -32,14 +32,14 @@ from propelauth_py.api_v2.org import (
     _disallow_org_to_setup_saml_connection,
     _validate_org_api_key,
 )
-from propelauth_py.api_v2.magic_link import _create_magic_link
-from propelauth_py.api_v2.token_verification_metadata import (
+from propelauth_py.api.magic_link import _create_magic_link
+from propelauth_py.api.token_verification_metadata import (
     _fetch_token_verification_metadata,
     TokenVerificationMetadata,
 )
-from propelauth_py.api_v2.access_token import _create_access_token
-from propelauth_py.api_v2.migrate_user import _migrate_user_from_external_source
-from propelauth_py.api_v2.end_user_api_keys import (
+from propelauth_py.api.access_token import _create_access_token
+from propelauth_py.api.migrate_user import _migrate_user_from_external_source
+from propelauth_py.api.end_user_api_keys import (
     _fetch_api_key,
     _fetch_current_api_keys,
     _fetch_archived_api_keys,
