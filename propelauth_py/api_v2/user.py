@@ -14,7 +14,7 @@ ENDPOINT_PATH = "/api/backend/v1/user"
 
 
 ####################
-#       GET      #
+#       GET        #
 ####################
 def _fetch_user_metadata_by_user_id(
     auth_url, integration_api_key, user_id, include_orgs=False
