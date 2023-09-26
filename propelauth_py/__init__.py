@@ -21,20 +21,22 @@ from propelauth_py.api_v2.user import (
     _enable_user_can_create_orgs,
     _disable_user_can_create_orgs,
 )
-from propelauth_py.api import (
-    _fetch_token_verification_metadata,
-    TokenVerificationMetadata,
-    OrgQueryOrderBy,
-    UserQueryOrderBy,
+from propelauth_py.api_v2.org import (
     _fetch_org,
     _fetch_org_by_query,
-    _create_magic_link,
-    _migrate_user_from_external_source,
     _create_org,
     _update_org_metadata,
     _add_user_to_org,
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
+)
+from propelauth_py.api import (
+    _fetch_token_verification_metadata,
+    TokenVerificationMetadata,
+    OrgQueryOrderBy,
+    UserQueryOrderBy,
+    _create_magic_link,
+    _migrate_user_from_external_source,
     _create_access_token,
     _fetch_api_key,
     _fetch_current_api_keys,
