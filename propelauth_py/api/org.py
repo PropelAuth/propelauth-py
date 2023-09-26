@@ -131,6 +131,23 @@ def _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role):
     return True
 
 
+def _remove_user_from_org(auth_url, integration_api_key, user_id, org_id):
+    url = auth_url + f"{ENDPOINT_PATH}/remove_user"
+    json = {"user_id": user_id, "org_id": org_id}
+
+    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when removing a user from the org")
+
+    return True
+
+
 ####################
 #     PATCH/PUT    #
 ####################
