@@ -6,8 +6,8 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
 # See https://pytest-runner.readthedocs.io/en/latest/#conditional-requirement
-needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
-pytest_runner = ['pytest-runner'] if needs_pytest else []
+needs_pytest = {"pytest", "test", "ptr"}.intersection(sys.argv)
+pytest_runner = ["pytest-runner"] if needs_pytest else []
 
 setup(
     name="propelauth-py",
@@ -16,7 +16,7 @@ setup(
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/propelauth/propelauth-py",
-    packages=find_packages(include=["propelauth_py"]),
+    packages=find_packages(include=["propelauth_py", "propelauth_py.*"]),
     author="PropelAuth",
     author_email="support@propelauth.com",
     license="MIT",
