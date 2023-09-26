@@ -148,6 +148,23 @@ def _remove_user_from_org(auth_url, integration_api_key, user_id, org_id):
     return True
 
 
+def _change_user_role_in_org(auth_url, integration_api_key, user_id, org_id, role):
+    url = auth_url + f"{ENDPOINT_PATH}/change_role"
+    json = {"user_id": user_id, "org_id": org_id, "role": role}
+
+    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when changing a user's role in the org")
+
+    return True
+
+
 ####################
 #     PATCH/PUT    #
 ####################

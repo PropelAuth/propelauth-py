@@ -31,6 +31,7 @@ from propelauth_py.api.org import (
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
     _validate_org_api_key,
+    _change_user_role_in_org,
 )
 from propelauth_py.api.magic_link import _create_magic_link
 from propelauth_py.api.access_token import _create_access_token
@@ -86,6 +87,7 @@ IMPORTED_FUNCTIONS = [
     _update_api_key,
     _delete_api_key,
     _validate_api_key,
+    _change_user_role_in_org,
 ]
 
 
