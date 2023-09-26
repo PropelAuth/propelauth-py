@@ -1,6 +1,5 @@
 from collections import namedtuple
 
-# TODO: Rename to api after moving the apis.
 from propelauth_py.api.user import (
     _fetch_user_metadata_by_user_id,
     _fetch_user_metadata_by_email,
