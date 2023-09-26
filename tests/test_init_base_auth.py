@@ -112,6 +112,9 @@ def test_all_functions_imported_in_init_base_auth():
 
 
 def test_auth_tuple_contains_all_expected_functions(rsa_keys):
+    """
+    Test that the Auth tuple contains all expected functions.
+    """
     mock_auth_tuple = mock_api_and_init_auth(
         BASE_AUTH_URL, 200, {"verifier_key_pem": rsa_keys.public_pem}
     )
