@@ -1,6 +1,11 @@
 import requests
 from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id
-from propelauth_py.errors import BadRequestException, UpdateUserMetadataException
+from propelauth_py.api_v2.end_user_api_keys import _validate_api_key
+from propelauth_py.errors import (
+    BadRequestException,
+    EndUserApiKeyException,
+    UpdateUserMetadataException,
+)
 
 
 ENDPOINT_PATH = "/api/backend/v1/org"
@@ -166,5 +171,17 @@ def _update_org_metadata(
 
 
 ####################
-#      DELETE      #
+#      HELPERS     #
 ####################
+
+
+def _validate_org_api_key(auth_url, integration_api_key, api_key_token):
+    api_key_validation = _validate_api_key(auth_url, integration_api_key, api_key_token)
+    if not api_key_validation["org"]:
+        raise EndUserApiKeyException({"api_key_token": ["Not an org API Key"]})
+    return {
+        "org": api_key_validation["org"],
+        "metadata": api_key_validation["metadata"],
+        "user": api_key_validation["user"],
+        "user_in_org": api_key_validation["user_in_org"],
+    }
