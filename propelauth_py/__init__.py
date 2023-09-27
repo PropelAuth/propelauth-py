@@ -21,6 +21,7 @@ from propelauth_py.api.user import (
     _enable_user_can_create_orgs,
     _disable_user_can_create_orgs,
     _validate_personal_api_key,
+    _invite_user_to_org,
 )
 from propelauth_py.api.org import (
     _fetch_org,
@@ -96,6 +97,7 @@ Auth = namedtuple(
         "fetch_users_by_query",
         "fetch_users_in_org",
         "create_user",
+        "invite_user_to_org",
         "update_user_email",
         "update_user_metadata",
         "update_user_password",
@@ -226,6 +228,15 @@ def init_base_auth(
             first_name,
             last_name,
             properties,
+        )
+
+    def invite_user_to_org(user_id, org_id, role):
+        return _invite_user_to_org(
+            auth_url,
+            integration_api_key,
+            user_id,
+            org_id,
+            role,
         )
 
     def update_user_email(user_id, new_email, require_email_confirmation):
@@ -481,6 +492,7 @@ def init_base_auth(
         fetch_users_by_query=fetch_users_by_query,
         fetch_users_in_org=fetch_users_in_org,
         create_user=create_user,
+        invite_user_to_org=invite_user_to_org,
         update_user_email=update_user_email,
         update_user_metadata=update_user_metadata,
         update_user_password=update_user_password,
