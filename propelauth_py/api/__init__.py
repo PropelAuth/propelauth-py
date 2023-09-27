@@ -2,7 +2,9 @@ from collections import namedtuple
 from enum import Enum
 from uuid import UUID
 
-from propelauth_py.api.token_verification_metadata import TokenVerificationMetadata
+TokenVerificationMetadata = namedtuple(
+    "TokenVerificationMetadata", ["verifier_key", "issuer"]
+)
 
 from requests.auth import AuthBase
 

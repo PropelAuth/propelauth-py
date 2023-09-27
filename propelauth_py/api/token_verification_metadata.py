@@ -1,12 +1,8 @@
 from collections import namedtuple
 import requests
-from propelauth_py.api import _ApiKeyAuth
+from propelauth_py.api import _ApiKeyAuth, TokenVerificationMetadata
 
 ENDPOINT_PATH = "/api/v1/token_verification_metadata"
-
-TokenVerificationMetadata = namedtuple(
-    "TokenVerificationMetadata", ["verifier_key", "issuer"]
-)
 
 
 ####################
