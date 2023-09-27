@@ -30,6 +30,7 @@ from propelauth_py.api.org import (
     _add_user_to_org,
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
+    _create_org_saml_connection_link,
     _validate_org_api_key,
     _change_user_role_in_org,
 )
@@ -113,6 +114,7 @@ Auth = namedtuple(
         "disable_user_can_create_orgs",
         "allow_org_to_setup_saml_connection",
         "disallow_org_to_setup_saml_connection",
+        "create_org_saml_connection_link",
         "fetch_api_key",
         "fetch_current_api_keys",
         "fetch_archived_api_keys",
@@ -359,6 +361,11 @@ def init_base_auth(
             auth_url, integration_api_key, org_id
         )
 
+    def create_org_saml_connection_link(org_id, expires_in_seconds=None):
+        return _create_org_saml_connection_link(
+            auth_url, integration_api_key, org_id, expires_in_seconds
+        )
+
     # functions for end user api keys
 
     def fetch_api_key(api_key_id):
@@ -490,6 +497,7 @@ def init_base_auth(
         disable_user_can_create_orgs=disable_user_can_create_orgs,
         allow_org_to_setup_saml_connection=allow_org_to_setup_saml_connection,
         disallow_org_to_setup_saml_connection=disallow_org_to_setup_saml_connection,
+        create_org_saml_connection_link=create_org_saml_connection_link,
         # api key functions
         fetch_api_key=fetch_api_key,
         fetch_current_api_keys=fetch_current_api_keys,

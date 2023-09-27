@@ -30,6 +30,7 @@ from propelauth_py.api.org import (
     _add_user_to_org,
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
+    _create_org_saml_connection_link,
     _validate_org_api_key,
     _change_user_role_in_org,
 )
@@ -76,6 +77,7 @@ IMPORTED_FUNCTIONS = [
     _add_user_to_org,
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
+    _create_org_saml_connection_link,
     _validate_org_api_key,
     _create_magic_link,
     _create_access_token,
