@@ -283,16 +283,14 @@ def _disable_user_2fa(auth_url, integration_api_key, user_id):
     return True
 
 
-def _invite_user_to_org(auth_url, integration_api_key, user_id, org_id, role):
-    if not _is_valid_id(user_id):
-        return False
+def _invite_user_to_org(auth_url, integration_api_key, email, org_id, role):
     if not _is_valid_id(org_id):
         return False
 
     endpoint_path = "/api/backend/v1/invite_user"
     url = auth_url + endpoint_path
     json = {
-        "user_id": user_id,
+        "email": email,
         "org_id": org_id,
         "role": role,
     }
@@ -301,13 +299,17 @@ def _invite_user_to_org(auth_url, integration_api_key, user_id, org_id, role):
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 400:
-        raise InviteUserToOrgException(response.json())
+        try:
+            response_json = response.json()
+            raise InviteUserToOrgException(response_json)
+        except requests.exceptions.JSONDecodeError:
+            raise ValueError("Bad request: " + response.text)
     elif response.status_code == 404:
         return False
     elif not response.ok:
         raise RuntimeError("Unknown error when updating metadata")
 
-    return response.json()
+    return response.text
 
 
 ####################
