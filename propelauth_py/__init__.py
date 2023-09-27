@@ -230,11 +230,11 @@ def init_base_auth(
             properties,
         )
 
-    def invite_user_to_org(user_id, org_id, role):
+    def invite_user_to_org(email, org_id, role):
         return _invite_user_to_org(
             auth_url,
             integration_api_key,
-            user_id,
+            email,
             org_id,
             role,
         )
