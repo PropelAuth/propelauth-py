@@ -35,7 +35,6 @@ from propelauth_py.api.org import (
 from propelauth_py.api.magic_link import _create_magic_link
 from propelauth_py.api.token_verification_metadata import (
     _fetch_token_verification_metadata,
-    TokenVerificationMetadata,
 )
 from propelauth_py.api.access_token import _create_access_token
 from propelauth_py.api.migrate_user import _migrate_user_from_external_source
@@ -51,6 +50,7 @@ from propelauth_py.api.end_user_api_keys import (
 from propelauth_py.api import (
     OrgQueryOrderBy,
     UserQueryOrderBy,
+    TokenVerificationMetadata,
 )
 from propelauth_py.auth_fns import (
     wrap_validate_access_token_and_get_user,
