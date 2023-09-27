@@ -21,6 +21,7 @@ from propelauth_py.api.user import (
     _enable_user_can_create_orgs,
     _disable_user_can_create_orgs,
     _validate_personal_api_key,
+    _invite_user_to_org,
 )
 from propelauth_py.api.org import (
     _fetch_org,
@@ -92,6 +93,7 @@ IMPORTED_FUNCTIONS = [
     _validate_api_key,
     _change_user_role_in_org,
     _delete_org,
+    _invite_user_to_org,
 ]
 
 
