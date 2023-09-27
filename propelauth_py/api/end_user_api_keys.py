@@ -28,9 +28,16 @@ def _fetch_api_key(auth_url, integration_api_key, api_key_id):
 
 
 def _fetch_current_api_keys(
-    auth_url, integration_api_key, org_id, user_id, user_email, page_size, page_number
+    auth_url,
+    integration_api_key,
+    org_id=None,
+    user_id=None,
+    user_email=None,
+    page_size=None,
+    page_number=None,
+    api_key_type=None,
 ):
-    url = auth_url + f"{ENDPOINT_PATH}"
+    url = auth_url + ENDPOINT_PATH
 
     query_params = {}
     if org_id:
@@ -43,6 +50,8 @@ def _fetch_current_api_keys(
         query_params["page_size"] = page_size
     if page_number:
         query_params["page_number"] = page_number
+    if api_key_type:
+        query_params["api_key_type"] = api_key_type
 
     response = requests.get(
         url, auth=_ApiKeyAuth(integration_api_key), params=query_params
@@ -95,7 +104,7 @@ def _fetch_archived_api_keys(
 def _create_api_key(
     auth_url, integration_api_key, org_id, user_id, expires_at_seconds, metadata
 ):
-    url = auth_url + f"{ENDPOINT_PATH}"
+    url = auth_url + ENDPOINT_PATH
 
     json = {}
     if org_id:
