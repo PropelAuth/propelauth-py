@@ -205,6 +205,28 @@ def _update_org_metadata(
 
 
 ####################
+#      DELETE      #
+####################
+
+
+def _delete_org(auth_url, integration_api_key, org_id):
+    if not _is_valid_id(org_id):
+        return False
+
+    url = auth_url + f"{ENDPOINT_PATH}/{org_id}"
+    response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key))
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when deleting org")
+
+    return True
+
+
+####################
 #      HELPERS     #
 ####################
 
