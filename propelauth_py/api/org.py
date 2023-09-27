@@ -65,11 +65,22 @@ def _fetch_org_by_query(
 ####################
 #       POST       #
 ####################
-def _create_org(auth_url, integration_api_key, name, max_users=None):
-    url = auth_url + f"{ENDPOINT_PATH}/"
-    json = {"name": name}
-    if max_users is not None:
-        json["max_users"] = max_users
+def _create_org(
+    auth_url,
+    integration_api_key,
+    name,
+    enable_auto_joining_by_domain=False,
+    members_must_have_matching_domain=False,
+    domain=None,
+):
+    url = auth_url + ENDPOINT_PATH
+    json = {
+        "name": name,
+        "enable_auto_joining_by_domain": enable_auto_joining_by_domain,
+        "members_must_have_matching_domain": members_must_have_matching_domain,
+    }
+    if domain:
+        json["domain"] = domain
 
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
