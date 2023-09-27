@@ -2,6 +2,8 @@ from collections import namedtuple
 from enum import Enum
 from uuid import UUID
 
+from propelauth_py.api.token_verification_metadata import TokenVerificationMetadata
+
 from requests.auth import AuthBase
 
 
