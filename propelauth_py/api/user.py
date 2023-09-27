@@ -354,6 +354,24 @@ def _update_user_password(
     return True
 
 
+def _clear_user_password(auth_url, integration_api_key, user_id):
+    if not _is_valid_id(user_id):
+        return False
+
+    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/clear_password"
+    response = requests.put(url, auth=_ApiKeyAuth(integration_api_key))
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise UpdateUserEmailException(response.json())
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when updating user email")
+
+    return True
+
+
 def _update_user_email(
     auth_url, integration_api_key, user_id, new_email, require_email_confirmation
 ):

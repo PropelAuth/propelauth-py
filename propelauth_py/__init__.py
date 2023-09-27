@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 from propelauth_py.api.user import (
+    _clear_user_password,
     _fetch_user_metadata_by_user_id,
     _fetch_user_metadata_by_email,
     _fetch_user_metadata_by_username,
@@ -97,6 +98,7 @@ Auth = namedtuple(
         "update_user_email",
         "update_user_metadata",
         "update_user_password",
+        "clear_user_password",
         "create_magic_link",
         "create_access_token",
         "migrate_user_from_external_source",
@@ -251,6 +253,9 @@ def init_base_auth(
             metadata,
             properties,
         )
+
+    def clear_user_password(user_id):
+        return _clear_user_password(auth_url, integration_api_key, user_id)
 
     def update_user_password(
         user_id, password, ask_user_to_update_password_on_login=False
@@ -474,6 +479,7 @@ def init_base_auth(
         update_user_email=update_user_email,
         update_user_metadata=update_user_metadata,
         update_user_password=update_user_password,
+        clear_user_password=clear_user_password,
         create_magic_link=create_magic_link,
         create_access_token=create_access_token,
         migrate_user_from_external_source=migrate_user_from_external_source,
