@@ -8,6 +8,11 @@ class UpdateUserMetadataException(Exception):
         self.field_to_errors = field_to_errors
 
 
+class InviteUserToOrgException(Exception):
+    def __init__(self, field_to_errors):
+        self.field_to_errors = field_to_errors
+
+
 class UpdateUserPasswordException(Exception):
     def __init__(self, field_to_errors):
         self.field_to_errors = field_to_errors
@@ -46,7 +51,9 @@ class UnauthorizedException(Exception):
 
     @staticmethod
     def invalid_header_found():
-        return UnauthorizedException("Invalid authorization header. Expected: Bearer {accessToken}")
+        return UnauthorizedException(
+            "Invalid authorization header. Expected: Bearer {accessToken}"
+        )
 
     @staticmethod
     def invalid_access_token():
