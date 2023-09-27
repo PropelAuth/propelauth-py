@@ -405,7 +405,12 @@ def init_base_auth(
         )
 
     def fetch_archived_api_keys(
-        org_id=None, user_id=None, user_email=None, page_size=None, page_number=None
+        org_id=None,
+        user_id=None,
+        user_email=None,
+        page_size=None,
+        page_number=None,
+        api_key_type=None,
     ):
         return _fetch_archived_api_keys(
             auth_url,
@@ -415,6 +420,7 @@ def init_base_auth(
             user_email,
             page_size,
             page_number,
+            api_key_type=api_key_type,
         )
 
     def create_api_key(
