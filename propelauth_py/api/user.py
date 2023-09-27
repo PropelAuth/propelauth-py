@@ -127,7 +127,7 @@ def _fetch_users_by_query(
     email_or_username,
     include_orgs,
 ):
-    url = auth_url + "/api/backend/v1/user/query"
+    url = auth_url + f"{ENDPOINT_PATH}/query"
     params = {
         "page_size": page_size,
         "page_number": page_number,
@@ -165,7 +165,7 @@ def _fetch_users_in_org(
             "has_more_results": False,
         }
 
-    url = auth_url + "/api/backend/v1/user/org/{}".format(org_id)
+    url = auth_url + f"{ENDPOINT_PATH}/org/{org_id}"
     params = {
         "page_size": page_size,
         "page_number": page_number,
@@ -205,7 +205,7 @@ def _create_user(
     last_name,
     properties,
 ):
-    url = auth_url + "/api/backend/v1/user/"
+    url = auth_url + f"{ENDPOINT_PATH}/"
     json = {
         "email": email,
         "email_confirmed": email_confirmed,
@@ -237,7 +237,7 @@ def _disable_user(auth_url, integration_api_key, user_id):
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + "/api/backend/v1/user/{}/disable".format(user_id)
+    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/disable"
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -253,7 +253,7 @@ def _enable_user(auth_url, integration_api_key, user_id):
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + "/api/backend/v1/user/{}/enable".format(user_id)
+    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/enable"
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -269,7 +269,7 @@ def _disable_user_2fa(auth_url, integration_api_key, user_id):
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + "/api/backend/v1/user/{}/disable_2fa".format(user_id)
+    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/disable_2fa"
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
 
     if response.status_code == 401:
@@ -298,7 +298,7 @@ def _update_user_metadata(
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + "/api/backend/v1/user/{}".format(user_id)
+    url = auth_url + f"{ENDPOINT_PATH}/{user_id}"
     json = {}
     if username is not None:
         json["username"] = username
@@ -334,7 +334,7 @@ def _update_user_password(
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + "/api/backend/v1/user/{}/password".format(user_id)
+    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/password"
     json = {"password": password}
     if ask_user_to_update_password_on_login is not None:
         json[
@@ -360,7 +360,7 @@ def _update_user_email(
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + "/api/backend/v1/user/{}/email".format(user_id)
+    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/email"
     json = {
         "new_email": new_email,
         "require_email_confirmation": require_email_confirmation,
@@ -383,7 +383,7 @@ def _enable_user_can_create_orgs(auth_url, integration_api_key, user_id):
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + "/api/backend/v1/user/{}/can_create_orgs/enable".format(user_id)
+    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/can_create_orgs/enable"
     response = requests.put(url, auth=_ApiKeyAuth(integration_api_key))
 
     if response.status_code == 401:
@@ -400,7 +400,7 @@ def _disable_user_can_create_orgs(auth_url, integration_api_key, user_id):
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + "/api/backend/v1/user/{}/can_create_orgs/disable".format(user_id)
+    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/can_create_orgs/disable"
     response = requests.put(url, auth=_ApiKeyAuth(integration_api_key))
 
     if response.status_code == 401:
@@ -420,7 +420,7 @@ def _delete_user(auth_url, integration_api_key, user_id):
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + "/api/backend/v1/user/{}".format(user_id)
+    url = auth_url + f"{ENDPOINT_PATH}/{user_id}"
     response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
