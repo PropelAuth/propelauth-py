@@ -255,16 +255,20 @@ def init_base_auth(
         last_name=None,
         metadata=None,
         properties=None,
+        picture_url=None,
+        update_password_required=None,
     ):
         return _update_user_metadata(
             auth_url,
             integration_api_key,
-            user_id,
-            username,
-            first_name,
-            last_name,
-            metadata,
-            properties,
+            user_id=user_id,
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            metadata=metadata,
+            properties=properties,
+            picture_url=picture_url,
+            update_password_required=update_password_required,
         )
 
     def clear_user_password(user_id):
