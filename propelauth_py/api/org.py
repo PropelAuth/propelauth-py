@@ -176,6 +176,10 @@ def _update_org_metadata(
     can_setup_saml=None,
     metadata=None,
     max_users=None,
+    can_join_on_email_domain_match=None,  # In the backend, this is the `domain_autojoin` argument.
+    members_must_have_email_domain_match=None,  # In the backend, this is the `domain_restrict` argument.
+    domain=None,
+    # TODO: Add `require_2fa_by` optional argument.
 ):
     if not _is_valid_id(org_id):
         return False
@@ -190,6 +194,12 @@ def _update_org_metadata(
         json["metadata"] = metadata
     if max_users is not None:
         json["max_users"] = max_users
+    if can_join_on_email_domain_match is not None:
+        json["domain_autojoin"] = can_join_on_email_domain_match
+    if members_must_have_email_domain_match is not None:
+        json["domain_restrict"] = members_must_have_email_domain_match
+    if domain is not None:
+        json["domain"] = domain
 
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
