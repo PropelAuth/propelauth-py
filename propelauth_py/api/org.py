@@ -72,6 +72,7 @@ def _create_org(
     enable_auto_joining_by_domain=False,
     members_must_have_matching_domain=False,
     domain=None,
+    max_users=None,
 ):
     url = auth_url + ENDPOINT_PATH
     json = {
@@ -81,6 +82,8 @@ def _create_org(
     }
     if domain:
         json["domain"] = domain
+    if max_users is not None:
+        json["max_users"] = max_users
 
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:

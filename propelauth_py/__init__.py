@@ -339,6 +339,7 @@ def init_base_auth(
         enable_auto_joining_by_domain=False,
         members_must_have_matching_domain=False,
         domain=None,
+        max_users=None,
     ):
         return _create_org(
             auth_url,
@@ -347,6 +348,7 @@ def init_base_auth(
             enable_auto_joining_by_domain,
             members_must_have_matching_domain,
             domain,
+            max_users,
         )
 
     def update_org_metadata(
