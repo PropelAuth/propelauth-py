@@ -114,6 +114,38 @@ def _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id
     return True
 
 
+def _create_org_saml_connection_link(
+    auth_url, integration_api_key, org_id, expires_in_seconds=None
+):
+    if not _is_valid_id(org_id):
+        return None
+
+    url = auth_url + f"{ENDPOINT_PATH}/{org_id}/create_saml_connection_link"
+
+    query_params = {}
+    if expires_in_seconds is not None:
+        query_params["expires_in_seconds"] = expires_in_seconds
+
+    response = requests.post(
+        url, params=_format_params(query_params), auth=_ApiKeyAuth(integration_api_key)
+    )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise ValueError("Bad request: " + response.text)
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+    elif not response.ok:
+        raise RuntimeError(
+            f"Unknown error when creating org SAML connection link: {response.text}"
+        )
+
+    return response.json()
+
+
 def _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role):
     url = auth_url + f"{ENDPOINT_PATH}/add_user"
     json = {"user_id": user_id, "org_id": org_id, "role": role}
