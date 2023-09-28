@@ -333,9 +333,27 @@ def init_base_auth(
     def create_org(name):
         return _create_org(auth_url, integration_api_key, name)
 
-    def update_org_metadata(org_id, name=None, can_setup_saml=None, metadata=None):
+    def update_org_metadata(
+        org_id,
+        name=None,
+        can_setup_saml=None,
+        metadata=None,
+        max_users=None,
+        can_join_on_email_domain_match=None,
+        members_must_have_email_domain_match=None,
+        domain=None,
+    ):
         return _update_org_metadata(
-            auth_url, integration_api_key, org_id, name, can_setup_saml, metadata
+            auth_url,
+            integration_api_key,
+            org_id=org_id,
+            name=name,
+            can_setup_saml=can_setup_saml,
+            metadata=metadata,
+            max_users=max_users,
+            can_join_on_email_domain_match=can_join_on_email_domain_match,
+            members_must_have_email_domain_match=members_must_have_email_domain_match,
+            domain=domain,
         )
 
     def delete_org(org_id):
