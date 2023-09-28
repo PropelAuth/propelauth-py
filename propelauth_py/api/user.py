@@ -324,6 +324,8 @@ def _update_user_metadata(
     last_name=None,
     metadata=None,
     properties=None,
+    picture_url=None,
+    update_password_required=None,
 ):
     if not _is_valid_id(user_id):
         return False
@@ -340,6 +342,10 @@ def _update_user_metadata(
         json["metadata"] = metadata
     if properties is not None:
         json["properties"] = properties
+    if picture_url is not None:
+        json["picture_url"] = picture_url
+    if update_password_required is not None:
+        json["update_password_required"] = update_password_required
 
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
