@@ -334,8 +334,22 @@ def init_base_auth(
             properties,
         )
 
-    def create_org(name):
-        return _create_org(auth_url, integration_api_key, name)
+    def create_org(
+        name,
+        enable_auto_joining_by_domain=False,
+        members_must_have_matching_domain=False,
+        domain=None,
+        max_users=None,
+    ):
+        return _create_org(
+            auth_url,
+            integration_api_key,
+            name,
+            enable_auto_joining_by_domain,
+            members_must_have_matching_domain,
+            domain,
+            max_users,
+        )
 
     def update_org_metadata(
         org_id,
