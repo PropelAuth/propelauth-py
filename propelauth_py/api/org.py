@@ -209,9 +209,9 @@ def _update_org_metadata(
     if max_users is not None:
         json["max_users"] = max_users
     if can_join_on_email_domain_match is not None:
-        json["domain_autojoin"] = can_join_on_email_domain_match
+        json["autojoin_by_domain"] = can_join_on_email_domain_match
     if members_must_have_email_domain_match is not None:
-        json["domain_restrict"] = members_must_have_email_domain_match
+        json["restrict_to_domain"] = members_must_have_email_domain_match
     if domain is not None:
         json["domain"] = domain
 
