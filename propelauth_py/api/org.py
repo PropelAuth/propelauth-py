@@ -74,7 +74,7 @@ def _create_org(
     domain=None,
     max_users=None,
 ):
-    url = auth_url + ENDPOINT_PATH
+    url = auth_url + f"{ENDPOINT_PATH}/"
     json = {
         "name": name,
         "enable_auto_joining_by_domain": enable_auto_joining_by_domain,
