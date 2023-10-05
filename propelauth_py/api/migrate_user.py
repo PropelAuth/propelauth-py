@@ -21,7 +21,7 @@ def _migrate_user_from_external_source(
     username=None,
     properties=None,
 ):
-    url = auth_url + ENDPOINT_PATH
+    url = auth_url + f"{ENDPOINT_PATH}/"
     json = {
         "email": email,
         "email_confirmed": email_confirmed,
