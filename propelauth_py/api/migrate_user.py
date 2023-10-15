@@ -3,7 +3,7 @@ import requests
 from propelauth_py.api import _ApiKeyAuth
 from propelauth_py.errors import BadRequestException
 
-ENDPOINT_PATH = "/api/backend/v1/migrate_user/"
+ENDPOINT_PATH = "/api/backend/v1/migrate_user"
 
 
 def _migrate_user_from_external_source(
@@ -33,8 +33,9 @@ def _migrate_user_from_external_source(
         "first_name": first_name,
         "last_name": last_name,
         "username": username,
-        "properties": properties,
     }
+    if properties is not None:
+        json["properties"] = properties
 
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
