@@ -10,6 +10,7 @@ OPTIONS = {
     "verify_exp": True,
     "verify_iat": True,
     "verify_iss": True,
+    "verify_aud": False,
     "require": ["exp", "iat", "iss"],
 }
 
