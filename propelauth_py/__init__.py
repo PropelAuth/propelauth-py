@@ -8,6 +8,7 @@ from propelauth_py.api.user import (
     _fetch_batch_user_metadata_by_user_ids,
     _fetch_batch_user_metadata_by_emails,
     _fetch_batch_user_metadata_by_usernames,
+    _fetch_user_signup_query_params_by_user_id,
     _fetch_users_by_query,
     _fetch_users_in_org,
     _create_user,
@@ -89,6 +90,7 @@ Auth = namedtuple(
         "fetch_user_metadata_by_user_id",
         "fetch_user_metadata_by_email",
         "fetch_user_metadata_by_username",
+        "fetch_user_signup_query_params_by_user_id",
         "fetch_batch_user_metadata_by_user_ids",
         "fetch_batch_user_metadata_by_emails",
         "fetch_batch_user_metadata_by_usernames",
@@ -156,6 +158,11 @@ def init_base_auth(
     def fetch_user_metadata_by_username(username, include_orgs=False):
         return _fetch_user_metadata_by_username(
             auth_url, integration_api_key, username, include_orgs
+        )
+
+    def fetch_user_signup_query_params_by_user_id(user_id):
+        return _fetch_user_signup_query_params_by_user_id(
+            auth_url, integration_api_key, user_id
         )
 
     def fetch_batch_user_metadata_by_user_ids(user_ids, include_orgs=False):
@@ -532,6 +539,7 @@ def init_base_auth(
         fetch_user_metadata_by_user_id=fetch_user_metadata_by_user_id,
         fetch_user_metadata_by_email=fetch_user_metadata_by_email,
         fetch_user_metadata_by_username=fetch_user_metadata_by_username,
+        fetch_user_signup_query_params_by_user_id=fetch_user_signup_query_params_by_user_id,
         fetch_batch_user_metadata_by_user_ids=fetch_batch_user_metadata_by_user_ids,
         fetch_batch_user_metadata_by_emails=fetch_batch_user_metadata_by_emails,
         fetch_batch_user_metadata_by_usernames=fetch_batch_user_metadata_by_usernames,
