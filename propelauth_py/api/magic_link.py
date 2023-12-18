@@ -16,6 +16,7 @@ def _create_magic_link(
     redirect_to_url=None,
     expires_in_hours=None,
     create_new_user_if_one_doesnt_exist=None,
+    user_signup_query_parameters=None,
 ):
     url = auth_url + ENDPOINT_PATH
     json = {"email": email}
@@ -23,6 +24,8 @@ def _create_magic_link(
         json["redirect_to_url"] = redirect_to_url
     if expires_in_hours is not None:
         json["expires_in_hours"] = expires_in_hours
+    if user_signup_query_parameters is not None:
+        json["user_signup_query_parameters"] = user_signup_query_parameters
     if create_new_user_if_one_doesnt_exist is not None:
         json[
             "create_new_user_if_one_doesnt_exist"

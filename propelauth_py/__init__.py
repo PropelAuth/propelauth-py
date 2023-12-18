@@ -297,6 +297,7 @@ def init_base_auth(
         redirect_to_url=None,
         expires_in_hours=None,
         create_new_user_if_one_doesnt_exist=None,
+        user_signup_query_parameters=None,
     ):
         return _create_magic_link(
             auth_url,
@@ -305,6 +306,7 @@ def init_base_auth(
             redirect_to_url,
             expires_in_hours,
             create_new_user_if_one_doesnt_exist,
+            user_signup_query_parameters,
         )
 
     def create_access_token(user_id, duration_in_minutes):
