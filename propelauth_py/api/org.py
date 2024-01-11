@@ -36,13 +36,14 @@ def _fetch_org(auth_url, integration_api_key, org_id):
 
 
 def _fetch_org_by_query(
-    auth_url, integration_api_key, page_size, page_number, order_by
+    auth_url, integration_api_key, page_size, page_number, order_by, name
 ):
     url = auth_url + f"{ENDPOINT_PATH}/query"
     params = {
         "page_size": page_size,
         "page_number": page_number,
         "order_by": order_by,
+        "name": name,
     }
     response = requests.get(
         url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key)
