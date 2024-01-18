@@ -177,10 +177,10 @@ def init_base_auth(
         return _fetch_org(auth_url, integration_api_key, org_id)
 
     def fetch_org_by_query(
-        page_size=10, page_number=0, order_by=OrgQueryOrderBy.CREATED_AT_ASC
+        page_size=10, page_number=0, order_by=OrgQueryOrderBy.CREATED_AT_ASC, name=None
     ):
         return _fetch_org_by_query(
-            auth_url, integration_api_key, page_size, page_number, order_by
+            auth_url, integration_api_key, page_size, page_number, order_by, name,
         )
 
     def fetch_users_by_query(
