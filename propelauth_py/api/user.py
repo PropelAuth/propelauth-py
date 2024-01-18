@@ -28,6 +28,31 @@ def _fetch_user_metadata_by_user_id(
     return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query)
 
 
+def _fetch_user_signup_query_params_by_user_id(
+    auth_url,
+    integration_api_key,
+    user_id,
+):
+    if not _is_valid_id(user_id):
+        return None
+
+    user_signup_query_params_url = (
+        auth_url + f"{ENDPOINT_PATH}/{user_id}/signup_query_parameters"
+    )
+    response = requests.get(
+        url=user_signup_query_params_url, auth=_ApiKeyAuth(integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 404:
+        return None
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching user signup query params")
+
+    return response.json()
+
+
 def _fetch_user_metadata_by_email(
     auth_url, integration_api_key, email, include_orgs=False
 ):
