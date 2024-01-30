@@ -207,9 +207,9 @@ def init_base_auth(
             include_orgs,
         )
 
-    def fetch_users_in_org(org_id, page_size=10, page_number=0, include_orgs=False):
+    def fetch_users_in_org(org_id, page_size=10, page_number=0, include_orgs=False, role=None):
         return _fetch_users_in_org(
-            auth_url, integration_api_key, org_id, page_size, page_number, include_orgs
+            auth_url, integration_api_key, org_id, page_size, page_number, include_orgs, role
         )
 
     def create_user(

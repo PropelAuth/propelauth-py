@@ -180,7 +180,7 @@ def _fetch_users_by_query(
 
 
 def _fetch_users_in_org(
-    auth_url, integration_api_key, org_id, page_size, page_number, include_orgs
+    auth_url, integration_api_key, org_id, page_size, page_number, include_orgs, role
 ):
     if not _is_valid_id(org_id):
         return {
@@ -196,6 +196,7 @@ def _fetch_users_in_org(
         "page_size": page_size,
         "page_number": page_number,
         "include_orgs": include_orgs,
+        "role": role,
     }
     response = requests.get(
         url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key)
