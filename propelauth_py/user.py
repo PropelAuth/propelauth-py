@@ -11,7 +11,6 @@ class User:
         last_name=None,
         username=None,
         properties=None,
-        picture_url=None,
         legacy_user_id=None,
         impersonator_user_id=None,
         metadata=None,
@@ -23,7 +22,6 @@ class User:
         self.last_name = last_name
         self.username = username
         self.properties = properties
-        self.picture_url = picture_url
         self.legacy_user_id = legacy_user_id
         self.impersonator_user_id = impersonator_user_id
         self.metadata = metadata
@@ -46,7 +44,7 @@ class User:
 
         return False
 
-    def is_impersonating(self):
+    def is_impersonated(self):
         """Returns true if the user is impersonated"""
         return self.impersonator_user_id is not None
 
