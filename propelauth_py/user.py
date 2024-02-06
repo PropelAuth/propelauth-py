@@ -13,7 +13,6 @@ class User:
         properties=None,
         legacy_user_id=None,
         impersonator_user_id=None,
-        metadata=None,
     ):
         self.user_id = user_id
         self.org_id_to_org_member_info = org_id_to_org_member_info
@@ -24,7 +23,6 @@ class User:
         self.properties = properties
         self.legacy_user_id = legacy_user_id
         self.impersonator_user_id = impersonator_user_id
-        self.metadata = metadata
 
     def __eq__(self, other):
         if isinstance(other, User):
@@ -37,7 +35,6 @@ class User:
                 and self.first_name == other.first_name
                 and self.last_name == other.last_name
                 and self.username == other.username
-                and self.metadata == other.metadata
                 and self.properties == other.properties
             )
 
@@ -192,6 +189,5 @@ def _to_user(decoded_token):
         username=decoded_token.get("username"),
         legacy_user_id=decoded_token.get("legacy_user_id"),
         impersonator_user_id=decoded_token.get("impersonator_user_id"),
-        metadata=decoded_token.get("metadata"),
         properties=decoded_token.get("properties"),
     )
