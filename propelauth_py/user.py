@@ -34,7 +34,6 @@ class User:
                 and self.legacy_user_id == other.legacy_user_id
                 and self.impersonator_user_id == other.impersonator_user_id
                 and self.email == other.email
-                and self.picture_url == other.picture_url
                 and self.first_name == other.first_name
                 and self.last_name == other.last_name
                 and self.username == other.username
