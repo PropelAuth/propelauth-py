@@ -70,7 +70,7 @@ from propelauth_py.auth_fns import (
     validate_permission_and_get_org,
     validate_all_permissions_and_get_org,
 )
-from propelauth_py.errors import UnauthorizedException
+from propelauth_py.errors import UnauthorizedException, ForbiddenException
 from propelauth_py.validation import _validate_url
 
 Auth = namedtuple(
@@ -187,7 +187,12 @@ def init_base_auth(
         page_size=10, page_number=0, order_by=OrgQueryOrderBy.CREATED_AT_ASC, name=None
     ):
         return _fetch_org_by_query(
-            auth_url, integration_api_key, page_size, page_number, order_by, name,
+            auth_url,
+            integration_api_key,
+            page_size,
+            page_number,
+            order_by,
+            name,
         )
 
     def fetch_users_by_query(
@@ -207,9 +212,17 @@ def init_base_auth(
             include_orgs,
         )
 
-    def fetch_users_in_org(org_id, page_size=10, page_number=0, include_orgs=False, role=None):
+    def fetch_users_in_org(
+        org_id, page_size=10, page_number=0, include_orgs=False, role=None
+    ):
         return _fetch_users_in_org(
-            auth_url, integration_api_key, org_id, page_size, page_number, include_orgs, role
+            auth_url,
+            integration_api_key,
+            org_id,
+            page_size,
+            page_number,
+            include_orgs,
+            role,
         )
 
     def create_user(
