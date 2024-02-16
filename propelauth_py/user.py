@@ -13,6 +13,7 @@ class User:
         properties=None,
         legacy_user_id=None,
         impersonator_user_id=None,
+        active_org_id=None,
     ):
         self.user_id = user_id
         self.org_id_to_org_member_info = org_id_to_org_member_info
@@ -23,6 +24,7 @@ class User:
         self.properties = properties
         self.legacy_user_id = legacy_user_id
         self.impersonator_user_id = impersonator_user_id
+        self.active_org_id = active_org_id
 
     def __eq__(self, other):
         if isinstance(other, User):
@@ -36,6 +38,7 @@ class User:
                 and self.last_name == other.last_name
                 and self.username == other.username
                 and self.properties == other.properties
+                and self.active_org_id == other.active_org_id
             )
 
         return False
@@ -43,6 +46,16 @@ class User:
     def is_impersonated(self):
         """Returns true if the user is impersonated"""
         return self.impersonator_user_id is not None
+
+    def get_active_org(self):
+        """Returns the active org member info, if the user has an active org."""
+        if self.active_org_id is None:
+            return None
+        return self.get_org(self.active_org_id)
+
+    def get_active_org_id(self):
+        """Returns the active org id, if the user has an active org."""
+        return self.active_org_id
 
     def get_org(self, org_id):
         """Returns the org member info for the org_id, if the user is in the org."""
@@ -177,9 +190,18 @@ def _to_user(decoded_token):
     if user_id is None:
         raise UnauthorizedException.invalid_payload_in_access_token()
 
-    org_id_to_org_member_info = _to_org_member_info(
-        decoded_token.get("org_id_to_org_member_info")
-    )
+    org_member_info = decoded_token.get("org_member_info")
+    if org_member_info:
+        active_org_id = org_member_info.get("org_id")
+        org_id_to_org_member_info = _to_org_member_info(
+            {active_org_id: org_member_info}
+        )
+    else:
+        active_org_id = None
+        org_id_to_org_member_info = _to_org_member_info(
+            decoded_token.get("org_id_to_org_member_info")
+        )
+
     return User(
         user_id,
         org_id_to_org_member_info,
@@ -190,4 +212,5 @@ def _to_user(decoded_token):
         legacy_user_id=decoded_token.get("legacy_user_id"),
         impersonator_user_id=decoded_token.get("impersonator_user_id"),
         properties=decoded_token.get("properties"),
+        active_org_id=active_org_id,
     )

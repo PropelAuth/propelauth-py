@@ -47,14 +47,16 @@ def test_to_user():
         org_c["org_id"]: org_c,
     }
 
-    user = _to_user({
-        "user_id": user_id,
-        "org_id_to_org_member_info": org_id_to_org_member_info,
-        "email": email,
-        "first_name": first_name,
-        "last_name": last_name,
-        "username": username,
-    })
+    user = _to_user(
+        {
+            "user_id": user_id,
+            "org_id_to_org_member_info": org_id_to_org_member_info,
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "username": username,
+        }
+    )
 
     expected_org_id_to_org_member_info = {
         org_a["org_id"]: OrgMemberInfo(
@@ -80,8 +82,64 @@ def test_to_user():
             user_assigned_role="Member",
             user_inherited_roles_plus_current_role=["Member"],
             user_permissions=["View"],
-        )
+        ),
     }
-    expected_user = User(user_id, expected_org_id_to_org_member_info, email, first_name, last_name, username)
+    expected_user = User(
+        user_id,
+        expected_org_id_to_org_member_info,
+        email,
+        first_name,
+        last_name,
+        username,
+    )
+
+    assert user == expected_user
+
+
+def test_to_user_with_active_org():
+    user_id = str(uuid4())
+    email = str(uuid4())
+    first_name = str(uuid4())
+    last_name = str(uuid4())
+    username = str(uuid4())
+    org_member_info = {
+        "org_id": str(uuid4()),
+        "org_name": "orgA",
+        "org_metadata": {"org_metadata_key_a": "org_metadata_value_a"},
+        "user_role": "Owner",
+        "inherited_user_roles_plus_current_role": ["Owner", "Admin", "Member"],
+        "user_permissions": ["View", "Edit", "Delete"],
+    }
+
+    user = _to_user(
+        {
+            "user_id": user_id,
+            "org_member_info": org_member_info,
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "username": username,
+        }
+    )
+
+    expected_org_id_to_org_member_info = {
+        org_member_info["org_id"]: OrgMemberInfo(
+            org_id=org_member_info["org_id"],
+            org_name=org_member_info["org_name"],
+            org_metadata=org_member_info["org_metadata"],
+            user_assigned_role="Owner",
+            user_inherited_roles_plus_current_role=["Owner", "Admin", "Member"],
+            user_permissions=["View", "Edit", "Delete"],
+        ),
+    }
+    expected_user = User(
+        user_id,
+        expected_org_id_to_org_member_info,
+        email,
+        first_name,
+        last_name,
+        username,
+        active_org_id=org_member_info["org_id"],
+    )
 
     assert user == expected_user
