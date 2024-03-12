@@ -6,8 +6,11 @@ from propelauth_py.user import _to_user, User, OrgMemberInfo
 def test_to_user_without_orgs():
     user_id = str(uuid4())
     email = str(uuid4())
-    user = _to_user({"user_id": user_id, "email": email})
-    expected_user = User(user_id, None, email)
+    login_method = {
+        "login_method": "password",
+    }
+    user = _to_user({"user_id": user_id, "email": email, "login_method": login_method})
+    expected_user = User(user_id, None, email, login_method=login_method)
     assert user == expected_user
 
 
@@ -46,6 +49,11 @@ def test_to_user():
         org_b["org_id"]: org_b,
         org_c["org_id"]: org_c,
     }
+    login_method = {
+        "login_method": "saml_sso",
+        "provider": "Okta",
+        "org_id": org_a["org_id"],
+    }
 
     user = _to_user(
         {
@@ -55,6 +63,7 @@ def test_to_user():
             "first_name": first_name,
             "last_name": last_name,
             "username": username,
+            "login_method": login_method,
         }
     )
 
@@ -91,6 +100,7 @@ def test_to_user():
         first_name,
         last_name,
         username,
+        login_method=login_method,
     )
 
     assert user == expected_user
@@ -110,6 +120,11 @@ def test_to_user_with_active_org():
         "inherited_user_roles_plus_current_role": ["Owner", "Admin", "Member"],
         "user_permissions": ["View", "Edit", "Delete"],
     }
+    login_method = {
+        "login_method": "social_sso",
+        "provider": "Google",
+        "org_id": None,
+    }
 
     user = _to_user(
         {
@@ -119,6 +134,7 @@ def test_to_user_with_active_org():
             "first_name": first_name,
             "last_name": last_name,
             "username": username,
+            "login_method": login_method,
         }
     )
 
@@ -140,6 +156,7 @@ def test_to_user_with_active_org():
         last_name,
         username,
         active_org_id=org_member_info["org_id"],
+        login_method=login_method,
     )
 
     assert user == expected_user
