@@ -31,6 +31,7 @@ from propelauth_py.api.org import (
     _remove_user_from_org,
     _update_org_metadata,
     _add_user_to_org,
+    _add_user_to_org_with_roles,
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
     _validate_org_api_key,
@@ -111,7 +112,9 @@ Auth = namedtuple(
         "delete_org",
         "update_org_metadata",
         "add_user_to_org",
+        "add_user_to_org_with_roles",
         "change_user_role_in_org",
+        "change_user_roles_in_org",
         "remove_user_from_org",
         "delete_user",
         "disable_user",
@@ -402,12 +405,20 @@ def init_base_auth(
     def add_user_to_org(user_id, org_id, role):
         return _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role)
 
+    def add_user_to_org_with_roles(user_id, org_id, roles):
+        return _add_user_to_org_with_roles(auth_url, integration_api_key, user_id, org_id, roles)
+
     def remove_user_from_org(user_id, org_id):
         return _remove_user_from_org(auth_url, integration_api_key, user_id, org_id)
 
     def change_user_role_in_org(user_id, org_id, role):
         return _change_user_role_in_org(
             auth_url, integration_api_key, user_id, org_id, role
+        )
+
+    def change_user_roles_in_org(user_id, org_id, roles):
+        return _change_user_roles_in_org(
+            auth_url, integration_api_key, user_id, org_id, roles
         )
 
     def delete_user(user_id):
@@ -575,7 +586,9 @@ def init_base_auth(
         delete_org=delete_org,
         update_org_metadata=update_org_metadata,
         add_user_to_org=add_user_to_org,
+        add_user_to_org_with_roles=add_user_to_org_with_roles,
         change_user_role_in_org=change_user_role_in_org,
+        change_user_roles_in_org=change_user_roles_in_org,
         remove_user_from_org=remove_user_from_org,
         enable_user=enable_user,
         disable_user=disable_user,

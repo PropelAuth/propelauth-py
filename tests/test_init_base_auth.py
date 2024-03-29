@@ -31,10 +31,12 @@ from propelauth_py.api.org import (
     _remove_user_from_org,
     _update_org_metadata,
     _add_user_to_org,
+    _add_user_to_org_with_roles,
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
     _validate_org_api_key,
     _change_user_role_in_org,
+    _change_user_roles_in_org,
     _delete_org,
 )
 from propelauth_py.api.magic_link import _create_magic_link
@@ -80,6 +82,7 @@ IMPORTED_FUNCTIONS = [
     _remove_user_from_org,
     _update_org_metadata,
     _add_user_to_org,
+    _add_user_to_org_with_roles,
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
     _validate_org_api_key,
@@ -94,6 +97,7 @@ IMPORTED_FUNCTIONS = [
     _delete_api_key,
     _validate_api_key,
     _change_user_role_in_org,
+    _change_user_roles_in_org,
     _delete_org,
     _invite_user_to_org,
 ]
