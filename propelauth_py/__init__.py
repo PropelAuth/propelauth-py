@@ -23,6 +23,7 @@ from propelauth_py.api.user import (
     _disable_user_can_create_orgs,
     _validate_personal_api_key,
     _invite_user_to_org,
+    _invite_user_to_org_with_roles,
 )
 from propelauth_py.api.org import (
     _fetch_org,
@@ -36,6 +37,7 @@ from propelauth_py.api.org import (
     _disallow_org_to_setup_saml_connection,
     _validate_org_api_key,
     _change_user_role_in_org,
+    _change_user_roles_in_org,
     _delete_org,
 )
 from propelauth_py.api.magic_link import _create_magic_link
@@ -101,6 +103,7 @@ Auth = namedtuple(
         "fetch_users_in_org",
         "create_user",
         "invite_user_to_org",
+        "invite_user_to_org_with_roles",
         "update_user_email",
         "update_user_metadata",
         "update_user_password",
@@ -260,6 +263,15 @@ def init_base_auth(
             email,
             org_id,
             role,
+        )
+
+    def invite_user_to_org_with_roles(email, org_id, roles):
+        return _invite_user_to_org_with_roles(
+            auth_url,
+            integration_api_key,
+            email,
+            org_id,
+            roles,
         )
 
     def update_user_email(user_id, new_email, require_email_confirmation):
@@ -575,6 +587,7 @@ def init_base_auth(
         fetch_users_in_org=fetch_users_in_org,
         create_user=create_user,
         invite_user_to_org=invite_user_to_org,
+        invite_user_to_org_with_roles=invite_user_to_org_with_roles,
         update_user_email=update_user_email,
         update_user_metadata=update_user_metadata,
         update_user_password=update_user_password,
