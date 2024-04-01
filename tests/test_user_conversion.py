@@ -74,7 +74,7 @@ def test_to_user():
             user_inherited_roles_plus_current_role=["Owner", "Admin", "Member"],
             user_permissions=["View", "Edit", "Delete"],
             org_role_structure=org_role_structure,
-            additional_roles=[],
+            assigned_additional_roles=[],
         ),
         org_b["org_id"]: OrgMemberInfo(
             org_id=org_b["org_id"],
@@ -84,7 +84,7 @@ def test_to_user():
             user_inherited_roles_plus_current_role=["Admin", "Member"],
             user_permissions=["View", "Edit"],
             org_role_structure=org_role_structure,
-            additional_roles=[],
+            assigned_additional_roles=[],
         ),
         org_c["org_id"]: OrgMemberInfo(
             org_id=org_c["org_id"],
@@ -94,7 +94,7 @@ def test_to_user():
             user_inherited_roles_plus_current_role=["Member"],
             user_permissions=["View"],
             org_role_structure=org_role_structure,
-            additional_roles=[],
+            assigned_additional_roles=[],
         ),
     }
     expected_user = User(
@@ -147,7 +147,7 @@ def test_to_user_with_active_org():
             user_inherited_roles_plus_current_role=["Owner", "Admin", "Member"],
             user_permissions=["View", "Edit", "Delete"],
             org_role_structure=org_role_structure,
-            additional_roles=[],
+            assigned_additional_roles=[],
         ),
     }
     expected_user = User(
@@ -225,7 +225,7 @@ def test_to_user_multi_role():
             user_inherited_roles_plus_current_role=["Owner"],
             user_permissions=["View", "Edit", "Delete"],
             org_role_structure=org_role_structure,
-            additional_roles=["Billing", "Finance"],
+            assigned_additional_roles=["Billing", "Finance"],
         ),
         org_b["org_id"]: OrgMemberInfo(
             org_id=org_b["org_id"],
@@ -235,7 +235,7 @@ def test_to_user_multi_role():
             user_inherited_roles_plus_current_role=["Member"],
             user_permissions=["View", "Edit"],
             org_role_structure=org_role_structure,
-            additional_roles=["IT"],
+            assigned_additional_roles=["IT"],
         ),
         org_c["org_id"]: OrgMemberInfo(
             org_id=org_c["org_id"],
@@ -245,7 +245,7 @@ def test_to_user_multi_role():
             user_inherited_roles_plus_current_role=["Contractor"],
             user_permissions=["View"],
             org_role_structure=org_role_structure,
-            additional_roles=[],
+            assigned_additional_roles=[],
         ),
     }
     expected_user = User(

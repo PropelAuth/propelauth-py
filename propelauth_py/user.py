@@ -121,7 +121,7 @@ class OrgMemberInfo:
         user_inherited_roles_plus_current_role,
         user_permissions,
         org_role_structure = SINGLE_ROLE,
-        additional_roles = [],
+        assigned_additional_roles = [],
     ):
         self.org_id = org_id
         self.org_name = org_name
@@ -132,7 +132,7 @@ class OrgMemberInfo:
         )
         self.user_permissions = user_permissions
         self.org_role_structure = org_role_structure
-        self.additional_roles = additional_roles
+        self.assigned_additional_roles = assigned_additional_roles
 
     def __eq__(self, other):
         if isinstance(other, OrgMemberInfo):
@@ -140,19 +140,19 @@ class OrgMemberInfo:
                 self.org_id == other.org_id
                 and self.org_name == other.org_name
                 and self.user_assigned_role == other.user_assigned_role
-                and all([r in self.additional_roles for r in other.additional_roles])
+                and all([r in self.assigned_additional_roles for r in other.assigned_additional_roles])
             )
         return False
 
     def user_is_role(self, role):
         """returns true if the user is the role"""
         return (role == self.user_assigned_role or 
-            (self.org_role_structure == MULTI_ROLE and role in self.additional_roles))
+            (self.org_role_structure == MULTI_ROLE and role in self.assigned_additional_roles))
 
     def user_is_at_least_role(self, role):
         """returns true if the user can act as the role"""
         if self.org_role_structure == MULTI_ROLE:
-            return role == self.user_assigned_role or role in self.additional_roles
+            return role == self.user_assigned_role or role in self.assigned_additional_roles
         else:
             return role in self.user_inherited_roles_plus_current_role
 
@@ -193,7 +193,7 @@ def _to_org_member_info(org_id_to_org_member_info_json):
                 ],
                 user_permissions=org_member_info_json["user_permissions"],
                 org_role_structure=org_member_info_json.get("org_role_structure", SINGLE_ROLE),
-                additional_roles=org_member_info_json.get("additional_roles", []),
+                assigned_additional_roles=org_member_info_json.get("additional_roles", []),
             )
     return org_id_to_org_member_info
 
