@@ -1,5 +1,13 @@
 from uuid import uuid4
 
+from propelauth_py.types.login_method import (
+    PasswordLoginMethod,
+    SamlLoginProvider,
+    SamlSsoLoginMethod,
+    SocialLoginProvider,
+    SocialSsoLoginMethod,
+    UnknownLoginMethod,
+)
 from propelauth_py.user import _to_user, User, OrgMemberInfo
 
 
@@ -10,7 +18,15 @@ def test_to_user_without_orgs():
         "login_method": "password",
     }
     user = _to_user({"user_id": user_id, "email": email, "login_method": login_method})
-    expected_user = User(user_id, None, email, login_method=login_method)
+    expected_user = User(user_id, None, email, login_method=PasswordLoginMethod())
+    assert user == expected_user
+
+
+def test_to_user_with_no_login_method():
+    user_id = str(uuid4())
+    email = str(uuid4())
+    user = _to_user({"user_id": user_id, "email": email})
+    expected_user = User(user_id, None, email, login_method=UnknownLoginMethod())
     assert user == expected_user
 
 
@@ -100,7 +116,9 @@ def test_to_user():
         first_name,
         last_name,
         username,
-        login_method=login_method,
+        login_method=SamlSsoLoginMethod(
+            provider=SamlLoginProvider.OKTA, org_id=org_a["org_id"]
+        ),
     )
 
     assert user == expected_user
@@ -156,7 +174,7 @@ def test_to_user_with_active_org():
         last_name,
         username,
         active_org_id=org_member_info["org_id"],
-        login_method=login_method,
+        login_method=SocialSsoLoginMethod(provider=SocialLoginProvider.GOOGLE),
     )
 
     assert user == expected_user

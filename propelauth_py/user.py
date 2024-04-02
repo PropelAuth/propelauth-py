@@ -1,4 +1,5 @@
 from propelauth_py.errors import UnauthorizedException
+from propelauth_py.types.login_method import to_login_method
 
 
 class User:
@@ -216,5 +217,5 @@ def _to_user(decoded_token):
         impersonator_user_id=decoded_token.get("impersonator_user_id"),
         properties=decoded_token.get("properties"),
         active_org_id=active_org_id,
-        login_method=decoded_token.get("login_method"),
+        login_method=to_login_method(decoded_token.get("login_method", {})),
     )
