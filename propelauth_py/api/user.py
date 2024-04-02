@@ -309,7 +309,7 @@ def _disable_user_2fa(auth_url, integration_api_key, user_id):
     return True
 
 
-def _invite_user_to_org(auth_url, integration_api_key, email, org_id, role, roles=[]):
+def _invite_user_to_org(auth_url, integration_api_key, email, org_id, role, additional_roles=[]):
     if not _is_valid_id(org_id):
         return False
 
@@ -319,7 +319,7 @@ def _invite_user_to_org(auth_url, integration_api_key, email, org_id, role, role
         "email": email,
         "org_id": org_id,
         "role": role,
-        "additional_roles": roles,
+        "additional_roles": additional_roles,
     }
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
 
