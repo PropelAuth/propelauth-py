@@ -1,4 +1,5 @@
 from propelauth_py.errors import UnauthorizedException
+from propelauth_py.types.login_method import to_login_method
 
 
 class User:
@@ -14,6 +15,7 @@ class User:
         legacy_user_id=None,
         impersonator_user_id=None,
         active_org_id=None,
+        login_method=None,
     ):
         self.user_id = user_id
         self.org_id_to_org_member_info = org_id_to_org_member_info
@@ -25,6 +27,7 @@ class User:
         self.legacy_user_id = legacy_user_id
         self.impersonator_user_id = impersonator_user_id
         self.active_org_id = active_org_id
+        self.login_method = login_method
 
     def __eq__(self, other):
         if isinstance(other, User):
@@ -39,6 +42,7 @@ class User:
                 and self.username == other.username
                 and self.properties == other.properties
                 and self.active_org_id == other.active_org_id
+                and self.login_method == other.login_method
             )
 
         return False
@@ -213,4 +217,5 @@ def _to_user(decoded_token):
         impersonator_user_id=decoded_token.get("impersonator_user_id"),
         properties=decoded_token.get("properties"),
         active_org_id=active_org_id,
+        login_method=to_login_method(decoded_token.get("login_method", {})),
     )

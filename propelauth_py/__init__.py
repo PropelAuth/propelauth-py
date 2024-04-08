@@ -71,6 +71,18 @@ from propelauth_py.auth_fns import (
     validate_all_permissions_and_get_org,
 )
 from propelauth_py.errors import UnauthorizedException, ForbiddenException
+from propelauth_py.types.login_method import (
+    UnknownLoginMethod,
+    PasswordLoginMethod,
+    MagicLinkLoginMethod,
+    SamlLoginProvider,
+    SamlSsoLoginMethod,
+    SocialLoginProvider,
+    SocialSsoLoginMethod,
+    EmailConfirmationLinkLoginMethod,
+    ImpersonationLoginMethod,
+    GeneratedFromBackendApiLoginMethod,
+)
 from propelauth_py.validation import _validate_url
 
 Auth = namedtuple(
