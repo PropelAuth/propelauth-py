@@ -4,6 +4,7 @@ from enum import Enum
 class SocialLoginProvider(Enum):
     GOOGLE = "Google"
     GITHUB = "GitHub"
+    MICROSOFT = "Microsoft"
     SLACK = "Slack"
     LINKEDIN = "LinkedIn"
     SALESFORCE = "Salesforce"
