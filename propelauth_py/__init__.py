@@ -23,7 +23,6 @@ from propelauth_py.api.user import (
     _disable_user_can_create_orgs,
     _validate_personal_api_key,
     _invite_user_to_org,
-    _invite_user_to_org_with_roles,
 )
 from propelauth_py.api.org import (
     _fetch_org,
@@ -32,12 +31,10 @@ from propelauth_py.api.org import (
     _remove_user_from_org,
     _update_org_metadata,
     _add_user_to_org,
-    _add_user_to_org_with_roles,
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
     _validate_org_api_key,
     _change_user_role_in_org,
-    _change_user_roles_in_org,
     _delete_org,
 )
 from propelauth_py.api.magic_link import _create_magic_link
@@ -103,7 +100,6 @@ Auth = namedtuple(
         "fetch_users_in_org",
         "create_user",
         "invite_user_to_org",
-        "invite_user_to_org_with_roles",
         "update_user_email",
         "update_user_metadata",
         "update_user_password",
@@ -115,9 +111,7 @@ Auth = namedtuple(
         "delete_org",
         "update_org_metadata",
         "add_user_to_org",
-        "add_user_to_org_with_roles",
         "change_user_role_in_org",
-        "change_user_roles_in_org",
         "remove_user_from_org",
         "delete_user",
         "disable_user",
@@ -256,22 +250,14 @@ def init_base_auth(
             properties,
         )
 
-    def invite_user_to_org(email, org_id, role):
+    def invite_user_to_org(email, org_id, role, additional_roles=[]):
         return _invite_user_to_org(
             auth_url,
             integration_api_key,
             email,
             org_id,
             role,
-        )
-
-    def invite_user_to_org_with_roles(email, org_id, roles):
-        return _invite_user_to_org_with_roles(
-            auth_url,
-            integration_api_key,
-            email,
-            org_id,
-            roles,
+            additional_roles,
         )
 
     def update_user_email(user_id, new_email, require_email_confirmation):
@@ -414,23 +400,15 @@ def init_base_auth(
     def delete_org(org_id):
         return _delete_org(auth_url, integration_api_key, org_id)
 
-    def add_user_to_org(user_id, org_id, role):
-        return _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role)
-
-    def add_user_to_org_with_roles(user_id, org_id, roles):
-        return _add_user_to_org_with_roles(auth_url, integration_api_key, user_id, org_id, roles)
+    def add_user_to_org(user_id, org_id, role, additional_roles=[]):
+        return _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role, additional_roles)
 
     def remove_user_from_org(user_id, org_id):
         return _remove_user_from_org(auth_url, integration_api_key, user_id, org_id)
 
-    def change_user_role_in_org(user_id, org_id, role):
+    def change_user_role_in_org(user_id, org_id, role, additional_roles=[]):
         return _change_user_role_in_org(
-            auth_url, integration_api_key, user_id, org_id, role
-        )
-
-    def change_user_roles_in_org(user_id, org_id, roles):
-        return _change_user_roles_in_org(
-            auth_url, integration_api_key, user_id, org_id, roles
+            auth_url, integration_api_key, user_id, org_id, role, additional_roles
         )
 
     def delete_user(user_id):
@@ -587,7 +565,6 @@ def init_base_auth(
         fetch_users_in_org=fetch_users_in_org,
         create_user=create_user,
         invite_user_to_org=invite_user_to_org,
-        invite_user_to_org_with_roles=invite_user_to_org_with_roles,
         update_user_email=update_user_email,
         update_user_metadata=update_user_metadata,
         update_user_password=update_user_password,
@@ -599,9 +576,7 @@ def init_base_auth(
         delete_org=delete_org,
         update_org_metadata=update_org_metadata,
         add_user_to_org=add_user_to_org,
-        add_user_to_org_with_roles=add_user_to_org_with_roles,
         change_user_role_in_org=change_user_role_in_org,
-        change_user_roles_in_org=change_user_roles_in_org,
         remove_user_from_org=remove_user_from_org,
         enable_user=enable_user,
         disable_user=disable_user,

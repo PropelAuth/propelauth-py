@@ -145,9 +145,6 @@ def _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role, addit
 
     return True
 
-def _add_user_to_org_with_roles(auth_url, integration_api_key, user_id, org_id, roles):
-    _add_user_to_org(auth_url, integration_api_key, user_id, org_id, roles[0], roles[1:])
-
 def _remove_user_from_org(auth_url, integration_api_key, user_id, org_id):
     url = auth_url + f"{ENDPOINT_PATH}/remove_user"
     json = {"user_id": user_id, "org_id": org_id}
@@ -180,9 +177,6 @@ def _change_user_role_in_org(auth_url, integration_api_key, user_id, org_id, rol
         raise RuntimeError("Unknown error when changing a user's role(s) in the org")
 
     return True
-
-def _change_user_roles_in_org(auth_url, integration_api_key, user_id, org_id, roles):
-    _change_user_role_in_org(auth_url, integration_api_key, user_id, org_id, roles[0], roles[1:])
 
 
 ####################

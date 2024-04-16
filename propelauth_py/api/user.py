@@ -338,10 +338,6 @@ def _invite_user_to_org(auth_url, integration_api_key, email, org_id, role, addi
 
     return response.text
 
-def _invite_user_to_org_with_roles(auth_url, integration_api_key, email, org_id, roles):
-    return _invite_user_to_org(auth_url, integration_api_key, email, org_id, roles[0], roles[1:])
-
-
 ####################
 #     PATCH/PUT    #
 ####################
