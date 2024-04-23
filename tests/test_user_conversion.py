@@ -290,6 +290,7 @@ def test_to_user_multi_role():
         first_name,
         last_name,
         username,
+        login_method=UnknownLoginMethod(),
     )
 
     assert user == expected_user
