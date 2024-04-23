@@ -1,6 +1,8 @@
 from propelauth_py.errors import UnauthorizedException
 from propelauth_py.types.login_method import to_login_method
 
+MULTI_ROLE = "multi_role"
+SINGLE_ROLE = "single_role_in_hierarchy"
 
 class User:
     def __init__(
@@ -122,6 +124,8 @@ class OrgMemberInfo:
         user_assigned_role,
         user_inherited_roles_plus_current_role,
         user_permissions,
+        org_role_structure = SINGLE_ROLE,
+        assigned_additional_roles = [],
     ):
         self.org_id = org_id
         self.org_name = org_name
@@ -131,6 +135,8 @@ class OrgMemberInfo:
             user_inherited_roles_plus_current_role
         )
         self.user_permissions = user_permissions
+        self.org_role_structure = org_role_structure
+        self.assigned_additional_roles = assigned_additional_roles
 
     def __eq__(self, other):
         if isinstance(other, OrgMemberInfo):
@@ -138,23 +144,28 @@ class OrgMemberInfo:
                 self.org_id == other.org_id
                 and self.org_name == other.org_name
                 and self.user_assigned_role == other.user_assigned_role
+                and all([r in self.assigned_additional_roles for r in other.assigned_additional_roles])
             )
         return False
 
     def user_is_role(self, role):
         """returns true if the user is the role"""
-        return role == self.user_assigned_role
+        return (role == self.user_assigned_role or 
+            (self.org_role_structure == MULTI_ROLE and role in self.assigned_additional_roles))
 
     def user_is_at_least_role(self, role):
         """returns true if the user can act as the role"""
-        return role in self.user_inherited_roles_plus_current_role
+        if self.org_role_structure == MULTI_ROLE:
+            return role == self.user_assigned_role or role in self.assigned_additional_roles
+        else:
+            return role in self.user_inherited_roles_plus_current_role
 
     def user_has_permission(self, permission):
         """returns true if user has the permission"""
         return permission in self.user_permissions
 
     def user_has_all_permissions(self, permissions):
-        """returns true if user has the all the permissions listed"""
+        """returns true if user has all the permissions listed"""
         for permission in permissions:
             if not self.user_has_permission(permission):
                 return False
@@ -185,6 +196,8 @@ def _to_org_member_info(org_id_to_org_member_info_json):
                     "inherited_user_roles_plus_current_role"
                 ],
                 user_permissions=org_member_info_json["user_permissions"],
+                org_role_structure=org_member_info_json.get("org_role_structure", SINGLE_ROLE),
+                assigned_additional_roles=org_member_info_json.get("additional_roles", []),
             )
     return org_id_to_org_member_info
 

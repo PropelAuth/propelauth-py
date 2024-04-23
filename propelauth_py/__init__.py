@@ -262,13 +262,14 @@ def init_base_auth(
             properties,
         )
 
-    def invite_user_to_org(email, org_id, role):
+    def invite_user_to_org(email, org_id, role, additional_roles=[]):
         return _invite_user_to_org(
             auth_url,
             integration_api_key,
             email,
             org_id,
             role,
+            additional_roles,
         )
 
     def update_user_email(user_id, new_email, require_email_confirmation):
@@ -411,15 +412,15 @@ def init_base_auth(
     def delete_org(org_id):
         return _delete_org(auth_url, integration_api_key, org_id)
 
-    def add_user_to_org(user_id, org_id, role):
-        return _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role)
+    def add_user_to_org(user_id, org_id, role, additional_roles=[]):
+        return _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role, additional_roles)
 
     def remove_user_from_org(user_id, org_id):
         return _remove_user_from_org(auth_url, integration_api_key, user_id, org_id)
 
-    def change_user_role_in_org(user_id, org_id, role):
+    def change_user_role_in_org(user_id, org_id, role, additional_roles=[]):
         return _change_user_role_in_org(
-            auth_url, integration_api_key, user_id, org_id, role
+            auth_url, integration_api_key, user_id, org_id, role, additional_roles
         )
 
     def delete_user(user_id):
