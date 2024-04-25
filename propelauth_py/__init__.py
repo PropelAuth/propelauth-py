@@ -25,6 +25,7 @@ from propelauth_py.api.user import (
     _invite_user_to_org,
 )
 from propelauth_py.api.org import (
+    _fetch_custom_role_mappings,
     _fetch_org,
     _fetch_org_by_query,
     _create_org,
@@ -108,6 +109,7 @@ Auth = namedtuple(
         "fetch_batch_user_metadata_by_usernames",
         "fetch_org",
         "fetch_org_by_query",
+        "fetch_custom_role_mappings",
         "fetch_users_by_query",
         "fetch_users_in_org",
         "create_user",
@@ -205,6 +207,12 @@ def init_base_auth(
             page_number,
             order_by,
             name,
+        )
+    
+    def fetch_custom_role_mappings():
+        return _fetch_custom_role_mappings(
+            auth_url,
+            integration_api_key,
         )
 
     def fetch_users_by_query(
@@ -395,6 +403,7 @@ def init_base_auth(
         can_join_on_email_domain_match=None,
         members_must_have_email_domain_match=None,
         domain=None,
+        custom_role_mapping_id=None,
     ):
         return _update_org_metadata(
             auth_url,
@@ -407,6 +416,7 @@ def init_base_auth(
             can_join_on_email_domain_match=can_join_on_email_domain_match,
             members_must_have_email_domain_match=members_must_have_email_domain_match,
             domain=domain,
+            custom_role_mapping_id=custom_role_mapping_id,
         )
 
     def delete_org(org_id):
@@ -573,6 +583,7 @@ def init_base_auth(
         fetch_batch_user_metadata_by_usernames=fetch_batch_user_metadata_by_usernames,
         fetch_org=fetch_org,
         fetch_org_by_query=fetch_org_by_query,
+        fetch_custom_role_mappings=fetch_custom_role_mappings,
         fetch_users_by_query=fetch_users_by_query,
         fetch_users_in_org=fetch_users_in_org,
         create_user=create_user,

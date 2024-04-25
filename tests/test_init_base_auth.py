@@ -25,6 +25,7 @@ from propelauth_py.api.user import (
     _invite_user_to_org,
 )
 from propelauth_py.api.org import (
+    _fetch_custom_role_mappings,
     _fetch_org,
     _fetch_org_by_query,
     _create_org,
@@ -76,6 +77,7 @@ IMPORTED_FUNCTIONS = [
     _validate_personal_api_key,
     _fetch_org,
     _fetch_org_by_query,
+    _fetch_custom_role_mappings,
     _create_org,
     _remove_user_from_org,
     _update_org_metadata,

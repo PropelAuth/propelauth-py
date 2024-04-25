@@ -62,6 +62,22 @@ def _fetch_org_by_query(
 
     return response.json()
 
+def _fetch_custom_role_mappings(auth_url, integration_api_key):
+    url = auth_url + "/api/backend/v1/custom_role_mappings"
+    response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching org")
+
+    return response.json()
+
+
 
 ####################
 #       POST       #
@@ -193,6 +209,7 @@ def _update_org_metadata(
     can_join_on_email_domain_match=None,  # In the backend, this is the `domain_autojoin` argument.
     members_must_have_email_domain_match=None,  # In the backend, this is the `domain_restrict` argument.
     domain=None,
+    custom_role_mapping_id=None,
     # TODO: Add `require_2fa_by` optional argument.
 ):
     if not _is_valid_id(org_id):
@@ -214,6 +231,8 @@ def _update_org_metadata(
         json["restrict_to_domain"] = members_must_have_email_domain_match
     if domain is not None:
         json["domain"] = domain
+    if custom_role_mapping_id is not None:
+        json["custom_role_mapping_id"] = custom_role_mapping_id
 
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
