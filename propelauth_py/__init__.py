@@ -375,6 +375,7 @@ def init_base_auth(
         members_must_have_matching_domain=False,
         domain=None,
         max_users=None,
+        legacy_org_id=None,
     ):
         return _create_org(
             auth_url,
@@ -384,6 +385,7 @@ def init_base_auth(
             members_must_have_matching_domain,
             domain,
             max_users,
+            legacy_org_id,
         )
 
     def update_org_metadata(

@@ -74,6 +74,7 @@ def _create_org(
     members_must_have_matching_domain=False,
     domain=None,
     max_users=None,
+    legacy_org_id=None,
 ):
     url = auth_url + f"{ENDPOINT_PATH}/"
     json = {
@@ -85,6 +86,8 @@ def _create_org(
         json["domain"] = domain
     if max_users is not None:
         json["max_users"] = max_users
+    if legacy_org_id:
+        json["legacy_org_id"] = legacy_org_id
 
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
