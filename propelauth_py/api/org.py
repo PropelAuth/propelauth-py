@@ -212,7 +212,6 @@ def _update_org_metadata(
     can_join_on_email_domain_match=None,  # In the backend, this is the `domain_autojoin` argument.
     members_must_have_email_domain_match=None,  # In the backend, this is the `domain_restrict` argument.
     domain=None,
-    custom_role_mapping_id=None,
     # TODO: Add `require_2fa_by` optional argument.
 ):
     if not _is_valid_id(org_id):
@@ -234,8 +233,6 @@ def _update_org_metadata(
         json["restrict_to_domain"] = members_must_have_email_domain_match
     if domain is not None:
         json["domain"] = domain
-    if custom_role_mapping_id is not None:
-        json["custom_role_mapping_id"] = custom_role_mapping_id
 
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
@@ -246,6 +243,32 @@ def _update_org_metadata(
         return False
     elif not response.ok:
         raise RuntimeError("Unknown error when updating org metadata")
+
+    return True
+
+def _subscribe_org_to_role_mapping(
+    auth_url,
+    integration_api_key,
+    org_id,
+    custom_role_mapping_id,
+):
+    if not _is_valid_id(org_id):
+        return False
+
+    url = auth_url + f"{ENDPOINT_PATH}/{org_id}"
+    json = {
+        "custom_role_mapping_id": custom_role_mapping_id,
+    }
+
+    response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise UpdateUserMetadataException(response.json())
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when subscribing an org to a custom role mapping")
 
     return True
 

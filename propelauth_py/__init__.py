@@ -30,6 +30,7 @@ from propelauth_py.api.org import (
     _fetch_org_by_query,
     _create_org,
     _remove_user_from_org,
+    _subscribe_org_to_role_mapping,
     _update_org_metadata,
     _add_user_to_org,
     _allow_org_to_setup_saml_connection,
@@ -124,6 +125,7 @@ Auth = namedtuple(
         "create_org",
         "delete_org",
         "update_org_metadata",
+        "subscribe_org_to_role_mapping",
         "add_user_to_org",
         "change_user_role_in_org",
         "remove_user_from_org",
@@ -405,7 +407,6 @@ def init_base_auth(
         can_join_on_email_domain_match=None,
         members_must_have_email_domain_match=None,
         domain=None,
-        custom_role_mapping_id=None,
     ):
         return _update_org_metadata(
             auth_url,
@@ -418,7 +419,14 @@ def init_base_auth(
             can_join_on_email_domain_match=can_join_on_email_domain_match,
             members_must_have_email_domain_match=members_must_have_email_domain_match,
             domain=domain,
-            custom_role_mapping_id=custom_role_mapping_id,
+        )
+    
+    def subscribe_org_to_role_mapping(org_id, custom_role_mapping_id):
+        return _subscribe_org_to_role_mapping(
+            auth_url,
+            integration_api_key,
+            org_id,
+            custom_role_mapping_id,
         )
 
     def delete_org(org_id):
@@ -600,6 +608,7 @@ def init_base_auth(
         create_org=create_org,
         delete_org=delete_org,
         update_org_metadata=update_org_metadata,
+        subscribe_org_to_role_mapping=subscribe_org_to_role_mapping,
         add_user_to_org=add_user_to_org,
         change_user_role_in_org=change_user_role_in_org,
         remove_user_from_org=remove_user_from_org,
