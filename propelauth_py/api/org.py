@@ -90,7 +90,7 @@ def _create_org(
     members_must_have_matching_domain=False,
     domain=None,
     max_users=None,
-    custom_role_mapping_id=None,
+    custom_role_mapping_name=None,
 ):
     url = auth_url + f"{ENDPOINT_PATH}/"
     json = {
@@ -102,8 +102,8 @@ def _create_org(
         json["domain"] = domain
     if max_users is not None:
         json["max_users"] = max_users
-    if custom_role_mapping_id is not None:
-        json["custom_role_mapping_id"] = custom_role_mapping_id
+    if custom_role_mapping_name is not None:
+        json["custom_role_mapping_name"] = custom_role_mapping_name
 
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
@@ -250,14 +250,14 @@ def _subscribe_org_to_role_mapping(
     auth_url,
     integration_api_key,
     org_id,
-    custom_role_mapping_id,
+    custom_role_mapping_name,
 ):
     if not _is_valid_id(org_id):
         return False
 
     url = auth_url + f"{ENDPOINT_PATH}/{org_id}"
     json = {
-        "custom_role_mapping_id": custom_role_mapping_id,
+        "custom_role_mapping_name": custom_role_mapping_name,
     }
 
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))

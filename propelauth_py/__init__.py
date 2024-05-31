@@ -385,7 +385,7 @@ def init_base_auth(
         members_must_have_matching_domain=False,
         domain=None,
         max_users=None,
-        custom_role_mapping_id=None,
+        custom_role_mapping_name=None,
     ):
         return _create_org(
             auth_url,
@@ -395,7 +395,7 @@ def init_base_auth(
             members_must_have_matching_domain,
             domain,
             max_users,
-            custom_role_mapping_id,
+            custom_role_mapping_name,
         )
 
     def update_org_metadata(
@@ -421,12 +421,12 @@ def init_base_auth(
             domain=domain,
         )
     
-    def subscribe_org_to_role_mapping(org_id, custom_role_mapping_id):
+    def subscribe_org_to_role_mapping(org_id, custom_role_mapping_name):
         return _subscribe_org_to_role_mapping(
             auth_url,
             integration_api_key,
             org_id,
-            custom_role_mapping_id,
+            custom_role_mapping_name,
         )
 
     def delete_org(org_id):
