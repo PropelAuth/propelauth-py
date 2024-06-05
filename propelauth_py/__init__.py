@@ -23,6 +23,7 @@ from propelauth_py.api.user import (
     _disable_user_can_create_orgs,
     _validate_personal_api_key,
     _invite_user_to_org,
+    _resend_email_confirmation,
 )
 from propelauth_py.api.org import (
     _fetch_custom_role_mappings,
@@ -115,6 +116,7 @@ Auth = namedtuple(
         "fetch_users_in_org",
         "create_user",
         "invite_user_to_org",
+        "resend_email_confirmation",
         "update_user_email",
         "update_user_metadata",
         "update_user_password",
@@ -282,6 +284,13 @@ def init_base_auth(
             additional_roles,
         )
 
+    def resend_email_confirmation(user_id):
+        return _resend_email_confirmation(
+            auth_url,
+            integration_api_key,
+            user_id,
+        )
+
     def update_user_email(user_id, new_email, require_email_confirmation):
         return _update_user_email(
             auth_url,
@@ -433,7 +442,9 @@ def init_base_auth(
         return _delete_org(auth_url, integration_api_key, org_id)
 
     def add_user_to_org(user_id, org_id, role, additional_roles=[]):
-        return _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role, additional_roles)
+        return _add_user_to_org(
+            auth_url, integration_api_key, user_id, org_id, role, additional_roles
+        )
 
     def remove_user_from_org(user_id, org_id):
         return _remove_user_from_org(auth_url, integration_api_key, user_id, org_id)
@@ -598,6 +609,7 @@ def init_base_auth(
         fetch_users_in_org=fetch_users_in_org,
         create_user=create_user,
         invite_user_to_org=invite_user_to_org,
+        resend_email_confirmation=resend_email_confirmation,
         update_user_email=update_user_email,
         update_user_metadata=update_user_metadata,
         update_user_password=update_user_password,

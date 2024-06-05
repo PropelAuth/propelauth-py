@@ -309,7 +309,9 @@ def _disable_user_2fa(auth_url, integration_api_key, user_id):
     return True
 
 
-def _invite_user_to_org(auth_url, integration_api_key, email, org_id, role, additional_roles=[]):
+def _invite_user_to_org(
+    auth_url, integration_api_key, email, org_id, role, additional_roles=[]
+):
     if not _is_valid_id(org_id):
         return False
 
@@ -337,6 +339,28 @@ def _invite_user_to_org(auth_url, integration_api_key, email, org_id, role, addi
         raise RuntimeError("Unknown error when updating metadata")
 
     return response.text
+
+
+def _resend_email_confirmation(auth_url, integration_api_key, user_id):
+    if not _is_valid_id(user_id):
+        return False
+
+    endpoint_path = "/api/backend/v1/resend_email_confirmation"
+    url = auth_url + endpoint_path
+    json = {
+        "user_id": user_id,
+    }
+    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when resending email confirmation")
+
+    return True
+
 
 ####################
 #     PATCH/PUT    #
@@ -399,9 +423,9 @@ def _update_user_password(
     url = auth_url + f"{ENDPOINT_PATH}/{user_id}/password"
     json = {"password": password}
     if ask_user_to_update_password_on_login is not None:
-        json[
-            "ask_user_to_update_password_on_login"
-        ] = ask_user_to_update_password_on_login
+        json["ask_user_to_update_password_on_login"] = (
+            ask_user_to_update_password_on_login
+        )
 
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
