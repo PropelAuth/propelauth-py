@@ -358,6 +358,9 @@ def _resend_email_confirmation(auth_url, integration_api_key, user_id):
         return False
     elif response.status_code == 429:
         raise RuntimeError("Too many requests, please try again later.")
+    elif response.status_code == 400:
+        if response.json().get("user_facing_error"):
+            raise ValueError(response.json().get("user_facing_error"))
     elif not response.ok:
         raise RuntimeError("Unknown error when resending email confirmation")
 
