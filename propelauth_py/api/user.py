@@ -356,6 +356,8 @@ def _resend_email_confirmation(auth_url, integration_api_key, user_id):
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 404:
         return False
+    elif response.status_code == 429:
+        raise RuntimeError("Too many requests, please try again later.")
     elif not response.ok:
         raise RuntimeError("Unknown error when resending email confirmation")
 
