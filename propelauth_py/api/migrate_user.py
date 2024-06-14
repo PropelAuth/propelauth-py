@@ -19,6 +19,7 @@ def _migrate_user_from_external_source(
     first_name=None,
     last_name=None,
     username=None,
+    picture_url=None,
     properties=None,
 ):
     url = auth_url + f"{ENDPOINT_PATH}/"
@@ -28,11 +29,12 @@ def _migrate_user_from_external_source(
         "existing_user_id": existing_user_id,
         "existing_password_hash": existing_password_hash,
         "existing_mfa_base32_encoded_secret": existing_mfa_base32_encoded_secret,
-        "ask_user_to_update_password_on_login": ask_user_to_update_password_on_login,
+        "update_password_required": ask_user_to_update_password_on_login,
         "enabled": enabled,
         "first_name": first_name,
         "last_name": last_name,
         "username": username,
+        "picture_url": picture_url,
     }
     if properties is not None:
         json["properties"] = properties
