@@ -390,6 +390,7 @@ def init_base_auth(
         first_name=None,
         last_name=None,
         username=None,
+        picture_url=None,
         properties=None,
     ):
         return _migrate_user_from_external_source(
@@ -405,6 +406,7 @@ def init_base_auth(
             first_name,
             last_name,
             username,
+            picture_url,
             properties,
         )
 
