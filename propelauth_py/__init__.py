@@ -12,6 +12,7 @@ from propelauth_py.api.user import (
     _fetch_users_by_query,
     _fetch_users_in_org,
     _create_user,
+    _logout_all_user_sessions,
     _update_user_email,
     _update_user_metadata,
     _delete_user,
@@ -139,6 +140,7 @@ Auth = namedtuple(
         "disable_user_2fa",
         "enable_user_can_create_orgs",
         "disable_user_can_create_orgs",
+        "logout_all_user_sessions",
         "allow_org_to_setup_saml_connection",
         "disallow_org_to_setup_saml_connection",
         "fetch_api_key",
@@ -297,6 +299,13 @@ def init_base_auth(
 
     def resend_email_confirmation(user_id):
         return _resend_email_confirmation(
+            auth_url,
+            integration_api_key,
+            user_id,
+        )
+
+    def logout_all_user_sessions(user_id):
+        return _logout_all_user_sessions(
             auth_url,
             integration_api_key,
             user_id,
@@ -644,6 +653,7 @@ def init_base_auth(
         disable_user_2fa=disable_user_2fa,
         enable_user_can_create_orgs=enable_user_can_create_orgs,
         disable_user_can_create_orgs=disable_user_can_create_orgs,
+        logout_all_user_sessions=logout_all_user_sessions,
         allow_org_to_setup_saml_connection=allow_org_to_setup_saml_connection,
         disallow_org_to_setup_saml_connection=disallow_org_to_setup_saml_connection,
         # api key functions
