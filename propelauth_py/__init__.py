@@ -29,6 +29,7 @@ from propelauth_py.api.org import (
     _fetch_custom_role_mappings,
     _fetch_org,
     _fetch_org_by_query,
+    _fetch_pending_invites,
     _create_org,
     _remove_user_from_org,
     _subscribe_org_to_role_mapping,
@@ -112,6 +113,7 @@ Auth = namedtuple(
         "fetch_org",
         "fetch_org_by_query",
         "fetch_custom_role_mappings",
+        "fetch_pending_invites",
         "fetch_users_by_query",
         "fetch_users_in_org",
         "create_user",
@@ -212,11 +214,20 @@ def init_base_auth(
             order_by,
             name,
         )
-    
+
     def fetch_custom_role_mappings():
         return _fetch_custom_role_mappings(
             auth_url,
             integration_api_key,
+        )
+
+    def fetch_pending_invites(page_number=0, page_size=10, org_id=None):
+        return _fetch_pending_invites(
+            auth_url,
+            integration_api_key,
+            page_number,
+            page_size,
+            org_id,
         )
 
     def fetch_users_by_query(
@@ -431,7 +442,7 @@ def init_base_auth(
             members_must_have_email_domain_match=members_must_have_email_domain_match,
             domain=domain,
         )
-    
+
     def subscribe_org_to_role_mapping(org_id, custom_role_mapping_name):
         return _subscribe_org_to_role_mapping(
             auth_url,
@@ -607,6 +618,7 @@ def init_base_auth(
         fetch_org=fetch_org,
         fetch_org_by_query=fetch_org_by_query,
         fetch_custom_role_mappings=fetch_custom_role_mappings,
+        fetch_pending_invites=fetch_pending_invites,
         fetch_users_by_query=fetch_users_by_query,
         fetch_users_in_org=fetch_users_in_org,
         create_user=create_user,

@@ -62,6 +62,7 @@ def _fetch_org_by_query(
 
     return response.json()
 
+
 def _fetch_custom_role_mappings(auth_url, integration_api_key):
     url = auth_url + "/api/backend/v1/custom_role_mappings"
     response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
@@ -77,6 +78,39 @@ def _fetch_custom_role_mappings(auth_url, integration_api_key):
 
     return response.json()
 
+
+def _fetch_pending_invites(
+    auth_url,
+    integration_api_key,
+    page=0,
+    page_size=10,
+    org_id=None,
+):
+    if org_id:
+        if not _is_valid_id(org_id):
+            return None
+
+    url = auth_url + f"/api/backend/v1/pending_org_invites"
+    params = {
+        "page": page,
+        "page_size": page_size,
+        "org_id": org_id,
+    }
+
+    response = requests.get(
+        url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key)
+    )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching pending invites")
+
+    return response.json()
 
 
 ####################
@@ -151,9 +185,16 @@ def _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id
     return True
 
 
-def _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role, additional_roles=[]):
+def _add_user_to_org(
+    auth_url, integration_api_key, user_id, org_id, role, additional_roles=[]
+):
     url = auth_url + f"{ENDPOINT_PATH}/add_user"
-    json = {"user_id": user_id, "org_id": org_id, "role": role, "additional_roles": additional_roles}
+    json = {
+        "user_id": user_id,
+        "org_id": org_id,
+        "role": role,
+        "additional_roles": additional_roles,
+    }
 
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
@@ -166,6 +207,7 @@ def _add_user_to_org(auth_url, integration_api_key, user_id, org_id, role, addit
         raise RuntimeError("Unknown error when adding a user to the org")
 
     return True
+
 
 def _remove_user_from_org(auth_url, integration_api_key, user_id, org_id):
     url = auth_url + f"{ENDPOINT_PATH}/remove_user"
@@ -184,9 +226,16 @@ def _remove_user_from_org(auth_url, integration_api_key, user_id, org_id):
     return True
 
 
-def _change_user_role_in_org(auth_url, integration_api_key, user_id, org_id, role, additional_roles=[]):
+def _change_user_role_in_org(
+    auth_url, integration_api_key, user_id, org_id, role, additional_roles=[]
+):
     url = auth_url + f"{ENDPOINT_PATH}/change_role"
-    json = {"user_id": user_id, "org_id": org_id, "role": role, "additional_roles": additional_roles}
+    json = {
+        "user_id": user_id,
+        "org_id": org_id,
+        "role": role,
+        "additional_roles": additional_roles,
+    }
 
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
@@ -249,6 +298,7 @@ def _update_org_metadata(
 
     return True
 
+
 def _subscribe_org_to_role_mapping(
     auth_url,
     integration_api_key,
@@ -271,7 +321,9 @@ def _subscribe_org_to_role_mapping(
     elif response.status_code == 404:
         return False
     elif not response.ok:
-        raise RuntimeError("Unknown error when subscribing an org to a custom role mapping")
+        raise RuntimeError(
+            "Unknown error when subscribing an org to a custom role mapping"
+        )
 
     return True
 
