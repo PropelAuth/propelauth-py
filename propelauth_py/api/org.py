@@ -62,6 +62,22 @@ def _fetch_org_by_query(
 
     return response.json()
 
+def _fetch_custom_role_mappings(auth_url, integration_api_key):
+    url = auth_url + "/api/backend/v1/custom_role_mappings"
+    response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching org")
+
+    return response.json()
+
+
 
 ####################
 #       POST       #
@@ -74,6 +90,7 @@ def _create_org(
     members_must_have_matching_domain=False,
     domain=None,
     max_users=None,
+    custom_role_mapping_name=None,
     legacy_org_id=None,
 ):
     url = auth_url + f"{ENDPOINT_PATH}/"
@@ -88,6 +105,8 @@ def _create_org(
         json["max_users"] = max_users
     if legacy_org_id:
         json["legacy_org_id"] = legacy_org_id
+    if custom_role_mapping_name is not None:
+        json["custom_role_mapping_name"] = custom_role_mapping_name
 
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
@@ -227,6 +246,32 @@ def _update_org_metadata(
         return False
     elif not response.ok:
         raise RuntimeError("Unknown error when updating org metadata")
+
+    return True
+
+def _subscribe_org_to_role_mapping(
+    auth_url,
+    integration_api_key,
+    org_id,
+    custom_role_mapping_name,
+):
+    if not _is_valid_id(org_id):
+        return False
+
+    url = auth_url + f"{ENDPOINT_PATH}/{org_id}"
+    json = {
+        "custom_role_mapping_name": custom_role_mapping_name,
+    }
+
+    response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise UpdateUserMetadataException(response.json())
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when subscribing an org to a custom role mapping")
 
     return True
 

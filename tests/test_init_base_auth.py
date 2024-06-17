@@ -23,13 +23,16 @@ from propelauth_py.api.user import (
     _disable_user_can_create_orgs,
     _validate_personal_api_key,
     _invite_user_to_org,
+    _resend_email_confirmation,
 )
 from propelauth_py.api.org import (
+    _fetch_custom_role_mappings,
     _fetch_org,
     _fetch_org_by_query,
     _create_org,
     _remove_user_from_org,
     _update_org_metadata,
+    _subscribe_org_to_role_mapping,
     _add_user_to_org,
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
@@ -76,9 +79,11 @@ IMPORTED_FUNCTIONS = [
     _validate_personal_api_key,
     _fetch_org,
     _fetch_org_by_query,
+    _fetch_custom_role_mappings,
     _create_org,
     _remove_user_from_org,
     _update_org_metadata,
+    _subscribe_org_to_role_mapping,
     _add_user_to_org,
     _allow_org_to_setup_saml_connection,
     _disallow_org_to_setup_saml_connection,
@@ -96,6 +101,7 @@ IMPORTED_FUNCTIONS = [
     _change_user_role_in_org,
     _delete_org,
     _invite_user_to_org,
+    _resend_email_confirmation,
 ]
 
 
