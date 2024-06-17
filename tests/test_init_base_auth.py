@@ -24,6 +24,7 @@ from propelauth_py.api.user import (
     _validate_personal_api_key,
     _invite_user_to_org,
     _resend_email_confirmation,
+    _logout_all_user_sessions,
 )
 from propelauth_py.api.org import (
     _fetch_custom_role_mappings,
@@ -104,6 +105,7 @@ IMPORTED_FUNCTIONS = [
     _delete_org,
     _invite_user_to_org,
     _resend_email_confirmation,
+    _logout_all_user_sessions,
 ]
 
 
