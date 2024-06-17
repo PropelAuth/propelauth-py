@@ -90,7 +90,7 @@ def _fetch_pending_invites(
         if not _is_valid_id(org_id):
             return None
 
-    url = auth_url + f"/api/backend/v1/pending_org_invites"
+    url = auth_url + "/api/backend/v1/pending_org_invites"
     params = {
         "page": page,
         "page_size": page_size,
