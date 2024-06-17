@@ -91,6 +91,7 @@ def _create_org(
     domain=None,
     max_users=None,
     custom_role_mapping_name=None,
+    legacy_org_id=None,
 ):
     url = auth_url + f"{ENDPOINT_PATH}/"
     json = {
@@ -102,6 +103,8 @@ def _create_org(
         json["domain"] = domain
     if max_users is not None:
         json["max_users"] = max_users
+    if legacy_org_id:
+        json["legacy_org_id"] = legacy_org_id
     if custom_role_mapping_name is not None:
         json["custom_role_mapping_name"] = custom_role_mapping_name
 

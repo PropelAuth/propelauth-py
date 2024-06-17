@@ -395,6 +395,7 @@ def init_base_auth(
         domain=None,
         max_users=None,
         custom_role_mapping_name=None,
+        legacy_org_id=None,
     ):
         return _create_org(
             auth_url,
@@ -405,6 +406,7 @@ def init_base_auth(
             domain,
             max_users,
             custom_role_mapping_name,
+            legacy_org_id,
         )
 
     def update_org_metadata(
