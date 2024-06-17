@@ -82,7 +82,7 @@ def _fetch_custom_role_mappings(auth_url, integration_api_key):
 def _fetch_pending_invites(
     auth_url,
     integration_api_key,
-    page=0,
+    page_number=0,
     page_size=10,
     org_id=None,
 ):
@@ -92,7 +92,7 @@ def _fetch_pending_invites(
 
     url = auth_url + "/api/backend/v1/pending_org_invites"
     params = {
-        "page": page,
+        "page_number": page_number,
         "page_size": page_size,
         "org_id": org_id,
     }
