@@ -106,6 +106,7 @@ IMPORTED_FUNCTIONS = [
     _invite_user_to_org,
     _resend_email_confirmation,
     _logout_all_user_sessions,
+    _revoke_pending_org_invite
 ]
 
 
