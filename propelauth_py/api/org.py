@@ -349,6 +349,28 @@ def _delete_org(auth_url, integration_api_key, org_id):
 
     return True
 
+def _revoke_pending_org_invite(
+    auth_url,
+    integration_api_key,
+    org_id,
+    invitee_email
+):
+    url = auth_url + "/api/backend/v1/pending_org_invites"
+    json = {
+        "org_id": org_id,
+        "invitee_email": invitee_email
+    }
+
+    response = requests.delete(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif not response.ok:
+        raise RuntimeError("Unknown error when revoking pending org invite")
+
+    return response.json()
+
 
 ####################
 #      HELPERS     #

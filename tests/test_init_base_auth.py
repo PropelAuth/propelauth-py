@@ -41,6 +41,7 @@ from propelauth_py.api.org import (
     _validate_org_api_key,
     _change_user_role_in_org,
     _delete_org,
+    _revoke_pending_org_invite
 )
 from propelauth_py.api.magic_link import _create_magic_link
 from propelauth_py.api.access_token import _create_access_token
@@ -106,6 +107,7 @@ IMPORTED_FUNCTIONS = [
     _invite_user_to_org,
     _resend_email_confirmation,
     _logout_all_user_sessions,
+    _revoke_pending_org_invite
 ]
 
 
