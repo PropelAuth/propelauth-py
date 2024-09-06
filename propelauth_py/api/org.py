@@ -36,7 +36,7 @@ def _fetch_org(auth_url, integration_api_key, org_id):
 
 
 def _fetch_org_by_query(
-    auth_url, integration_api_key, page_size, page_number, order_by, name
+    auth_url, integration_api_key, page_size, page_number, order_by, name, legacy_org_id
 ):
     url = auth_url + f"{ENDPOINT_PATH}/query"
     params = {
@@ -44,6 +44,7 @@ def _fetch_org_by_query(
         "page_number": page_number,
         "order_by": order_by,
         "name": name,
+        "legacy_org_id": legacy_org_id,
     }
     response = requests.get(
         url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key)
@@ -264,6 +265,7 @@ def _update_org_metadata(
     can_join_on_email_domain_match=None,  # In the backend, this is the `domain_autojoin` argument.
     members_must_have_email_domain_match=None,  # In the backend, this is the `domain_restrict` argument.
     domain=None,
+    legacy_org_id=None,
     # TODO: Add `require_2fa_by` optional argument.
 ):
     if not _is_valid_id(org_id):
@@ -285,6 +287,8 @@ def _update_org_metadata(
         json["restrict_to_domain"] = members_must_have_email_domain_match
     if domain is not None:
         json["domain"] = domain
+    if legacy_org_id is not None:
+        json["legacy_org_id"] = legacy_org_id
 
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:

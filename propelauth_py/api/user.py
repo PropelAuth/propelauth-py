@@ -152,6 +152,7 @@ def _fetch_users_by_query(
     order_by,
     email_or_username,
     include_orgs,
+    legacy_user_id,
 ):
     url = auth_url + f"{ENDPOINT_PATH}/query"
     params = {
@@ -160,6 +161,7 @@ def _fetch_users_by_query(
         "order_by": order_by,
         "email_or_username": email_or_username,
         "include_orgs": include_orgs,
+        "legacy_user_id": legacy_user_id,
     }
     response = requests.get(
         url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key)
