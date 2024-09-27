@@ -208,7 +208,11 @@ def init_base_auth(
         return _fetch_org(auth_url, integration_api_key, org_id)
 
     def fetch_org_by_query(
-        page_size=10, page_number=0, order_by=OrgQueryOrderBy.CREATED_AT_ASC, name=None
+        page_size=10,
+        page_number=0,
+        order_by=OrgQueryOrderBy.CREATED_AT_ASC,
+        name=None,
+        legacy_org_id=None,
     ):
         return _fetch_org_by_query(
             auth_url,
@@ -217,6 +221,7 @@ def init_base_auth(
             page_number,
             order_by,
             name,
+            legacy_org_id,
         )
 
     def fetch_custom_role_mappings():
@@ -240,6 +245,7 @@ def init_base_auth(
         order_by=UserQueryOrderBy.CREATED_AT_ASC,
         email_or_username=None,
         include_orgs=False,
+        legacy_user_id=None,
     ):
         return _fetch_users_by_query(
             auth_url,
@@ -249,6 +255,7 @@ def init_base_auth(
             order_by,
             email_or_username,
             include_orgs,
+            legacy_user_id,
         )
 
     def fetch_users_in_org(
@@ -442,6 +449,7 @@ def init_base_auth(
         can_join_on_email_domain_match=None,
         members_must_have_email_domain_match=None,
         domain=None,
+        legacy_org_id=None,
     ):
         return _update_org_metadata(
             auth_url,
@@ -454,6 +462,7 @@ def init_base_auth(
             can_join_on_email_domain_match=can_join_on_email_domain_match,
             members_must_have_email_domain_match=members_must_have_email_domain_match,
             domain=domain,
+            legacy_org_id=legacy_org_id,
         )
 
     def subscribe_org_to_role_mapping(org_id, custom_role_mapping_name):
