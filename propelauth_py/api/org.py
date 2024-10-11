@@ -194,13 +194,11 @@ def _create_org_saml_connection_link(
 
     url = auth_url + f"{ENDPOINT_PATH}/{org_id}/create_saml_connection_link"
 
-    query_params = {}
+    body = {}
     if expires_in_seconds is not None:
-        query_params["expires_in_seconds"] = expires_in_seconds
+        body["expires_in_seconds"] = expires_in_seconds
 
-    response = requests.post(
-        url, params=_format_params(query_params), auth=_ApiKeyAuth(integration_api_key)
-    )
+    response = requests.post(url, json=body, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 400:
