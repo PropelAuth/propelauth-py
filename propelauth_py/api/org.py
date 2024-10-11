@@ -1,4 +1,5 @@
 import requests
+
 from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id
 from propelauth_py.api.end_user_api_keys import _validate_api_key
 from propelauth_py.errors import (
@@ -6,7 +7,6 @@ from propelauth_py.errors import (
     EndUserApiKeyException,
     UpdateUserMetadataException,
 )
-
 
 ENDPOINT_PATH = "/api/backend/v1/org"
 
@@ -186,6 +186,34 @@ def _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id
     return True
 
 
+def _create_org_saml_connection_link(
+    auth_url, integration_api_key, org_id, expires_in_seconds=None
+):
+    if not _is_valid_id(org_id):
+        return None
+
+    url = auth_url + f"{ENDPOINT_PATH}/{org_id}/create_saml_connection_link"
+
+    body = {}
+    if expires_in_seconds is not None:
+        body["expires_in_seconds"] = expires_in_seconds
+
+    response = requests.post(url, json=body, auth=_ApiKeyAuth(integration_api_key))
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+    elif not response.ok:
+        raise RuntimeError("Unknown error when creating org SAML connection link")
+
+    return response.json()
+
+
 def _add_user_to_org(
     auth_url, integration_api_key, user_id, org_id, role, additional_roles=[]
 ):
@@ -353,17 +381,10 @@ def _delete_org(auth_url, integration_api_key, org_id):
 
     return True
 
-def _revoke_pending_org_invite(
-    auth_url,
-    integration_api_key,
-    org_id,
-    invitee_email
-):
+
+def _revoke_pending_org_invite(auth_url, integration_api_key, org_id, invitee_email):
     url = auth_url + "/api/backend/v1/pending_org_invites"
-    json = {
-        "org_id": org_id,
-        "invitee_email": invitee_email
-    }
+    json = {"org_id": org_id, "invitee_email": invitee_email}
 
     response = requests.delete(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
