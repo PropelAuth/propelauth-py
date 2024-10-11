@@ -202,16 +202,14 @@ def _create_org_saml_connection_link(
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 400:
-        raise ValueError("Bad request: " + response.text)
+        raise BadRequestException(response.json())
     elif response.status_code == 426:
         raise RuntimeError(
             "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
             "dashboard."
         )
     elif not response.ok:
-        raise RuntimeError(
-            f"Unknown error when creating org SAML connection link: {response.text}"
-        )
+        raise RuntimeError("Unknown error when creating org SAML connection link")
 
     return response.json()
 
