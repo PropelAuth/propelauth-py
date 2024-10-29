@@ -1,3 +1,4 @@
+from typing import Optional, Any, Dict, Union
 from propelauth_py.errors import UnauthorizedException
 from propelauth_py.types.login_method import (
     to_login_method,
@@ -19,7 +20,7 @@ class OrgMemberInfo:
         self,
         org_id: str,
         org_name: str,
-        org_metadata: object,
+        org_metadata: Dict[str, Any],
         user_assigned_role: str,
         user_inherited_roles_plus_current_role: list[str],
         user_permissions: list[str],
@@ -77,14 +78,14 @@ class User:
         user_id: str,
         org_id_to_org_member_info,
         email: str,
-        first_name: str | None = None,
-        last_name: str | None = None,
-        username: str | None = None,
-        properties: object | None = None,
-        legacy_user_id: str | None = None,
-        impersonator_user_id: str | None = None,
-        active_org_id: str | None = None,
-        login_method: PasswordLoginMethod | MagicLinkLoginMethod | SocialSsoLoginMethod | EmailConfirmationLinkLoginMethod | SamlSsoLoginMethod | ImpersonationLoginMethod | GeneratedFromBackendApiLoginMethod | UnknownLoginMethod | None = None,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        username: Optional[str] = None,
+        properties: Optional[Dict[str, Any]] = None,
+        legacy_user_id: Optional[str] = None,
+        impersonator_user_id: Optional[str] = None,
+        active_org_id: Optional[str] = None,
+        login_method: Union[PasswordLoginMethod, MagicLinkLoginMethod, SocialSsoLoginMethod, EmailConfirmationLinkLoginMethod, SamlSsoLoginMethod, ImpersonationLoginMethod,GeneratedFromBackendApiLoginMethod,UnknownLoginMethod, None] = None,
     ):
         self.user_id = user_id
         self.org_id_to_org_member_info = org_id_to_org_member_info
@@ -120,21 +121,21 @@ class User:
         """Returns true if the user is impersonated"""
         return self.impersonator_user_id is not None
 
-    def get_active_org(self) -> OrgMemberInfo | None:
+    def get_active_org(self) -> Optional[OrgMemberInfo]:
         """Returns the active org member info, if the user has an active org."""
         if self.active_org_id is None:
             return None
         return self.get_org(self.active_org_id)
 
-    def get_active_org_id(self) -> str | None:
+    def get_active_org_id(self) -> Optional[str]:
         """Returns the active org id, if the user has an active org."""
         return self.active_org_id
 
-    def get_org(self, org_id: str) -> OrgMemberInfo | None:
+    def get_org(self, org_id: str) -> Optional[OrgMemberInfo]:
         """Returns the org member info for the org_id, if the user is in the org."""
         return self.org_id_to_org_member_info.get(org_id)
 
-    def get_org_by_name(self, org_name: str) -> OrgMemberInfo | None:
+    def get_org_by_name(self, org_name: str) -> Optional[OrgMemberInfo]:
         """Returns the org member info for the org_name, if the user is in the org."""
         for org_member_info in self.org_id_to_org_member_info.values():
             if org_member_info.org_name == org_name:
