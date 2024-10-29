@@ -26,6 +26,8 @@ class SamlLoginProvider(Enum):
 class PasswordLoginMethod:
     def __init__(self):
         self.login_method = "password"
+        self.provider = None
+        self.org_id = None
 
     def __eq__(self, other):
         return isinstance(other, PasswordLoginMethod)
@@ -34,6 +36,8 @@ class PasswordLoginMethod:
 class MagicLinkLoginMethod:
     def __init__(self):
         self.login_method = "magic_link"
+        self.provider = None
+        self.org_id = None
 
     def __eq__(self, other):
         isinstance(other, MagicLinkLoginMethod)
@@ -43,6 +47,7 @@ class SocialSsoLoginMethod:
     def __init__(self, provider: SocialLoginProvider):
         self.login_method = "social_sso"
         self.provider = provider
+        self.org_id = None
 
     def __eq__(self, other):
         if isinstance(other, SocialSsoLoginMethod):
@@ -56,6 +61,8 @@ class SocialSsoLoginMethod:
 class EmailConfirmationLinkLoginMethod:
     def __init__(self):
         self.login_method = "email_confirmation_link"
+        self.provider = None
+        self.org_id = None
 
     def __eq__(self, other):
         return isinstance(other, EmailConfirmationLinkLoginMethod)
@@ -80,6 +87,8 @@ class SamlSsoLoginMethod:
 class ImpersonationLoginMethod:
     def __init__(self):
         self.login_method = "impersonation"
+        self.provider = None
+        self.org_id = None
 
     def __eq__(self, other):
         return isinstance(other, ImpersonationLoginMethod)
@@ -88,6 +97,8 @@ class ImpersonationLoginMethod:
 class GeneratedFromBackendApiLoginMethod:
     def __init__(self):
         self.login_method = "generated_from_backend_api"
+        self.provider = None
+        self.org_id = None
 
     def __eq__(self, other):
         return isinstance(other, GeneratedFromBackendApiLoginMethod)
@@ -96,6 +107,8 @@ class GeneratedFromBackendApiLoginMethod:
 class UnknownLoginMethod:
     def __init__(self):
         self.login_method = "unknown"
+        self.provider = None
+        self.org_id = None
 
     def __eq__(self, other):
         return isinstance(other, UnknownLoginMethod)

@@ -11,7 +11,7 @@ ENDPOINT_PATH = "/api/v1/token_verification_metadata"
 def _fetch_token_verification_metadata(
     auth_url: str,
     integration_api_key: str,
-    token_verification_metadata: TokenVerificationMetadata,
+    token_verification_metadata: TokenVerificationMetadata | None,
 ):
     if token_verification_metadata is not None:
         return token_verification_metadata
