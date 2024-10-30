@@ -2,6 +2,7 @@ import requests
 
 from propelauth_py.api import _ApiKeyAuth
 from propelauth_py.errors import BadRequestException
+from propelauth_py.types.user import CreatedUser
 
 ENDPOINT_PATH = "/api/backend/v1/migrate_user"
 
@@ -21,7 +22,7 @@ def _migrate_user_from_external_source(
     username=None,
     picture_url=None,
     properties=None,
-):
+) -> CreatedUser:
     url = auth_url + f"{ENDPOINT_PATH}/"
     json = {
         "email": email,
@@ -47,4 +48,7 @@ def _migrate_user_from_external_source(
     elif not response.ok:
         raise RuntimeError("Unknown error when migrating user")
 
-    return response.json()
+    json_response = response.json()
+    return CreatedUser(
+        user_id=json_response['user_id']
+    )

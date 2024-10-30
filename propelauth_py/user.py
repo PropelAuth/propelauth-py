@@ -22,6 +22,7 @@ class OrgMemberInfo:
         org_name: str,
         org_metadata: Dict[str, Any],
         user_assigned_role: str,
+        url_safe_org_name: str,
         user_inherited_roles_plus_current_role: list[str],
         user_permissions: list[str],
         org_role_structure: str = SINGLE_ROLE,
@@ -37,6 +38,7 @@ class OrgMemberInfo:
         self.user_permissions = user_permissions
         self.org_role_structure = org_role_structure
         self.assigned_additional_roles = assigned_additional_roles
+        self.url_safe_org_name = url_safe_org_name
 
     def __eq__(self, other):
         if isinstance(other, OrgMemberInfo):
@@ -47,6 +49,8 @@ class OrgMemberInfo:
                 and all([r in self.assigned_additional_roles for r in other.assigned_additional_roles])
             )
         return False
+    def __getitem__(self, key):
+        return getattr(self, key)
 
     def user_is_role(self, role: str) -> bool:
         """returns true if the user is the role"""
@@ -116,6 +120,8 @@ class User:
             )
 
         return False
+    def __getitem__(self, key):
+        return getattr(self, key)
 
     def is_impersonated(self) -> bool:
         """Returns true if the user is impersonated"""
@@ -187,6 +193,8 @@ class UserAndOrgMemberInfo:
     def __init__(self, user: User, org_member_info: OrgMemberInfo):
         self.user = user
         self.org_member_info = org_member_info
+    def __getitem__(self, key):
+        return getattr(self, key)
 
 
 def _to_org_member_info(org_id_to_org_member_info_json):
@@ -202,6 +210,7 @@ def _to_org_member_info(org_id_to_org_member_info_json):
                 org_name=org_member_info_json["org_name"],
                 org_metadata=org_member_info_json["org_metadata"],
                 user_assigned_role=user_assigned_role,
+                url_safe_org_name=org_member_info_json["url_safe_org_name"],
                 user_inherited_roles_plus_current_role=org_member_info_json[
                     "inherited_user_roles_plus_current_role"
                 ],

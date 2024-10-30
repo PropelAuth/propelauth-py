@@ -86,6 +86,9 @@ from propelauth_py.types.login_method import (
     ImpersonationLoginMethod,
     GeneratedFromBackendApiLoginMethod,
 )
+from propelauth_py.types.end_user_api_keys import (
+    ApiKeyFull
+)
 from propelauth_py.validation import _validate_url
 
 class AuthClass:
@@ -445,7 +448,7 @@ class AuthClass:
 
     # functions for end user api keys
 
-    def fetch_api_key(self, api_key_id: str):
+    def fetch_api_key(self, api_key_id: str) -> Optional[ApiKeyFull]:
         return _fetch_api_key(self.auth_url, self.integration_api_key, api_key_id)
 
     def fetch_current_api_keys(
