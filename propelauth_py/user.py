@@ -51,6 +51,15 @@ class OrgMemberInfo:
         return False
     def __getitem__(self, key):
         return getattr(self, key)
+    def __repr__(self):
+        return (
+            f"OrgMemberInfo(org_id={self.org_id!r}, org_name={self.org_name!r}, "
+            f"org_metadata={self.org_metadata!r}, user_assigned_role={self.user_assigned_role!r}, "
+            f"url_safe_org_name={self.url_safe_org_name!r}, "
+            f"user_inherited_roles_plus_current_role={self.user_inherited_roles_plus_current_role!r}, "
+            f"user_permissions={self.user_permissions!r}, org_role_structure={self.org_role_structure!r}, "
+            f"assigned_additional_roles={self.assigned_additional_roles!r})"
+        )
 
     def user_is_role(self, role: str) -> bool:
         """returns true if the user is the role"""
@@ -122,6 +131,14 @@ class User:
         return False
     def __getitem__(self, key):
         return getattr(self, key)
+    def __repr__(self):
+        return (
+            f"User(user_id={self.user_id!r}, org_id_to_org_member_info={self.org_id_to_org_member_info!r}, "
+            f"email={self.email!r}, first_name={self.first_name!r}, last_name={self.last_name!r}, "
+            f"username={self.username!r}, properties={self.properties!r}, legacy_user_id={self.legacy_user_id!r}, "
+            f"impersonator_user_id={self.impersonator_user_id!r}, active_org_id={self.active_org_id!r}, "
+            f"login_method={self.login_method!r})"
+        )
 
     def is_impersonated(self) -> bool:
         """Returns true if the user is impersonated"""
