@@ -32,13 +32,13 @@ class OrgMemberInfo:
         self.org_name = org_name
         self.org_metadata = org_metadata
         self.user_assigned_role = user_assigned_role
+        self.url_safe_org_name = url_safe_org_name
         self.user_inherited_roles_plus_current_role = (
             user_inherited_roles_plus_current_role
         )
         self.user_permissions = user_permissions
         self.org_role_structure = org_role_structure
         self.assigned_additional_roles = assigned_additional_roles
-        self.url_safe_org_name = url_safe_org_name
 
     def __eq__(self, other):
         if isinstance(other, OrgMemberInfo):
@@ -46,6 +46,7 @@ class OrgMemberInfo:
                 self.org_id == other.org_id
                 and self.org_name == other.org_name
                 and self.user_assigned_role == other.user_assigned_role
+                and self.url_safe_org_name == other.url_safe_org_name
                 and all([r in self.assigned_additional_roles for r in other.assigned_additional_roles])
             )
         return False
