@@ -1,62 +1,63 @@
 import inspect
+
 from propelauth_py import init_base_auth
-from propelauth_py.api.user import (
-    _fetch_user_metadata_by_user_id,
-    _fetch_user_metadata_by_email,
-    _fetch_user_metadata_by_username,
-    _fetch_batch_user_metadata_by_user_ids,
-    _fetch_batch_user_metadata_by_emails,
-    _fetch_batch_user_metadata_by_usernames,
-    _fetch_users_by_query,
-    _fetch_users_in_org,
-    _fetch_user_signup_query_params_by_user_id,
-    _create_user,
-    _update_user_email,
-    _update_user_metadata,
-    _clear_user_password,
-    _delete_user,
-    _disable_user,
-    _enable_user,
-    _update_user_password,
-    _disable_user_2fa,
-    _enable_user_can_create_orgs,
-    _disable_user_can_create_orgs,
-    _validate_personal_api_key,
-    _invite_user_to_org,
-    _resend_email_confirmation,
-    _logout_all_user_sessions,
+from propelauth_py.api.access_token import _create_access_token
+from propelauth_py.api.end_user_api_keys import (
+    _create_api_key,
+    _delete_api_key,
+    _fetch_api_key,
+    _fetch_archived_api_keys,
+    _fetch_current_api_keys,
+    _update_api_key,
+    _validate_api_key,
 )
+from propelauth_py.api.magic_link import _create_magic_link
+from propelauth_py.api.migrate_user import _migrate_user_from_external_source
 from propelauth_py.api.org import (
+    _add_user_to_org,
+    _allow_org_to_setup_saml_connection,
+    _change_user_role_in_org,
+    _create_org,
+    _create_org_saml_connection_link,
+    _delete_org,
+    _disallow_org_to_setup_saml_connection,
     _fetch_custom_role_mappings,
     _fetch_org,
     _fetch_org_by_query,
     _fetch_pending_invites,
-    _create_org,
     _remove_user_from_org,
-    _update_org_metadata,
+    _revoke_pending_org_invite,
     _subscribe_org_to_role_mapping,
-    _add_user_to_org,
-    _allow_org_to_setup_saml_connection,
-    _disallow_org_to_setup_saml_connection,
+    _update_org_metadata,
     _validate_org_api_key,
-    _change_user_role_in_org,
-    _delete_org,
-    _revoke_pending_org_invite
 )
-from propelauth_py.api.magic_link import _create_magic_link
-from propelauth_py.api.access_token import _create_access_token
-from propelauth_py.api.migrate_user import _migrate_user_from_external_source
-from propelauth_py.api.end_user_api_keys import (
-    _fetch_api_key,
-    _fetch_current_api_keys,
-    _fetch_archived_api_keys,
-    _create_api_key,
-    _update_api_key,
-    _delete_api_key,
-    _validate_api_key,
+from propelauth_py.api.user import (
+    _clear_user_password,
+    _create_user,
+    _delete_user,
+    _disable_user,
+    _disable_user_2fa,
+    _disable_user_can_create_orgs,
+    _enable_user,
+    _enable_user_can_create_orgs,
+    _fetch_batch_user_metadata_by_emails,
+    _fetch_batch_user_metadata_by_user_ids,
+    _fetch_batch_user_metadata_by_usernames,
+    _fetch_user_metadata_by_email,
+    _fetch_user_metadata_by_user_id,
+    _fetch_user_metadata_by_username,
+    _fetch_user_signup_query_params_by_user_id,
+    _fetch_users_by_query,
+    _fetch_users_in_org,
+    _invite_user_to_org,
+    _logout_all_user_sessions,
+    _resend_email_confirmation,
+    _update_user_email,
+    _update_user_metadata,
+    _update_user_password,
+    _validate_personal_api_key,
 )
 from tests.conftest import BASE_AUTH_URL, mock_api_and_init_auth, rsa_keys
-
 
 IMPORTED_FUNCTIONS = [
     _fetch_user_metadata_by_user_id,
@@ -107,7 +108,8 @@ IMPORTED_FUNCTIONS = [
     _invite_user_to_org,
     _resend_email_confirmation,
     _logout_all_user_sessions,
-    _revoke_pending_org_invite
+    _revoke_pending_org_invite,
+    _create_org_saml_connection_link,
 ]
 
 

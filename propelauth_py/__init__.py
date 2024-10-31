@@ -1,7 +1,7 @@
 from typing import Optional, Any, Dict
 from propelauth_py.user import UserAndOrgMemberInfo
 from propelauth_py.jwt import _validate_access_token_and_get_user
-from propelauth_py.api import token_verification_metadata
+from propelauth_py.api import token_verification_metadata, TokenVerificationMetadata, OrgQueryOrderBy, UserQueryOrderBy
 from propelauth_py.api.user import (
     _clear_user_password,
     _fetch_user_metadata_by_user_id,
@@ -27,64 +27,93 @@ from propelauth_py.api.user import (
     _validate_personal_api_key,
     _invite_user_to_org,
     _resend_email_confirmation,
+
 )
+from propelauth_py.api.access_token import _create_access_token
+from propelauth_py.api.end_user_api_keys import (
+    _create_api_key,
+    _delete_api_key,
+    _fetch_api_key,
+    _fetch_archived_api_keys,
+    _fetch_current_api_keys,
+    _update_api_key,
+    _validate_api_key,
+)
+from propelauth_py.api.magic_link import _create_magic_link
+from propelauth_py.api.migrate_user import _migrate_user_from_external_source
 from propelauth_py.api.org import (
+    _add_user_to_org,
+    _allow_org_to_setup_saml_connection,
+    _change_user_role_in_org,
+    _create_org,
+    _create_org_saml_connection_link,
+    _delete_org,
+    _disallow_org_to_setup_saml_connection,
     _fetch_custom_role_mappings,
     _fetch_org,
     _fetch_org_by_query,
     _fetch_pending_invites,
-    _create_org,
     _remove_user_from_org,
+    _revoke_pending_org_invite,
     _subscribe_org_to_role_mapping,
     _update_org_metadata,
-    _add_user_to_org,
-    _allow_org_to_setup_saml_connection,
-    _disallow_org_to_setup_saml_connection,
     _validate_org_api_key,
-    _change_user_role_in_org,
-    _delete_org,
-    _revoke_pending_org_invite,
 )
-from propelauth_py.api.magic_link import _create_magic_link
 from propelauth_py.api.token_verification_metadata import (
     _fetch_token_verification_metadata,
 )
-from propelauth_py.api.access_token import _create_access_token
-from propelauth_py.api.migrate_user import _migrate_user_from_external_source
-from propelauth_py.api.end_user_api_keys import (
-    _fetch_api_key,
-    _fetch_current_api_keys,
-    _fetch_archived_api_keys,
-    _create_api_key,
-    _update_api_key,
-    _delete_api_key,
-    _validate_api_key,
-)
-from propelauth_py.api import (
-    OrgQueryOrderBy,
-    UserQueryOrderBy,
-    TokenVerificationMetadata,
+from propelauth_py.api.user import (
+    _clear_user_password,
+    _create_user,
+    _delete_user,
+    _disable_user,
+    _disable_user_2fa,
+    _disable_user_can_create_orgs,
+    _enable_user,
+    _enable_user_can_create_orgs,
+    _fetch_batch_user_metadata_by_emails,
+    _fetch_batch_user_metadata_by_user_ids,
+    _fetch_batch_user_metadata_by_usernames,
+    _fetch_user_metadata_by_email,
+    _fetch_user_metadata_by_user_id,
+    _fetch_user_metadata_by_username,
+    _fetch_user_signup_query_params_by_user_id,
+    _fetch_users_by_query,
+    _fetch_users_in_org,
+    _invite_user_to_org,
+    _logout_all_user_sessions,
+    _resend_email_confirmation,
+    _update_user_email,
+    _update_user_metadata,
+    _update_user_password,
+    _validate_personal_api_key,
 )
 from propelauth_py.auth_fns import (
-    validate_org_access_and_get_org_member_info,
-    validate_minimum_org_role_and_get_org,
-    validate_exact_org_role_and_get_org,
-    validate_permission_and_get_org,
     validate_all_permissions_and_get_org,
-    _extract_token_from_authorization_header
+    validate_exact_org_role_and_get_org,
+    validate_minimum_org_role_and_get_org,
+    validate_org_access_and_get_org_member_info,
+    validate_permission_and_get_org,
+    _extract_token_from_authorization_header,
+    wrap_validate_access_token_and_get_user,
+    wrap_validate_access_token_and_get_user_with_org,
+    wrap_validate_access_token_and_get_user_with_org_by_all_permissions,
+    wrap_validate_access_token_and_get_user_with_org_by_exact_role,
+    wrap_validate_access_token_and_get_user_with_org_by_minimum_role,
+    wrap_validate_access_token_and_get_user_with_org_by_permission,
 )
-from propelauth_py.errors import UnauthorizedException, ForbiddenException
+from propelauth_py.errors import ForbiddenException, UnauthorizedException
 from propelauth_py.types.login_method import (
-    UnknownLoginMethod,
-    PasswordLoginMethod,
+    EmailConfirmationLinkLoginMethod,
+    GeneratedFromBackendApiLoginMethod,
+    ImpersonationLoginMethod,
     MagicLinkLoginMethod,
+    PasswordLoginMethod,
     SamlLoginProvider,
     SamlSsoLoginMethod,
     SocialLoginProvider,
     SocialSsoLoginMethod,
-    EmailConfirmationLinkLoginMethod,
-    ImpersonationLoginMethod,
-    GeneratedFromBackendApiLoginMethod,
+    UnknownLoginMethod,
 )
 
 from propelauth_py.validation import _validate_url
@@ -403,6 +432,7 @@ class AuthClass:
     def revoke_pending_org_invite(self, org_id: str, invitee_email: str):
         return _revoke_pending_org_invite(self.auth_url, self.integration_api_key, org_id, invitee_email)
 
+
     def add_user_to_org(self, user_id: str, org_id: str, role: str, additional_roles: list[str] = []):
         return _add_user_to_org(
             self.auth_url, self.integration_api_key, user_id, org_id, role, additional_roles
@@ -442,6 +472,11 @@ class AuthClass:
     def disallow_org_to_setup_saml_connection(self, org_id: str):
         return _disallow_org_to_setup_saml_connection(
             self.auth_url, self.integration_api_key, org_id
+        )
+
+    def create_org_saml_connection_link(self, org_id: str, expires_in_seconds=None):
+        return _create_org_saml_connection_link(
+            self.auth_url, self.integration_api_key, org_id, expires_in_seconds
         )
 
     # functions for end user api keys
@@ -560,4 +595,3 @@ def init_base_auth(
         auth_url, integration_api_key, token_verification_metadata
     )
     return AuthClass(auth_url, integration_api_key, token_verification_metadata)
-
