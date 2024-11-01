@@ -26,7 +26,7 @@ class OrgMemberInfo:
     user_inherited_roles_plus_current_role: list[str]
     user_permissions: list[str]
     org_role_structure: str = SINGLE_ROLE
-    assigned_additional_roles: list[str] = []
+    assigned_additional_roles: list[str] = field(default_factory=list)
     
     def __getitem__(self, key):
         return getattr(self, key)
