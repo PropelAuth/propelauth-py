@@ -1,5 +1,5 @@
 from typing import Optional, Any, Dict
-from propelauth_py.user import UserAndOrgMemberInfo
+from propelauth_py.user import UserAndOrgMemberInfo, User
 from propelauth_py.jwt import _validate_access_token_and_get_user
 from propelauth_py.api import token_verification_metadata, TokenVerificationMetadata, OrgQueryOrderBy, UserQueryOrderBy
 from propelauth_py.api.user import (
@@ -583,6 +583,22 @@ class Auth:
         user = _validate_access_token_and_get_user(access_token, token_verification_metadata)
         org_member_info = validate_all_permissions_and_get_org(user, required_org_id, permissions)
         return UserAndOrgMemberInfo(user, org_member_info)
+    
+    def validate_org_access_and_get_org(self, user: User, required_org_id: str):
+        return validate_org_access_and_get_org_member_info(user, required_org_id)
+    
+    def validate_minimum_org_role_and_get_org(self, user: User, required_org_id: str, minimum_role: str):
+        return validate_minimum_org_role_and_get_org(user, required_org_id, minimum_role)
+    
+    def validate_exact_org_role_and_get_org(self, user: User, required_org_id: str, exact_role: str):
+        return validate_exact_org_role_and_get_org(user, required_org_id, exact_role)
+    
+    def validate_permission_and_get_org(self, user: User, required_org_id: str, permission: str):
+        return validate_permission_and_get_org(user, required_org_id, permission)
+    
+    def validate_all_permissions_and_get_org(self, user: User, required_org_id: str, permissions: list[str]):
+        return validate_all_permissions_and_get_org(user, required_org_id, permissions)
+    
 
 
 def init_base_auth(
