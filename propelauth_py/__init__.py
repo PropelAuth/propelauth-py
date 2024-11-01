@@ -118,7 +118,7 @@ from propelauth_py.types.login_method import (
 
 from propelauth_py.validation import _validate_url
 
-class AuthClass:
+class Auth:
     
     def __init__(self, auth_url: str, integration_api_key: str, token_verification_metadata: Optional[TokenVerificationMetadata]):
         self.auth_url = auth_url
@@ -230,7 +230,7 @@ class AuthClass:
         username: Optional[str] = None,
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
-        properties: Optional[str] = None,
+        properties: Optional[Dict[str, Any]] = None,
     ):
         return _create_user(
             self.auth_url,
@@ -323,7 +323,7 @@ class AuthClass:
         redirect_to_url: Optional[str] = None,
         expires_in_hours: Optional[str] = None,
         create_new_user_if_one_doesnt_exist: Optional[bool] = None,
-        user_signup_query_parameters: Optional[Dict[str, Any]] = None,
+        user_signup_query_parameters: Optional[Dict[str, str]] = None,
     ):
         return _create_magic_link(
             self.auth_url,
@@ -489,8 +489,8 @@ class AuthClass:
         org_id: Optional[str] = None,
         user_id: Optional[str] = None,
         user_email: Optional[str] = None,
-        page_size: Optional[str] = None,
-        page_number: Optional[str] = None,
+        page_size: Optional[int] = None,
+        page_number: Optional[int] = None,
         api_key_type: Optional[str] = None,
     ):
         return _fetch_current_api_keys(
@@ -509,8 +509,8 @@ class AuthClass:
         org_id: Optional[str] = None,
         user_id: Optional[str] = None,
         user_email: Optional[str] = None,
-        page_size: Optional[str] = None,
-        page_number: Optional[str] = None,
+        page_size: Optional[int] = None,
+        page_number: Optional[int] = None,
         api_key_type: Optional[str] = None,
     ):
         return _fetch_archived_api_keys(
@@ -589,9 +589,9 @@ def init_base_auth(
     auth_url: str,
     integration_api_key: str,
     token_verification_metadata: Optional[TokenVerificationMetadata] = None,
-) -> AuthClass:
+) -> Auth:
     auth_url = _validate_url(auth_url)
     token_verification_metadata = _fetch_token_verification_metadata(
         auth_url, integration_api_key, token_verification_metadata
     )
-    return AuthClass(auth_url, integration_api_key, token_verification_metadata)
+    return Auth(auth_url, integration_api_key, token_verification_metadata)

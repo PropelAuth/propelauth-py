@@ -88,7 +88,7 @@ def _fetch_org_by_query(
             max_users=key.get('max_users'),
             is_saml_configured=key['is_saml_configured'],
             legacy_org_id=key.get('legacy_org_id'),
-            metadata=key.get('metadata', {}),
+            metadata=key.get('metadata'),
             custom_role_mapping_name=key.get('custom_role_mapping_name')
         )
         for key in json_response['orgs']

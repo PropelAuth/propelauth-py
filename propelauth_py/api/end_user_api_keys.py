@@ -12,9 +12,9 @@ ENDPOINT_PATH = "/api/backend/v1/end_user_api_keys"
 ####################
 #       GET        #
 ####################
-def _fetch_api_key(auth_url, integration_api_key, api_key_id) -> Optional[ApiKeyFull]:
+def _fetch_api_key(auth_url, integration_api_key, api_key_id) -> ApiKeyFull:
     if not _is_valid_hex(api_key_id):
-        return None
+        raise EndUserApiKeyNotFoundException()
 
     url = auth_url + f"{ENDPOINT_PATH}/{api_key_id}"    
     response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
