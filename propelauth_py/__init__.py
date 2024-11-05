@@ -562,25 +562,25 @@ class Auth:
     
     def validate_access_token_and_get_user_with_org_by_minimum_role(self, authorization_header: Optional[str], required_org_id: str, minimum_required_role: str):
         access_token = _extract_token_from_authorization_header(authorization_header)
-        user = _validate_access_token_and_get_user(access_token, token_verification_metadata)
+        user = _validate_access_token_and_get_user(access_token, self.token_verification_metadata)
         org_member_info = validate_minimum_org_role_and_get_org(user, required_org_id, minimum_required_role)
         return UserAndOrgMemberInfo(user, org_member_info)
     
     def validate_access_token_and_get_user_with_org_by_exact_role(self, authorization_header: Optional[str], required_org_id: str, required_role: str):
         access_token = _extract_token_from_authorization_header(authorization_header)
-        user = _validate_access_token_and_get_user(access_token, token_verification_metadata)
+        user = _validate_access_token_and_get_user(access_token, self.token_verification_metadata)
         org_member_info = validate_exact_org_role_and_get_org(user, required_org_id, required_role)
         return UserAndOrgMemberInfo(user, org_member_info)
     
     def validate_access_token_and_get_user_with_org_by_permission(self, authorization_header: Optional[str], required_org_id: str, permission: str):
         access_token = _extract_token_from_authorization_header(authorization_header)
-        user = _validate_access_token_and_get_user(access_token, token_verification_metadata)
+        user = _validate_access_token_and_get_user(access_token, self.token_verification_metadata)
         org_member_info = validate_permission_and_get_org(user, required_org_id, permission)
         return UserAndOrgMemberInfo(user, org_member_info)
     
     def validate_access_token_and_get_user_with_org_by_all_permissions(self, authorization_header: Optional[str], required_org_id: str, permissions: list[str]):
         access_token = _extract_token_from_authorization_header(authorization_header)
-        user = _validate_access_token_and_get_user(access_token, token_verification_metadata)
+        user = _validate_access_token_and_get_user(access_token, self.token_verification_metadata)
         org_member_info = validate_all_permissions_and_get_org(user, required_org_id, permissions)
         return UserAndOrgMemberInfo(user, org_member_info)
     
