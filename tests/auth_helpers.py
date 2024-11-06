@@ -33,6 +33,7 @@ def random_org(user_role_str, permissions=None):
         "inherited_user_roles_plus_current_role": [user_role_str],
         "user_permissions": [] if permissions is None else permissions,
         "org_role_structure": "single_role_in_hierarchy",
+        "url_safe_org_name": str(uuid4()),
         "additional_roles": [],
     }
 
