@@ -215,6 +215,7 @@ def init_base_auth(
         order_by=OrgQueryOrderBy.CREATED_AT_ASC,
         name=None,
         legacy_org_id=None,
+        domain=None,
     ):
         return _fetch_org_by_query(
             auth_url,
@@ -224,6 +225,7 @@ def init_base_auth(
             order_by,
             name,
             legacy_org_id,
+            domain,
         )
 
     def fetch_custom_role_mappings():
