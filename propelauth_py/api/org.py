@@ -43,13 +43,13 @@ def _fetch_org(auth_url, integration_api_key, org_id) -> Optional[Organization]:
         can_setup_saml=json_response['can_setup_saml'],
         is_saml_configured=json_response['is_saml_configured'],
         is_saml_in_test_mode=json_response['is_saml_in_test_mode'],
-        max_users=json_response['max_users'],
-        metadata=json_response['metadata'],
-        domain=json_response['domain'],
+        max_users=json_response.get('max_users'),
+        metadata=json_response.get('metadata'),
+        domain=json_response.get('domain'),
         domain_autojoin=json_response['domain_autojoin'],
         domain_restrict=json_response['domain_restrict'],
-        custom_role_mapping_name=json_response['custom_role_mapping_name'],
-        legacy_org_id=json_response['legacy_org_id']
+        custom_role_mapping_name=json_response.get('custom_role_mapping_name'),
+        legacy_org_id=json_response.get('legacy_org_id')
     )
 
 
