@@ -37,7 +37,7 @@ def _fetch_org(auth_url, integration_api_key, org_id):
 
 
 def _fetch_org_by_query(
-    auth_url, integration_api_key, page_size, page_number, order_by, name, legacy_org_id
+    auth_url, integration_api_key, page_size, page_number, order_by, name, legacy_org_id, domain
 ):
     url = auth_url + f"{ORG_ENDPOINT_PATH}/query"
     params = {
@@ -46,6 +46,7 @@ def _fetch_org_by_query(
         "order_by": order_by,
         "name": name,
         "legacy_org_id": legacy_org_id,
+        "domain": domain,
     }
     response = requests.get(
         url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key)
