@@ -34,6 +34,10 @@ from propelauth_py.api.org import (
     _subscribe_org_to_role_mapping,
     _update_org_metadata,
     _validate_org_api_key,
+    _fetch_saml_sp_metadata,
+    _set_saml_idp_metadata,
+    _saml_go_live,
+    _delete_saml_connection,
 )
 from propelauth_py.api.token_verification_metadata import (
     _fetch_token_verification_metadata,
@@ -156,6 +160,10 @@ Auth = namedtuple(
         "validate_personal_api_key",
         "validate_org_api_key",
         "validate_api_key",
+        "fetch_saml_sp_metadata",
+        "set_saml_idp_metadata",
+        "saml_go_live",
+        "delete_saml_connection",
     ],
 )
 
@@ -474,6 +482,35 @@ def init_base_auth(
             org_id,
             custom_role_mapping_name,
         )
+    
+    def fetch_saml_sp_metadata(org_id):
+        return _fetch_saml_sp_metadata(
+            auth_url,
+            integration_api_key,
+            org_id,
+        )
+    
+    def set_saml_idp_metadata(org_id, saml_idp_metadata):
+        return _set_saml_idp_metadata(
+            auth_url,
+            integration_api_key,
+            org_id,
+            saml_idp_metadata,
+        )
+    
+    def saml_go_live(org_id):
+        return _saml_go_live(
+            auth_url,
+            integration_api_key,
+            org_id,
+        )
+    
+    def delete_saml_connection(org_id):
+        return _delete_saml_connection(
+            auth_url,
+            integration_api_key,
+            org_id,
+        )
 
     def delete_org(org_id):
         return _delete_org(auth_url, integration_api_key, org_id)
@@ -683,6 +720,11 @@ def init_base_auth(
         disallow_org_to_setup_saml_connection=disallow_org_to_setup_saml_connection,
         create_org_saml_connection_link=create_org_saml_connection_link,
         revoke_pending_org_invite=revoke_pending_org_invite,
+        # saml setup functions
+        fetch_saml_sp_metadata=fetch_saml_sp_metadata,
+        set_saml_idp_metadata=set_saml_idp_metadata,
+        saml_go_live=saml_go_live,
+        delete_saml_connection=delete_saml_connection,
         # api key functions
         fetch_api_key=fetch_api_key,
         fetch_current_api_keys=fetch_current_api_keys,
