@@ -30,12 +30,12 @@ def _fetch_api_key(auth_url, integration_api_key, api_key_id) -> ApiKeyFull:
 
     json_response = response.json()
     return ApiKeyFull(
-        api_key_id=json_response['api_key_id'],
-        created_at=json_response['created_at'],
-        expires_at_seconds=json_response['expires_at_seconds'],
-        metadata=json_response['metadata'],
-        user_id=json_response['user_id'],
-        org_id=json_response['org_id']
+        api_key_id=json_response.get('api_key_id'),
+        created_at=json_response.get('created_at'),
+        expires_at_seconds=json_response.get('expires_at_seconds'),
+        metadata=json_response.get('metadata'),
+        user_id=json_response.get('user_id'),
+        org_id=json_response.get('org_id')
     )
 
 
@@ -80,22 +80,22 @@ def _fetch_current_api_keys(
     
     api_keys = [
         ApiKeyFull(
-            api_key_id=key["api_key_id"],
-            created_at=key["created_at"],
+            api_key_id=key.get("api_key_id"),
+            created_at=key.get("created_at"),
             expires_at_seconds=key.get("expires_at_seconds"),
             metadata=key.get("metadata"),
             user_id=key.get("user_id"),
             org_id=key.get("org_id")
         )
-        for key in json_response['api_keys']
+        for key in json_response.get('api_keys')
     ]
     
     return ApiKeyResultPage(
         api_keys=api_keys,
-        total_api_keys=json_response['total_api_keys'],
-        current_page=json_response['current_page'],
-        page_size=json_response['page_size'],
-        has_more_results=json_response['has_more_results']
+        total_api_keys=json_response.get('total_api_keys'),
+        current_page=json_response.get('current_page'),
+        page_size=json_response.get('page_size'),
+        has_more_results=json_response.get('has_more_results')
     )
 
 
@@ -140,22 +140,22 @@ def _fetch_archived_api_keys(
     
     api_keys = [
         ApiKeyFull(
-            api_key_id=key["api_key_id"],
-            created_at=key["created_at"],
+            api_key_id=key.get("api_key_id"),
+            created_at=key.get("created_at"),
             expires_at_seconds=key.get("expires_at_seconds"),
             metadata=key.get("metadata"),
             user_id=key.get("user_id"),
             org_id=key.get("org_id")
         )
-        for key in json_response['api_keys']
+        for key in json_response.get('api_keys')
     ]
     
     return ApiKeyResultPage(
         api_keys=api_keys,
-        total_api_keys=json_response['total_api_keys'],
-        current_page=json_response['current_page'],
-        page_size=json_response['page_size'],
-        has_more_results=json_response['has_more_results']
+        total_api_keys=json_response.get('total_api_keys'),
+        current_page=json_response.get('current_page'),
+        page_size=json_response.get('page_size'),
+        has_more_results=json_response.get('has_more_results')
     )
 
 
@@ -188,8 +188,8 @@ def _create_api_key(
 
     json_response = response.json()
     return ApiKeyNew(
-        api_key_id=json_response['api_key_id'],
-        api_key_token=json_response['api_key_token']
+        api_key_id=json_response.get('api_key_id'),
+        api_key_token=json_response.get('api_key_token')
     )
 
 
@@ -210,23 +210,23 @@ def _validate_api_key(auth_url, integration_api_key, api_key_token) -> ApiKeyVal
     json_response = response.json()
     
     user = None
-    if json_response['user'] is not None:
-        user_data = json_response['user']
+    if json_response.get('user') is not None:
+        user_data = json_response.get('user')
         user = UserMetadata(
-            user_id=user_data['user_id'],
-            email=user_data['email'],
-            email_confirmed=user_data['email_confirmed'],
-            has_password=user_data['has_password'],
+            user_id=user_data.get('user_id'),
+            email=user_data.get('email'),
+            email_confirmed=user_data.get('email_confirmed'),
+            has_password=user_data.get('has_password'),
             username=user_data.get('username'),
             first_name=user_data.get('first_name'),
             last_name=user_data.get('last_name'),
             picture_url=user_data.get('picture_url'),
-            locked=user_data['locked'],
-            enabled=user_data['enabled'],
-            mfa_enabled=user_data['mfa_enabled'],
-            can_create_orgs=user_data['can_create_orgs'],
-            created_at=user_data['created_at'],
-            last_active_at=user_data['last_active_at'],
+            locked=user_data.get('locked'),
+            enabled=user_data.get('enabled'),
+            mfa_enabled=user_data.get('mfa_enabled'),
+            can_create_orgs=user_data.get('can_create_orgs'),
+            created_at=user_data.get('created_at'),
+            last_active_at=user_data.get('last_active_at'),
             org_id_to_org_info=user_data.get('org_id_to_org_info'),
             legacy_org_id=user_data.get('legacy_org_id'),
             impersonator_user_id=user_data.get('impersonator_user_id'),
@@ -235,11 +235,11 @@ def _validate_api_key(auth_url, integration_api_key, api_key_token) -> ApiKeyVal
         )
         
     org = None
-    if json_response['org'] is not None:
-        org_data = json_response['org']
+    if json_response.get('org') is not None:
+        org_data = json_response.get('org')
         org = Org(
-            org_id=org_data['org_id'],
-            name=org_data['org_name'],
+            org_id=org_data.get('org_id'),
+            name=org_data.get('org_name'),
             max_users=org_data.get('max_users'),
             is_saml_configured=org_data.get('is_saml_configured'),
             legacy_org_id=org_data.get('legacy_org_id'),
@@ -248,22 +248,22 @@ def _validate_api_key(auth_url, integration_api_key, api_key_token) -> ApiKeyVal
         )
         
     user_in_org = None
-    if json_response['user_in_org'] is not None:
-        user_in_org_data = json_response['user_in_org']
+    if json_response.get('user_in_org') is not None:
+        user_in_org_data = json_response.get('user_in_org')
         user_in_org = OrgMemberInfo(
-            org_id=user_in_org_data['org_id'],
-            org_name=user_in_org_data['org_name'],
-            org_metadata=user_in_org_data['org_metadata'],
-            user_assigned_role=user_in_org_data['user_role'],
-            url_safe_org_name=user_in_org_data['url_safe_org_name'],
-            user_inherited_roles_plus_current_role=user_in_org_data['inherited_user_roles_plus_current_role'],
-            user_permissions=user_in_org_data['user_permissions'],
+            org_id=user_in_org_data.get('org_id'),
+            org_name=user_in_org_data.get('org_name'),
+            org_metadata=user_in_org_data.get('org_metadata'),
+            user_assigned_role=user_in_org_data.get('user_role'),
+            url_safe_org_name=user_in_org_data.get('url_safe_org_name'),
+            user_inherited_roles_plus_current_role=user_in_org_data.get('inherited_user_roles_plus_current_role'),
+            user_permissions=user_in_org_data.get('user_permissions'),
             org_role_structure=user_in_org_data.get('org_role_structure'),
             assigned_additional_roles=user_in_org_data.get('additional_roles', [])
         )
     
     return ApiKeyValidation(
-        metadata=json_response['metadata'],
+        metadata=json_response.get('metadata'),
         user=user,
         org=org,
         user_in_org=user_in_org,

@@ -31,6 +31,6 @@ def _fetch_token_verification_metadata(
 
     json_response = response.json()
     return TokenVerificationMetadata(
-        verifier_key=json_response["verifier_key_pem"],
+        verifier_key=json_response.get("verifier_key_pem"),
         issuer=auth_url,
     )

@@ -55,5 +55,5 @@ def _create_magic_link(
 
     json_response = response.json()
     return CreateMagicLinkResponse(
-        url=json_response['url']
+        url=json_response.get('url')
     )

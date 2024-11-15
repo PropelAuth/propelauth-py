@@ -54,7 +54,7 @@ def _fetch_user_signup_query_params_by_user_id(
 
     json_response = response.json()
     return UserSignupQueryParams(
-        user_signup_query_parameters=json_response['user_signup_query_parameters']
+        user_signup_query_parameters=json_response.get('user_signup_query_parameters')
     )
 
 
@@ -92,20 +92,20 @@ def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query) -> 
     json_response = response.json()
 
     return UserMetadata(
-        user_id=json_response['user_id'],
-        email=json_response['email'],
-        email_confirmed=json_response['email_confirmed'],
-        has_password=json_response['has_password'],
+        user_id=json_response.get('user_id'),
+        email=json_response.get('email'),
+        email_confirmed=json_response.get('email_confirmed'),
+        has_password=json_response.get('has_password'),
         username=json_response.get('username'),
         first_name=json_response.get('first_name'),
         last_name=json_response.get('last_name'),
         picture_url=json_response.get('picture_url'),
-        locked=json_response['locked'],
-        enabled=json_response['enabled'],
-        mfa_enabled=json_response['mfa_enabled'],
-        can_create_orgs=json_response['can_create_orgs'],
-        created_at=json_response['created_at'],
-        last_active_at=json_response['last_active_at'],
+        locked=json_response.get('locked'),
+        enabled=json_response.get('enabled'),
+        mfa_enabled=json_response.get('mfa_enabled'),
+        can_create_orgs=json_response.get('can_create_orgs'),
+        created_at=json_response.get('created_at'),
+        last_active_at=json_response.get('last_active_at'),
         org_id_to_org_info=json_response.get('org_id_to_org_info'),
         legacy_org_id=json_response.get('legacy_org_id'),
         impersonator_user_id=json_response.get('impersonator_user_id'),
@@ -209,35 +209,35 @@ def _fetch_users_by_query(
     
     users = [
         UserMetadata(
-            user_id=key['user_id'],
-            email=key['email'],
-            email_confirmed=key['email_confirmed'],
-            has_password=key['has_password'],
+            user_id=key.get('user_id'),
+            email=key.get('email'),
+            email_confirmed=key.get('email_confirmed'),
+            has_password=key.get('has_password'),
             username=key.get('username'),
             first_name=key.get('first_name'),
             last_name=key.get('last_name'),
             picture_url=key.get('picture_url'),
-            locked=key['locked'],
-            enabled=key['enabled'],
-            mfa_enabled=key['mfa_enabled'],
-            can_create_orgs=key['can_create_orgs'],
-            created_at=key['created_at'],
-            last_active_at=key['last_active_at'],
+            locked=key.get('locked'),
+            enabled=key.get('enabled'),
+            mfa_enabled=key.get('mfa_enabled'),
+            can_create_orgs=key.get('can_create_orgs'),
+            created_at=key.get('created_at'),
+            last_active_at=key.get('last_active_at'),
             org_id_to_org_info=key.get('org_id_to_org_info'),
             legacy_org_id=key.get('legacy_org_id'),
             impersonator_user_id=key.get('impersonator_user_id'),
             metadata=key.get('metadata'),
             properties=key.get('properties')
         )
-        for key in json_response['users']
+        for key in json_response.get('users')
     ]
     
     return UsersPagedResponse(
         users=users,
-        total_users=json_response['total_users'],
-        current_page=json_response['current_page'],
-        page_size=json_response['page_size'],
-        has_more_results=json_response['has_more_results']
+        total_users=json_response.get('total_users'),
+        current_page=json_response.get('current_page'),
+        page_size=json_response.get('page_size'),
+        has_more_results=json_response.get('has_more_results')
     )
 
 
@@ -279,35 +279,35 @@ def _fetch_users_in_org(
     
     users = [
         UserMetadata(
-            user_id=key['user_id'],
-            email=key['email'],
-            email_confirmed=key['email_confirmed'],
-            has_password=key['has_password'],
+            user_id=key.get('user_id'),
+            email=key.get('email'),
+            email_confirmed=key.get('email_confirmed'),
+            has_password=key.get('has_password'),
             username=key.get('username'),
             first_name=key.get('first_name'),
             last_name=key.get('last_name'),
             picture_url=key.get('picture_url'),
-            locked=key['locked'],
-            enabled=key['enabled'],
-            mfa_enabled=key['mfa_enabled'],
-            can_create_orgs=key['can_create_orgs'],
-            created_at=key['created_at'],
-            last_active_at=key['last_active_at'],
+            locked=key.get('locked'),
+            enabled=key.get('enabled'),
+            mfa_enabled=key.get('mfa_enabled'),
+            can_create_orgs=key.get('can_create_orgs'),
+            created_at=key.get('created_at'),
+            last_active_at=key.get('last_active_at'),
             org_id_to_org_info=key.get('org_id_to_org_info'),
             legacy_org_id=key.get('legacy_org_id'),
             impersonator_user_id=key.get('impersonator_user_id'),
             metadata=key.get('metadata'),
             properties=key.get('properties')
         )
-        for key in json_response['users']
+        for key in json_response.get('users')
     ]
     
     return UsersPagedResponse(
         users=users,
-        total_users=json_response['total_users'],
-        current_page=json_response['current_page'],
-        page_size=json_response['page_size'],
-        has_more_results=json_response['has_more_results']
+        total_users=json_response.get('total_users'),
+        current_page=json_response.get('current_page'),
+        page_size=json_response.get('page_size'),
+        has_more_results=json_response.get('has_more_results')
     )
 
 
@@ -354,7 +354,7 @@ def _create_user(
 
     json_response = response.json()
     return CreatedUser(
-        user_id=json_response['user_id']
+        user_id=json_response.get('user_id')
     )
 
 

@@ -38,5 +38,5 @@ def _create_access_token(auth_url, integration_api_key, user_id, duration_in_min
 
     json_response = response.json()
     return CreateAccessTokenResponse(
-        access_token=json_response['access_token']
+        access_token=json_response.get('access_token')
     )

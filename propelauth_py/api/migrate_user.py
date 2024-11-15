@@ -50,5 +50,5 @@ def _migrate_user_from_external_source(
 
     json_response = response.json()
     return CreatedUser(
-        user_id=json_response['user_id']
+        user_id=json_response.get('user_id')
     )

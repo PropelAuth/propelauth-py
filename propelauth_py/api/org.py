@@ -37,17 +37,17 @@ def _fetch_org(auth_url, integration_api_key, org_id) -> Optional[Organization]:
 
     json_response = response.json()
     return Organization(
-        org_id=json_response['org_id'],
-        name=json_response['name'],
-        url_safe_org_slug=json_response['url_safe_org_slug'],
-        can_setup_saml=json_response['can_setup_saml'],
-        is_saml_configured=json_response['is_saml_configured'],
-        is_saml_in_test_mode=json_response['is_saml_in_test_mode'],
+        org_id=json_response.get('org_id'),
+        name=json_response.get('name'),
+        url_safe_org_slug=json_response.get('url_safe_org_slug'),
+        can_setup_saml=json_response.get('can_setup_saml'),
+        is_saml_configured=json_response.get('is_saml_configured'),
+        is_saml_in_test_mode=json_response.get('is_saml_in_test_mode'),
         max_users=json_response.get('max_users'),
         metadata=json_response.get('metadata'),
         domain=json_response.get('domain'),
-        domain_autojoin=json_response['domain_autojoin'],
-        domain_restrict=json_response['domain_restrict'],
+        domain_autojoin=json_response.get('domain_autojoin'),
+        domain_restrict=json_response.get('domain_restrict'),
         custom_role_mapping_name=json_response.get('custom_role_mapping_name'),
         legacy_org_id=json_response.get('legacy_org_id')
     )
@@ -83,23 +83,23 @@ def _fetch_org_by_query(
     
     orgs = [
         Org(
-            org_id=key['org_id'],
-            name=key['name'],
+            org_id=key.get('org_id'),
+            name=key.get('name'),
             max_users=key.get('max_users'),
-            is_saml_configured=key['is_saml_configured'],
+            is_saml_configured=key.get('is_saml_configured'),
             legacy_org_id=key.get('legacy_org_id'),
             metadata=key.get('metadata'),
             custom_role_mapping_name=key.get('custom_role_mapping_name')
         )
-        for key in json_response['orgs']
+        for key in json_response.get('orgs')
     ]
     
     return OrgQueryResponse(
         orgs=orgs,
-        total_orgs=json_response['total_orgs'],
-        current_page=json_response['current_page'],
-        page_size=json_response['page_size'],
-        has_more_results=json_response['has_more_results']
+        total_orgs=json_response.get('total_orgs'),
+        current_page=json_response.get('current_page'),
+        page_size=json_response.get('page_size'),
+        has_more_results=json_response.get('has_more_results')
     )
 
 
@@ -120,10 +120,10 @@ def _fetch_custom_role_mappings(auth_url, integration_api_key) -> CustomRoleMapp
     
     role_mappings = [
         CustomRoleMapping(
-            custom_role_mapping_name=key['custom_role_mapping_name'],
-            num_orgs_subscribed=key['num_orgs_subscribed']
+            custom_role_mapping_name=key.get('custom_role_mapping_name'),
+            num_orgs_subscribed=key.get('num_orgs_subscribed')
         )
-        for key in json_response['custom_role_mappings']
+        for key in json_response.get('custom_role_mappings')
     ]
     
     return CustomRoleMappings(
@@ -166,25 +166,25 @@ def _fetch_pending_invites(
     
     invites = [
         PendingInvite(
-            invitee_email=key['invitee_email'],
-            org_id=key['org_id'],
-            org_name=key['org_name'],
-            role_in_org=key['role_in_org'],
-            additional_roles_in_org=key['additional_roles_in_org'],
-            created_at=key['created_at'],
-            expires_at=key['expires_at'],
+            invitee_email=key.get('invitee_email'),
+            org_id=key.get('org_id'),
+            org_name=key.get('org_name'),
+            role_in_org=key.get('role_in_org'),
+            additional_roles_in_org=key.get('additional_roles_in_org'),
+            created_at=key.get('created_at'),
+            expires_at=key.get('expires_at'),
             inviter_email=key.get('inviter_email'),
             inviter_user_id=key.get('inviter_user_id'),
         )
-        for key in json_response['invites']
+        for key in json_response.get('invites')
     ]
     
     return PendingInvitesPage(
         invites=invites,
-        total_invites=json_response['total_invites'],
-        current_page=json_response['current_page'],
-        page_size=json_response['page_size'],
-        has_more_results=json_response['has_more_results']
+        total_invites=json_response.get('total_invites'),
+        current_page=json_response.get('current_page'),
+        page_size=json_response.get('page_size'),
+        has_more_results=json_response.get('has_more_results')
     )
 
 
@@ -227,8 +227,8 @@ def _create_org(
 
     json_response = response.json()
     return CreatedOrg(
-        org_id=json_response['org_id'],
-        name=json_response['name']
+        org_id=json_response.get('org_id'),
+        name=json_response.get('name')
     )
 
 
