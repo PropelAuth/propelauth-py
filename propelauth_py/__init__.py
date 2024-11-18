@@ -58,36 +58,15 @@ from propelauth_py.api.org import (
     _subscribe_org_to_role_mapping,
     _update_org_metadata,
     _validate_org_api_key,
+    _fetch_saml_sp_metadata,
+    _set_saml_idp_metadata,
+    _saml_go_live,
+    _delete_saml_connection,
 )
 from propelauth_py.api.token_verification_metadata import (
     _fetch_token_verification_metadata,
 )
-from propelauth_py.api.user import (
-    _clear_user_password,
-    _create_user,
-    _delete_user,
-    _disable_user,
-    _disable_user_2fa,
-    _disable_user_can_create_orgs,
-    _enable_user,
-    _enable_user_can_create_orgs,
-    _fetch_batch_user_metadata_by_emails,
-    _fetch_batch_user_metadata_by_user_ids,
-    _fetch_batch_user_metadata_by_usernames,
-    _fetch_user_metadata_by_email,
-    _fetch_user_metadata_by_user_id,
-    _fetch_user_metadata_by_username,
-    _fetch_user_signup_query_params_by_user_id,
-    _fetch_users_by_query,
-    _fetch_users_in_org,
-    _invite_user_to_org,
-    _logout_all_user_sessions,
-    _resend_email_confirmation,
-    _update_user_email,
-    _update_user_metadata,
-    _update_user_password,
-    _validate_personal_api_key,
-)
+
 from propelauth_py.auth_fns import (
     validate_all_permissions_and_get_org,
     validate_exact_org_role_and_get_org,
@@ -160,7 +139,7 @@ class Auth:
         return _fetch_org(self.auth_url, self.integration_api_key, org_id)
 
     def fetch_org_by_query(
-        self, page_size: int = 10, page_number: int = 0, order_by: OrgQueryOrderBy = OrgQueryOrderBy.CREATED_AT_ASC, name: Optional[str] = None, legacy_org_id: Optional[str] = None
+        self, page_size: int = 10, page_number: int = 0, order_by: OrgQueryOrderBy = OrgQueryOrderBy.CREATED_AT_ASC, name: Optional[str] = None, legacy_org_id: Optional[str] = None, domain: Optional[str] = None
     ):
         return _fetch_org_by_query(
             self.auth_url,
@@ -169,7 +148,8 @@ class Auth:
             page_number,
             order_by,
             name,
-            legacy_org_id
+            legacy_org_id,
+            domain
         )
 
     def fetch_custom_role_mappings(self):
@@ -424,6 +404,35 @@ class Auth:
             self.integration_api_key,
             org_id,
             custom_role_mapping_name,
+        )
+        
+    def fetch_saml_sp_metadata(self, org_id: str):
+        return _fetch_saml_sp_metadata(
+            self.auth_url,
+            self.integration_api_key,
+            org_id,
+        )
+        
+    def set_saml_idp_metadata(self, org_id: str, saml_idp_metadata: str):
+        return _set_saml_idp_metadata(
+            self.auth_url,
+            self.integration_api_key,
+            org_id,
+            saml_idp_metadata,
+        )
+        
+    def saml_go_live(self, org_id: str):
+        return _saml_go_live(
+            self.auth_url,
+            self.integration_api_key,
+            org_id,
+        )
+        
+    def delete_saml_connection(self, org_id: str):
+        return _delete_saml_connection(
+            self.auth_url,
+            self.integration_api_key,
+            org_id,
         )
 
     def delete_org(self, org_id: str):

@@ -30,6 +30,10 @@ from propelauth_py.api.org import (
     _subscribe_org_to_role_mapping,
     _update_org_metadata,
     _validate_org_api_key,
+    _fetch_saml_sp_metadata,
+    _set_saml_idp_metadata,
+    _saml_go_live,
+    _delete_saml_connection,
 )
 from propelauth_py.api.user import (
     _clear_user_password,
@@ -110,6 +114,10 @@ IMPORTED_FUNCTIONS = [
     _logout_all_user_sessions,
     _revoke_pending_org_invite,
     _create_org_saml_connection_link,
+    _fetch_saml_sp_metadata,
+    _set_saml_idp_metadata,
+    _saml_go_live,
+    _delete_saml_connection,
 ]
 
 
