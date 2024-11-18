@@ -65,7 +65,7 @@ def _fetch_org_by_query(
         "order_by": order_by,
         "name": name,
         "legacy_org_id": legacy_org_id,
-        "domain": domain
+        "domain": domain,
     }
     response = requests.get(
         url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key)
@@ -209,6 +209,21 @@ def _fetch_saml_sp_metadata(auth_url, integration_api_key, org_id) -> Optional[S
         acs_url=json_response.get('acs_url'),
         logout_url=json_response.get('logout_url'),
     )
+
+def _fetch_saml_sp_metadata(auth_url, integration_api_key, org_id):
+    if not _is_valid_id(org_id):
+        return None
+
+    url = auth_url + f"{BASE_ENDPOINT_PATH}/saml_sp_metadata/{org_id}"
+    response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 404:
+        return None
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching org SAML SP metadata")
+
+    return response.json()
 
 
 ####################

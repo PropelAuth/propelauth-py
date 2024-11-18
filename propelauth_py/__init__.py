@@ -149,7 +149,7 @@ class Auth:
             order_by,
             name,
             legacy_org_id,
-            domain
+            domain,
         )
 
     def fetch_custom_role_mappings(self):
