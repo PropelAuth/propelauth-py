@@ -94,6 +94,7 @@ from propelauth_py.types.login_method import (
     SocialSsoLoginMethod,
     UnknownLoginMethod,
 )
+from propelauth_py.types.saml_types import SamlIdpMetadata
 
 from propelauth_py.validation import _validate_url
 
@@ -413,7 +414,7 @@ class Auth:
             org_id,
         )
         
-    def set_saml_idp_metadata(self, org_id: str, saml_idp_metadata: str):
+    def set_saml_idp_metadata(self, org_id: str, saml_idp_metadata: SamlIdpMetadata):
         return _set_saml_idp_metadata(
             self.auth_url,
             self.integration_api_key,

@@ -5,7 +5,7 @@ from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id
 from propelauth_py.api.end_user_api_keys import _validate_api_key
 from propelauth_py.types.user import Organization, OrgQueryResponse, Org, PendingInvite, PendingInvitesPage, CreatedOrg, OrgApiKeyValidation
 from propelauth_py.types.custom_role_mappings import CustomRoleMappings, CustomRoleMapping
-from propelauth_py.types.sp_metadata import SpMetadata
+from propelauth_py.types.saml_types import SamlIdpMetadata, SpMetadata
 from propelauth_py.errors import (
     BadRequestException,
     EndUserApiKeyException,
@@ -210,21 +210,6 @@ def _fetch_saml_sp_metadata(auth_url, integration_api_key, org_id) -> Optional[S
         logout_url=json_response.get('logout_url'),
     )
 
-def _fetch_saml_sp_metadata(auth_url, integration_api_key, org_id):
-    if not _is_valid_id(org_id):
-        return None
-
-    url = auth_url + f"{BASE_ENDPOINT_PATH}/saml_sp_metadata/{org_id}"
-    response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
-    if response.status_code == 401:
-        raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 404:
-        return None
-    elif not response.ok:
-        raise RuntimeError("Unknown error when fetching org SAML SP metadata")
-
-    return response.json()
-
 
 ####################
 #       POST       #
@@ -394,7 +379,7 @@ def _change_user_role_in_org(
 
     return True
 
-def _set_saml_idp_metadata(auth_url, integration_api_key, org_id, saml_idp_metadata) -> bool:
+def _set_saml_idp_metadata(auth_url, integration_api_key, org_id, saml_idp_metadata: SamlIdpMetadata) -> bool:
     if not _is_valid_id(org_id):
         return False
 
