@@ -5,6 +5,20 @@ from propelauth_py.errors import BadRequestException
 
 ENDPOINT_PATH = "/api/backend/v1/magic_link"
 
+class CreateMagicLinkResponse:
+    def __init__(
+        self,
+        url: str,
+    ):
+        self.url = url
+
+    def __repr__(self): 
+        return (
+            f"CreateMagicLinkResponse(url={self.url}"
+        )
+    def __eq__(self, other):
+        return isinstance(other, CreateMagicLinkResponse)
+
 
 ####################
 #       POST       #
@@ -17,7 +31,7 @@ def _create_magic_link(
     expires_in_hours=None,
     create_new_user_if_one_doesnt_exist=None,
     user_signup_query_parameters=None,
-):
+) -> CreateMagicLinkResponse:
     url = auth_url + ENDPOINT_PATH
     json = {"email": email}
     if redirect_to_url is not None:
@@ -39,4 +53,7 @@ def _create_magic_link(
     elif not response.ok:
         raise RuntimeError("Unknown error when creating magic link")
 
-    return response.json()
+    json_response = response.json()
+    return CreateMagicLinkResponse(
+        url=json_response.get('url')
+    )

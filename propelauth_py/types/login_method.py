@@ -1,4 +1,6 @@
 from enum import Enum
+from dataclasses import dataclass
+from typing import Optional
 
 
 class SocialLoginProvider(Enum):
@@ -23,82 +25,77 @@ class SamlLoginProvider(Enum):
     GENERIC = "Generic"
 
 
+@dataclass
 class PasswordLoginMethod:
-    def __init__(self):
-        self.login_method = "password"
+    login_method: str = "password"
+    provider = None
+    org_id = None
+    
+    def __getitem__(self, key):
+        return getattr(self, key)
 
-    def __eq__(self, other):
-        return isinstance(other, PasswordLoginMethod)
-
-
+@dataclass
 class MagicLinkLoginMethod:
-    def __init__(self):
-        self.login_method = "magic_link"
+    login_method: str = "magic_link"
+    provider = None
+    org_id = None
+    
+    def __getitem__(self, key):
+        return getattr(self, key)
 
-    def __eq__(self, other):
-        isinstance(other, MagicLinkLoginMethod)
-
-
+@dataclass
 class SocialSsoLoginMethod:
-    def __init__(self, provider: SocialLoginProvider):
-        self.login_method = "social_sso"
-        self.provider = provider
+    provider: SocialLoginProvider
+    login_method: str = "social_sso"
+    org_id = None
 
-    def __eq__(self, other):
-        if isinstance(other, SocialSsoLoginMethod):
-            return (
-                self.login_method == other.login_method
-                and self.provider == other.provider
-            )
-        return False
+    def __getitem__(self, key):
+        return getattr(self, key)
 
-
+@dataclass
 class EmailConfirmationLinkLoginMethod:
-    def __init__(self):
-        self.login_method = "email_confirmation_link"
+    login_method: str = "email_confirmation_link"
+    provider = None
+    org_id = None
+    
+    def __getitem__(self, key):
+        return getattr(self, key)
 
-    def __eq__(self, other):
-        return isinstance(other, EmailConfirmationLinkLoginMethod)
-
-
+@dataclass
 class SamlSsoLoginMethod:
-    def __init__(self, provider: SamlLoginProvider, org_id: str):
-        self.login_method = "saml_sso"
-        self.provider = provider
-        self.org_id = org_id
+    provider: SamlLoginProvider
+    org_id: str
+    login_method: str = "saml_sso"
 
-    def __eq__(self, other):
-        if isinstance(other, SamlSsoLoginMethod):
-            return (
-                self.login_method == other.login_method
-                and self.provider == other.provider
-                and self.org_id == other.org_id
-            )
-        return False
+    def __getitem__(self, key):
+        return getattr(self, key)
 
-
+@dataclass
 class ImpersonationLoginMethod:
-    def __init__(self):
-        self.login_method = "impersonation"
+    login_method: str = "impersonation"
+    provider = None
+    org_id = None
+    
+    def __getitem__(self, key):
+        return getattr(self, key)
 
-    def __eq__(self, other):
-        return isinstance(other, ImpersonationLoginMethod)
-
-
+@dataclass
 class GeneratedFromBackendApiLoginMethod:
-    def __init__(self):
-        self.login_method = "generated_from_backend_api"
+    login_method: str = "generated_from_backend_api"
+    provider = None
+    org_id = None
+    
+    def __getitem__(self, key):
+        return getattr(self, key)
 
-    def __eq__(self, other):
-        return isinstance(other, GeneratedFromBackendApiLoginMethod)
-
-
+@dataclass
 class UnknownLoginMethod:
-    def __init__(self):
-        self.login_method = "unknown"
-
-    def __eq__(self, other):
-        return isinstance(other, UnknownLoginMethod)
+    login_method: str = "unknown"
+    provider = None
+    org_id = None
+    
+    def __getitem__(self, key):
+        return getattr(self, key)
 
 
 def to_login_method(d={}):

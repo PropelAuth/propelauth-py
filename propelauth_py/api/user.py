@@ -1,7 +1,9 @@
+from typing import Optional, Dict
 import requests
 
 from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id
 from propelauth_py.api.end_user_api_keys import _validate_api_key
+from propelauth_py.types.user import UserMetadata, UsersPagedResponse, CreatedUser, PersonalApiKeyValidation, UserSignupQueryParams
 from propelauth_py.errors import (
     CreateUserException,
     EndUserApiKeyException,
@@ -19,7 +21,7 @@ ENDPOINT_PATH = "/api/backend/v1/user"
 ####################
 def _fetch_user_metadata_by_user_id(
     auth_url, integration_api_key, user_id, include_orgs=False
-):
+) -> Optional[UserMetadata]:
     if not _is_valid_id(user_id):
         return None
 
@@ -32,7 +34,7 @@ def _fetch_user_signup_query_params_by_user_id(
     auth_url,
     integration_api_key,
     user_id,
-):
+) -> Optional[UserSignupQueryParams]:
     if not _is_valid_id(user_id):
         return None
 
@@ -50,12 +52,15 @@ def _fetch_user_signup_query_params_by_user_id(
     elif not response.ok:
         raise RuntimeError("Unknown error when fetching user signup query params")
 
-    return response.json()
+    json_response = response.json()
+    return UserSignupQueryParams(
+        user_signup_query_parameters=json_response.get('user_signup_query_parameters')
+    )
 
 
 def _fetch_user_metadata_by_email(
     auth_url, integration_api_key, email, include_orgs=False
-):
+) -> Optional[UserMetadata]:
     user_info_url = auth_url + f"{ENDPOINT_PATH}/email"
     query = {"include_orgs": include_orgs, "email": email}
     return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query)
@@ -63,13 +68,13 @@ def _fetch_user_metadata_by_email(
 
 def _fetch_user_metadata_by_username(
     auth_url, integration_api_key, username, include_orgs=False
-):
+) -> Optional[UserMetadata]:
     user_info_url = auth_url + f"{ENDPOINT_PATH}/username"
     query = {"include_orgs": include_orgs, "username": username}
     return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query)
 
 
-def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query):
+def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query) -> Optional[UserMetadata]:
     response = requests.get(
         user_info_url,
         params=_format_params(query),
@@ -84,12 +89,34 @@ def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query):
     elif not response.ok:
         raise RuntimeError("Unknown error when fetching user metadata")
 
-    return response.json()
+    json_response = response.json()
+
+    return UserMetadata(
+        user_id=json_response.get('user_id'),
+        email=json_response.get('email'),
+        email_confirmed=json_response.get('email_confirmed'),
+        has_password=json_response.get('has_password'),
+        username=json_response.get('username'),
+        first_name=json_response.get('first_name'),
+        last_name=json_response.get('last_name'),
+        picture_url=json_response.get('picture_url'),
+        locked=json_response.get('locked'),
+        enabled=json_response.get('enabled'),
+        mfa_enabled=json_response.get('mfa_enabled'),
+        can_create_orgs=json_response.get('can_create_orgs'),
+        created_at=json_response.get('created_at'),
+        last_active_at=json_response.get('last_active_at'),
+        org_id_to_org_info=json_response.get('org_id_to_org_info'),
+        legacy_org_id=json_response.get('legacy_org_id'),
+        impersonator_user_id=json_response.get('impersonator_user_id'),
+        metadata=json_response.get('metadata'),
+        properties=json_response.get('properties')
+    )
 
 
 def _fetch_batch_user_metadata_by_user_ids(
     auth_url, integration_api_key, user_ids, include_orgs
-):
+) -> Dict[str, UserMetadata]:
     user_info_url = auth_url + f"{ENDPOINT_PATH}/user_ids"
     params = {"include_orgs": include_orgs}
     body = {"user_ids": user_ids}
@@ -100,7 +127,7 @@ def _fetch_batch_user_metadata_by_user_ids(
 
 def _fetch_batch_user_metadata_by_emails(
     auth_url, integration_api_key, emails, include_orgs
-):
+) -> Dict[str, UserMetadata]:
     user_info_url = auth_url + f"{ENDPOINT_PATH}/emails"
     params = {"include_orgs": include_orgs}
     body = {"emails": emails}
@@ -111,7 +138,7 @@ def _fetch_batch_user_metadata_by_emails(
 
 def _fetch_batch_user_metadata_by_usernames(
     auth_url, integration_api_key, usernames, include_orgs
-):
+) -> Dict[str, UserMetadata]:
     user_info_url = auth_url + f"{ENDPOINT_PATH}/usernames"
     params = {"include_orgs": include_orgs}
     body = {"usernames": usernames}
@@ -122,7 +149,7 @@ def _fetch_batch_user_metadata_by_usernames(
 
 def _fetch_batch_user_metadata_by_query(
     user_info_url, integration_api_key, params, body, key_fn
-):
+) -> Dict[str, UserMetadata]:
     response = requests.post(
         user_info_url,
         params=_format_params(params),
@@ -153,7 +180,7 @@ def _fetch_users_by_query(
     email_or_username,
     include_orgs,
     legacy_user_id,
-):
+) -> UsersPagedResponse:
     url = auth_url + f"{ENDPOINT_PATH}/query"
     params = {
         "page_size": page_size,
@@ -178,20 +205,53 @@ def _fetch_users_by_query(
     elif not response.ok:
         raise RuntimeError("Unknown error when fetching orgs by query")
 
-    return response.json()
+    json_response = response.json()
+    
+    users = [
+        UserMetadata(
+            user_id=key.get('user_id'),
+            email=key.get('email'),
+            email_confirmed=key.get('email_confirmed'),
+            has_password=key.get('has_password'),
+            username=key.get('username'),
+            first_name=key.get('first_name'),
+            last_name=key.get('last_name'),
+            picture_url=key.get('picture_url'),
+            locked=key.get('locked'),
+            enabled=key.get('enabled'),
+            mfa_enabled=key.get('mfa_enabled'),
+            can_create_orgs=key.get('can_create_orgs'),
+            created_at=key.get('created_at'),
+            last_active_at=key.get('last_active_at'),
+            org_id_to_org_info=key.get('org_id_to_org_info'),
+            legacy_org_id=key.get('legacy_org_id'),
+            impersonator_user_id=key.get('impersonator_user_id'),
+            metadata=key.get('metadata'),
+            properties=key.get('properties')
+        )
+        for key in json_response.get('users')
+    ]
+    
+    return UsersPagedResponse(
+        users=users,
+        total_users=json_response.get('total_users'),
+        current_page=json_response.get('current_page'),
+        page_size=json_response.get('page_size'),
+        has_more_results=json_response.get('has_more_results')
+    )
 
 
 def _fetch_users_in_org(
     auth_url, integration_api_key, org_id, page_size, page_number, include_orgs, role
-):
+) -> UsersPagedResponse:
     if not _is_valid_id(org_id):
-        return {
-            "users": [],
-            "total_users": 0,
-            "current_page": page_number,
-            "page_size": page_size,
-            "has_more_results": False,
-        }
+        return UsersPagedResponse(
+            users=[],
+            total_users=0,
+            current_page=page_number,
+            page_size=page_size,
+            has_more_results=False,
+        )
 
     url = auth_url + f"{ENDPOINT_PATH}/org/{org_id}"
     params = {
@@ -215,7 +275,40 @@ def _fetch_users_in_org(
     elif not response.ok:
         raise RuntimeError("Unknown error when fetching users in org")
 
-    return response.json()
+    json_response = response.json()
+    
+    users = [
+        UserMetadata(
+            user_id=key.get('user_id'),
+            email=key.get('email'),
+            email_confirmed=key.get('email_confirmed'),
+            has_password=key.get('has_password'),
+            username=key.get('username'),
+            first_name=key.get('first_name'),
+            last_name=key.get('last_name'),
+            picture_url=key.get('picture_url'),
+            locked=key.get('locked'),
+            enabled=key.get('enabled'),
+            mfa_enabled=key.get('mfa_enabled'),
+            can_create_orgs=key.get('can_create_orgs'),
+            created_at=key.get('created_at'),
+            last_active_at=key.get('last_active_at'),
+            org_id_to_org_info=key.get('org_id_to_org_info'),
+            legacy_org_id=key.get('legacy_org_id'),
+            impersonator_user_id=key.get('impersonator_user_id'),
+            metadata=key.get('metadata'),
+            properties=key.get('properties')
+        )
+        for key in json_response.get('users')
+    ]
+    
+    return UsersPagedResponse(
+        users=users,
+        total_users=json_response.get('total_users'),
+        current_page=json_response.get('current_page'),
+        page_size=json_response.get('page_size'),
+        has_more_results=json_response.get('has_more_results')
+    )
 
 
 ####################
@@ -233,7 +326,7 @@ def _create_user(
     first_name,
     last_name,
     properties,
-):
+) -> CreatedUser:
     url = auth_url + f"{ENDPOINT_PATH}/"
     json = {
         "email": email,
@@ -259,10 +352,13 @@ def _create_user(
     elif not response.ok:
         raise RuntimeError("Unknown error when creating user")
 
-    return response.json()
+    json_response = response.json()
+    return CreatedUser(
+        user_id=json_response.get('user_id')
+    )
 
 
-def _disable_user(auth_url, integration_api_key, user_id):
+def _disable_user(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -278,7 +374,7 @@ def _disable_user(auth_url, integration_api_key, user_id):
     return True
 
 
-def _enable_user(auth_url, integration_api_key, user_id):
+def _enable_user(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -294,7 +390,7 @@ def _enable_user(auth_url, integration_api_key, user_id):
     return True
 
 
-def _disable_user_2fa(auth_url, integration_api_key, user_id):
+def _disable_user_2fa(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -313,7 +409,7 @@ def _disable_user_2fa(auth_url, integration_api_key, user_id):
 
 def _invite_user_to_org(
     auth_url, integration_api_key, email, org_id, role, additional_roles=[]
-):
+) -> bool:
     if not _is_valid_id(org_id):
         return False
 
@@ -340,10 +436,10 @@ def _invite_user_to_org(
     elif not response.ok:
         raise RuntimeError("Unknown error when updating metadata")
 
-    return response.text
+    return True
 
 
-def _resend_email_confirmation(auth_url, integration_api_key, user_id):
+def _resend_email_confirmation(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -371,7 +467,7 @@ def _resend_email_confirmation(auth_url, integration_api_key, user_id):
     return True
 
 
-def _logout_all_user_sessions(auth_url, integration_api_key, user_id):
+def _logout_all_user_sessions(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -402,7 +498,7 @@ def _update_user_metadata(
     properties=None,
     picture_url=None,
     update_password_required=None,
-):
+)-> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -442,7 +538,7 @@ def _update_user_password(
     user_id,
     password,
     ask_user_to_update_password_on_login,
-):
+) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -466,7 +562,7 @@ def _update_user_password(
     return True
 
 
-def _clear_user_password(auth_url, integration_api_key, user_id):
+def _clear_user_password(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -486,7 +582,7 @@ def _clear_user_password(auth_url, integration_api_key, user_id):
 
 def _update_user_email(
     auth_url, integration_api_key, user_id, new_email, require_email_confirmation
-):
+) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -509,7 +605,7 @@ def _update_user_email(
     return True
 
 
-def _enable_user_can_create_orgs(auth_url, integration_api_key, user_id):
+def _enable_user_can_create_orgs(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -526,7 +622,7 @@ def _enable_user_can_create_orgs(auth_url, integration_api_key, user_id):
     return True
 
 
-def _disable_user_can_create_orgs(auth_url, integration_api_key, user_id):
+def _disable_user_can_create_orgs(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -546,7 +642,7 @@ def _disable_user_can_create_orgs(auth_url, integration_api_key, user_id):
 ####################
 #       DELETE     #
 ####################
-def _delete_user(auth_url, integration_api_key, user_id):
+def _delete_user(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -567,11 +663,11 @@ def _delete_user(auth_url, integration_api_key, user_id):
 ####################
 
 
-def _validate_personal_api_key(auth_url, integration_api_key, api_key_token):
+def _validate_personal_api_key(auth_url, integration_api_key, api_key_token) -> PersonalApiKeyValidation:
     api_key_validation = _validate_api_key(auth_url, integration_api_key, api_key_token)
-    if not api_key_validation["user"] or api_key_validation["org"]:
+    if not api_key_validation.user or api_key_validation.org:
         raise EndUserApiKeyException({"api_key_token": ["Not a personal API Key"]})
-    return {
-        "user": api_key_validation["user"],
-        "metadata": api_key_validation["metadata"],
-    }
+    return PersonalApiKeyValidation(
+        user=api_key_validation.user,
+        metadata=api_key_validation.metadata,
+    )

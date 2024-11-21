@@ -4,8 +4,21 @@ from propelauth_py.errors import BadRequestException, UserNotFoundException
 
 ENDPOINT_PATH = "/api/backend/v1/access_token"
 
+class CreateAccessTokenResponse:
+    def __init__(
+        self,
+        access_token: str,
+    ):
+        self.access_token = access_token
 
-def _create_access_token(auth_url, integration_api_key, user_id, duration_in_minutes):
+    def __repr__(self): 
+        return (
+            f"CreateAccessTokenResponse(access_token={self.access_token}"
+        )
+    def __eq__(self, other):
+        return isinstance(other, CreateAccessTokenResponse)
+
+def _create_access_token(auth_url, integration_api_key, user_id, duration_in_minutes) -> CreateAccessTokenResponse:
     if not _is_valid_id(user_id):
         raise UserNotFoundException()
 
@@ -23,4 +36,7 @@ def _create_access_token(auth_url, integration_api_key, user_id, duration_in_min
     elif not response.ok:
         raise RuntimeError("Unknown error when creating access token")
 
-    return response.json()
+    json_response = response.json()
+    return CreateAccessTokenResponse(
+        access_token=json_response.get('access_token')
+    )

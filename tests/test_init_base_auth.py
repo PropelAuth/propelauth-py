@@ -147,17 +147,20 @@ def test_auth_tuple_contains_all_expected_functions(rsa_keys):
     """
     Test that the Auth tuple contains all expected functions.
     """
-    mock_auth_tuple = mock_api_and_init_auth(
+    mock_auth_class = mock_api_and_init_auth(
         BASE_AUTH_URL, 200, {"verifier_key_pem": rsa_keys.public_pem}
     )
-    auth_fields = mock_auth_tuple._fields
+    auth_methods = [
+        func for func in dir(mock_auth_class)
+        if callable(getattr(mock_auth_class, func)) and not func.startswith("_")
+    ]
     imported_functions_without_underscores = [
         func.__name__[1:] for func in IMPORTED_FUNCTIONS
     ]
     missing_functions = [
         func_name
         for func_name in imported_functions_without_underscores
-        if func_name not in auth_fields
+        if func_name not in auth_methods
     ]
 
     assert len(missing_functions) == 0, f"Missing functions: {missing_functions}"

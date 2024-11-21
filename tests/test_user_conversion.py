@@ -45,6 +45,7 @@ def test_to_user():
         "inherited_user_roles_plus_current_role": ["Owner", "Admin", "Member"],
         "user_permissions": ["View", "Edit", "Delete"],
         "org_role_structure": org_role_structure,
+        "url_safe_org_name": "orga",
         "additional_roles": [],
     }
     org_b = {
@@ -55,6 +56,7 @@ def test_to_user():
         "inherited_user_roles_plus_current_role": ["Admin", "Member"],
         "user_permissions": ["View", "Edit"],
         "org_role_structure": org_role_structure,
+        "url_safe_org_name": "orgb",
         "additional_roles": [],
     }
     org_c = {
@@ -65,6 +67,7 @@ def test_to_user():
         "inherited_user_roles_plus_current_role": ["Member"],
         "user_permissions": ["View"],
         "org_role_structure": org_role_structure,
+        "url_safe_org_name": "orgc",
         "additional_roles": [],
     }
     org_id_to_org_member_info = {
@@ -99,6 +102,7 @@ def test_to_user():
             user_inherited_roles_plus_current_role=["Owner", "Admin", "Member"],
             user_permissions=["View", "Edit", "Delete"],
             org_role_structure=org_role_structure,
+            url_safe_org_name=org_a["url_safe_org_name"],
             assigned_additional_roles=[],
         ),
         org_b["org_id"]: OrgMemberInfo(
@@ -109,6 +113,7 @@ def test_to_user():
             user_inherited_roles_plus_current_role=["Admin", "Member"],
             user_permissions=["View", "Edit"],
             org_role_structure=org_role_structure,
+            url_safe_org_name=org_b["url_safe_org_name"],
             assigned_additional_roles=[],
         ),
         org_c["org_id"]: OrgMemberInfo(
@@ -119,16 +124,17 @@ def test_to_user():
             user_inherited_roles_plus_current_role=["Member"],
             user_permissions=["View"],
             org_role_structure=org_role_structure,
+            url_safe_org_name=org_c["url_safe_org_name"],
             assigned_additional_roles=[],
         ),
     }
     expected_user = User(
-        user_id,
-        expected_org_id_to_org_member_info,
-        email,
-        first_name,
-        last_name,
-        username,
+        user_id=user_id,
+        org_id_to_org_member_info=expected_org_id_to_org_member_info,
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        username=username,
         login_method=SamlSsoLoginMethod(
             provider=SamlLoginProvider.OKTA, org_id=org_a["org_id"]
         ),
@@ -152,6 +158,7 @@ def test_to_user_with_active_org():
         "inherited_user_roles_plus_current_role": ["Owner", "Admin", "Member"],
         "user_permissions": ["View", "Edit", "Delete"],
         "org_role_structure": org_role_structure,
+        "url_safe_org_name": "orga",
         "additional_roles": [],
     }
     login_method = {
@@ -181,16 +188,17 @@ def test_to_user_with_active_org():
             user_inherited_roles_plus_current_role=["Owner", "Admin", "Member"],
             user_permissions=["View", "Edit", "Delete"],
             org_role_structure=org_role_structure,
+            url_safe_org_name=org_member_info["url_safe_org_name"],
             assigned_additional_roles=[],
         ),
     }
     expected_user = User(
-        user_id,
-        expected_org_id_to_org_member_info,
-        email,
-        first_name,
-        last_name,
-        username,
+        user_id=user_id,
+        org_id_to_org_member_info=expected_org_id_to_org_member_info,
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        username=username,
         active_org_id=org_member_info["org_id"],
         login_method=SocialSsoLoginMethod(provider=SocialLoginProvider.GOOGLE),
     )
@@ -212,6 +220,7 @@ def test_to_user_multi_role():
         "inherited_user_roles_plus_current_role": ["Owner"],
         "user_permissions": ["View", "Edit", "Delete"],
         "org_role_structure": org_role_structure,
+        "url_safe_org_name": "orga",
         "additional_roles": ["Billing", "Finance"],
     }
     org_b = {
@@ -222,6 +231,7 @@ def test_to_user_multi_role():
         "inherited_user_roles_plus_current_role": ["Member"],
         "user_permissions": ["View", "Edit"],
         "org_role_structure": org_role_structure,
+        "url_safe_org_name": "orgb",
         "additional_roles": ["IT"],
     }
     org_c = {
@@ -232,6 +242,7 @@ def test_to_user_multi_role():
         "inherited_user_roles_plus_current_role": ["Contractor"],
         "user_permissions": ["View"],
         "org_role_structure": org_role_structure,
+        "url_safe_org_name": "orgc",
         "additional_roles": [],
     }
     org_id_to_org_member_info = {
@@ -260,6 +271,7 @@ def test_to_user_multi_role():
             user_inherited_roles_plus_current_role=["Owner"],
             user_permissions=["View", "Edit", "Delete"],
             org_role_structure=org_role_structure,
+            url_safe_org_name=org_a["url_safe_org_name"],
             assigned_additional_roles=["Billing", "Finance"],
         ),
         org_b["org_id"]: OrgMemberInfo(
@@ -270,6 +282,7 @@ def test_to_user_multi_role():
             user_inherited_roles_plus_current_role=["Member"],
             user_permissions=["View", "Edit"],
             org_role_structure=org_role_structure,
+            url_safe_org_name=org_b["url_safe_org_name"],
             assigned_additional_roles=["IT"],
         ),
         org_c["org_id"]: OrgMemberInfo(
@@ -280,16 +293,17 @@ def test_to_user_multi_role():
             user_inherited_roles_plus_current_role=["Contractor"],
             user_permissions=["View"],
             org_role_structure=org_role_structure,
+            url_safe_org_name=org_c["url_safe_org_name"],
             assigned_additional_roles=[],
         ),
     }
     expected_user = User(
-        user_id,
-        expected_org_id_to_org_member_info,
-        email,
-        first_name,
-        last_name,
-        username,
+        user_id=user_id,
+        org_id_to_org_member_info=expected_org_id_to_org_member_info,
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        username=username,
         login_method=UnknownLoginMethod(),
     )
 
