@@ -1,8 +1,9 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from propelauth_py.user import OrgMemberInfo
 from dataclasses import dataclass
 
 OrgIdToOrgMemberInfo = Dict[str, OrgMemberInfo]
+
 
 @dataclass
 class Org:
@@ -16,7 +17,8 @@ class Org:
 
     def __getitem__(self, key):
         return getattr(self, key)
-    
+
+
 @dataclass
 class Organization:
     org_id: str
@@ -36,9 +38,10 @@ class Organization:
     def __getitem__(self, key):
         return getattr(self, key)
 
+
 @dataclass
 class OrgQueryResponse:
-    orgs: list[Org]
+    orgs: List[Org]
     total_orgs: int
     current_page: int
     page_size: int
@@ -47,13 +50,14 @@ class OrgQueryResponse:
     def __getitem__(self, key):
         return getattr(self, key)
 
+
 @dataclass
 class PendingInvite:
     invitee_email: str
     org_id: str
     org_name: str
     role_in_org: str
-    additional_roles_in_org: list[str]
+    additional_roles_in_org: List[str]
     created_at: int
     expires_at: int
     inviter_email: Optional[str]
@@ -62,16 +66,18 @@ class PendingInvite:
     def __getitem__(self, key):
         return getattr(self, key)
 
+
 @dataclass
 class PendingInvitesPage:
     total_invites: int
     current_page: int
     page_size: int
     has_more_results: bool
-    invites: list[PendingInvite]
+    invites: List[PendingInvite]
 
     def __getitem__(self, key):
         return getattr(self, key)
+
 
 @dataclass
 class CreatedOrg:
@@ -80,6 +86,7 @@ class CreatedOrg:
 
     def __getitem__(self, key):
         return getattr(self, key)
+
 
 @dataclass
 class UserMetadata:
@@ -105,7 +112,8 @@ class UserMetadata:
 
     def __getitem__(self, key):
         return getattr(self, key)
-    
+
+
 @dataclass
 class OrgApiKeyValidation:
     metadata: Optional[Dict[str, Any]]
@@ -116,17 +124,18 @@ class OrgApiKeyValidation:
     def __getitem__(self, key):
         return getattr(self, key)
 
-@dataclass    
+
+@dataclass
 class CreatedUser:
     user_id: str
 
     def __getitem__(self, key):
         return getattr(self, key)
-    
-    
+
+
 @dataclass
 class UsersPagedResponse:
-    users: list[UserMetadata]
+    users: List[UserMetadata]
     total_users: int
     current_page: int
     page_size: int
@@ -135,6 +144,7 @@ class UsersPagedResponse:
     def __getitem__(self, key):
         return getattr(self, key)
 
+
 @dataclass
 class PersonalApiKeyValidation:
     metadata: Optional[Dict[str, Any]]
@@ -142,6 +152,7 @@ class PersonalApiKeyValidation:
 
     def __getitem__(self, key):
         return getattr(self, key)
+
 
 @dataclass
 class UserSignupQueryParams:
