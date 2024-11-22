@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 @dataclass
 class CustomRoleMapping:
@@ -7,4 +8,4 @@ class CustomRoleMapping:
 
 @dataclass
 class CustomRoleMappings:
-    custom_role_mappings: list[CustomRoleMapping]
+    custom_role_mappings: List[CustomRoleMapping]

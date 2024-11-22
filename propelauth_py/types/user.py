@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from propelauth_py.user import OrgMemberInfo
 from dataclasses import dataclass
 
@@ -53,7 +53,7 @@ class PendingInvite:
     org_id: str
     org_name: str
     role_in_org: str
-    additional_roles_in_org: list[str]
+    additional_roles_in_org: List[str]
     created_at: int
     expires_at: int
     inviter_email: Optional[str]
