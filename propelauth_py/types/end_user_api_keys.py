@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from propelauth_py.types.user import UserMetadata, Org
 from propelauth_py.user import OrgMemberInfo
 from dataclasses import dataclass
@@ -17,7 +17,7 @@ class ApiKeyFull:
 
 @dataclass
 class ApiKeyResultPage:
-    api_keys: list[ApiKeyFull]
+    api_keys: List[ApiKeyFull]
     total_api_keys: int
     current_page: int
     page_size: int

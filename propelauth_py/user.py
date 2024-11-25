@@ -1,4 +1,4 @@
-from typing import Optional, Any, Dict, Union
+from typing import List, Optional, Any, Dict, Union
 from propelauth_py.errors import UnauthorizedException
 from propelauth_py.types.login_method import (
     to_login_method,
@@ -22,11 +22,11 @@ class OrgMemberInfo:
     org_name: str
     org_metadata: Dict[str, Any]
     user_assigned_role: str
-    url_safe_org_name: str
-    user_inherited_roles_plus_current_role: list[str]
-    user_permissions: list[str]
+    user_inherited_roles_plus_current_role: List[str]
+    user_permissions: List[str]
     org_role_structure: str = SINGLE_ROLE
-    assigned_additional_roles: list[str] = field(default_factory=list)
+    assigned_additional_roles: List[str] = field(default_factory=List)
+    url_safe_org_name: str = ""
     
     def __getitem__(self, key):
         return getattr(self, key)
@@ -47,7 +47,7 @@ class OrgMemberInfo:
         """returns true if user has the permission"""
         return permission in self.user_permissions
 
-    def user_has_all_permissions(self, permissions: list[str]) -> bool:
+    def user_has_all_permissions(self, permissions: List[str]) -> bool:
         """returns true if user has all the permissions listed"""
         for permission in permissions:
             if not self.user_has_permission(permission):
@@ -115,7 +115,7 @@ class User:
             return self.properties.get(property_name)
         return None
 
-    def get_orgs(self) -> list[OrgMemberInfo]:
+    def get_orgs(self) -> List[OrgMemberInfo]:
         """Returns the orgs the user is in."""
         if self.org_id_to_org_member_info:
             return list(self.org_id_to_org_member_info.values())
@@ -145,7 +145,7 @@ class User:
 
         return org_member_info.user_has_permission(permission)
 
-    def has_all_permissions_in_org(self, org_id: str, permissions: list[str]) -> bool:
+    def has_all_permissions_in_org(self, org_id: str, permissions: List[str]) -> bool:
         """Returns true if the user has all the permissions in the org."""
         org_member_info = self.get_org(org_id)
         if not org_member_info:
