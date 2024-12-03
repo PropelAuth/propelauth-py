@@ -3,7 +3,7 @@ import requests
 from propelauth_py.api import _ApiKeyAuth, _is_valid_hex, remove_bearer_if_exists
 from propelauth_py.errors import EndUserApiKeyException, EndUserApiKeyNotFoundException
 from propelauth_py.types.end_user_api_keys import ApiKeyFull, ApiKeyResultPage, ApiKeyNew, ApiKeyValidation
-from propelauth_py.types.user import UserMetadata, Org
+from propelauth_py.types.user import UserMetadata, OrgFromApiKey
 from propelauth_py.user import OrgMemberInfo
 
 ENDPOINT_PATH = "/api/backend/v1/end_user_api_keys"
@@ -237,9 +237,10 @@ def _validate_api_key(auth_url, integration_api_key, api_key_token) -> ApiKeyVal
     org = None
     if json_response.get('org') is not None:
         org_data = json_response.get('org')
-        org = Org(
+        org = OrgFromApiKey(
             org_id=org_data.get('org_id'),
             name=org_data.get('org_name'),
+            org_name=org_data.get('org_name'),
             max_users=org_data.get('max_users'),
             is_saml_configured=org_data.get('is_saml_configured'),
             legacy_org_id=org_data.get('legacy_org_id'),

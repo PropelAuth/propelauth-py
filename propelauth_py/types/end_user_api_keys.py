@@ -1,5 +1,5 @@
 from typing import Any, Dict, Optional, List
-from propelauth_py.types.user import UserMetadata, Org
+from propelauth_py.types.user import UserMetadata, OrgFromApiKey
 from propelauth_py.user import OrgMemberInfo
 from dataclasses import dataclass
 
@@ -38,7 +38,7 @@ class ApiKeyNew:
 class ApiKeyValidation:
     metadata: Optional[Dict[str, Any]]
     user: Optional[UserMetadata]
-    org: Optional[Org]
+    org: Optional[OrgFromApiKey]
     user_in_org: Optional[OrgMemberInfo]
 
     def __getitem__(self, key):
