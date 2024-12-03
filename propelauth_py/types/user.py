@@ -17,6 +17,20 @@ class Org:
 
     def __getitem__(self, key):
         return getattr(self, key)
+    
+@dataclass
+class OrgFromApiKey:
+    org_id: str
+    name: str
+    org_name: str
+    max_users: Optional[int]
+    is_saml_configured: bool
+    legacy_org_id: Optional[str]
+    metadata: Dict[str, Any]
+    custom_role_mapping_name: Optional[str]
+
+    def __getitem__(self, key):
+        return getattr(self, key)
 
 
 @dataclass
@@ -117,7 +131,7 @@ class UserMetadata:
 @dataclass
 class OrgApiKeyValidation:
     metadata: Optional[Dict[str, Any]]
-    org: Org
+    org: OrgFromApiKey
     user: Optional[UserMetadata]
     user_in_org: Optional[OrgMemberInfo]
 
