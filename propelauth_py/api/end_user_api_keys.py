@@ -1,7 +1,7 @@
 from typing import Optional
 import requests
 from propelauth_py.api import _ApiKeyAuth, _is_valid_hex, remove_bearer_if_exists
-from propelauth_py.errors import EndUserApiKeyException, EndUserApiKeyNotFoundException
+from propelauth_py.errors import EndUserApiKeyException, EndUserApiKeyNotFoundException, EndUserApiKeyRateLimitedException
 from propelauth_py.types.end_user_api_keys import ApiKeyFull, ApiKeyResultPage, ApiKeyNew, ApiKeyValidation
 from propelauth_py.types.user import UserMetadata, OrgFromApiKey
 from propelauth_py.user import OrgMemberInfo
@@ -204,6 +204,8 @@ def _validate_api_key(auth_url, integration_api_key, api_key_token) -> ApiKeyVal
         raise EndUserApiKeyException(response.json())
     elif response.status_code == 404:
         raise EndUserApiKeyNotFoundException()
+    elif response.status_code == 429:
+        raise EndUserApiKeyRateLimitedException(response.json())
     elif not response.ok:
         raise RuntimeError("Unknown error when validating end user api key")
 

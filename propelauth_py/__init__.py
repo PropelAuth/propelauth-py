@@ -81,7 +81,12 @@ from propelauth_py.auth_fns import (
     wrap_validate_access_token_and_get_user_with_org_by_minimum_role,
     wrap_validate_access_token_and_get_user_with_org_by_permission,
 )
-from propelauth_py.errors import ForbiddenException, UnauthorizedException
+from propelauth_py.errors import (
+    ForbiddenException,
+    UnauthorizedException,
+    EndUserApiKeyRateLimitedException,
+    EndUserApiKeyException,
+)
 from propelauth_py.types.login_method import (
     EmailConfirmationLinkLoginMethod,
     GeneratedFromBackendApiLoginMethod,

@@ -40,6 +40,13 @@ class EndUserApiKeyException(Exception):
 class EndUserApiKeyNotFoundException(Exception):
     pass
 
+class EndUserApiKeyRateLimitedException(Exception):
+    def __init__(self, field_to_errors):
+        self.wait_seconds = field_to_errors.get("wait_seconds")
+        self.user_facing_error = field_to_errors.get("user_facing_error")
+        self.error_code = field_to_errors.get("error_code")
+        self.field_to_errors = field_to_errors
+
 
 class UnauthorizedException(Exception):
     def __init__(self, message):
