@@ -326,6 +326,7 @@ def _create_user(
     first_name,
     last_name,
     properties,
+    ignore_domain_restrictions
 ) -> CreatedUser:
     url = auth_url + f"{ENDPOINT_PATH}/"
     json = {
@@ -344,6 +345,8 @@ def _create_user(
         json["last_name"] = last_name
     if properties is not None:
         json["properties"] = properties
+    if ignore_domain_restrictions is not None:
+        json["ignore_domain_restrictions"] = ignore_domain_restrictions
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")

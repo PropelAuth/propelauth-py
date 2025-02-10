@@ -217,6 +217,7 @@ class Auth:
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
         properties: Optional[Dict[str, Any]] = None,
+        ignore_domain_restrictions: bool = False
     ):
         return _create_user(
             self.auth_url,
@@ -230,6 +231,7 @@ class Auth:
             first_name,
             last_name,
             properties,
+            ignore_domain_restrictions
         )
 
     def invite_user_to_org(self, email: str, org_id: str, role: str, additional_roles: List[str] = []):

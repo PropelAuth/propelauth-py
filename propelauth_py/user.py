@@ -25,7 +25,7 @@ class OrgMemberInfo:
     user_inherited_roles_plus_current_role: List[str]
     user_permissions: List[str]
     org_role_structure: str = SINGLE_ROLE
-    assigned_additional_roles: List[str] = field(default_factory=List)
+    assigned_additional_roles: List[str] = field(default_factory=list)
     url_safe_org_name: str = ""
     
     def __getitem__(self, key):
