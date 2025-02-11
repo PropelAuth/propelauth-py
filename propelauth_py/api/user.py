@@ -476,12 +476,15 @@ def _resend_email_confirmation(auth_url, integration_api_key, user_id) -> bool:
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
-    elif response.status_code == 429:
-        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return False
     elif response.status_code == 429:
-        raise RuntimeError("Too many requests, please try again later.")
+        try:
+            # Check if this is specifically an email-send rate limit error
+            error_message = response.json()["user_facing_error"]
+            raise RateLimitedException(error_message)
+        except requests.exceptions.JSONDecodeError:
+            raise RateLimitedException(response.text)
     elif response.status_code == 400:
         if response.json().get("user_facing_error"):
             raise ValueError(response.json().get("user_facing_error"))
