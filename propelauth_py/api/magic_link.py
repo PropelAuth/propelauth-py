@@ -1,7 +1,7 @@
 import requests
 
 from propelauth_py.api import _ApiKeyAuth
-from propelauth_py.errors import BadRequestException
+from propelauth_py.errors import BadRequestException, RateLimitedException
 
 ENDPOINT_PATH = "/api/backend/v1/magic_link"
 
@@ -48,6 +48,8 @@ def _create_magic_link(
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
     elif not response.ok:

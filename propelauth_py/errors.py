@@ -47,6 +47,10 @@ class EndUserApiKeyRateLimitedException(Exception):
         self.error_code = field_to_errors.get("error_code")
         self.field_to_errors = field_to_errors
 
+class RateLimitedException(Exception):
+    def __init__(self, error_message):
+        self.error_message = error_message
+
 
 class UnauthorizedException(Exception):
     def __init__(self, message):

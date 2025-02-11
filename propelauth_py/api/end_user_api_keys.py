@@ -1,7 +1,7 @@
 from typing import Optional
 import requests
 from propelauth_py.api import _ApiKeyAuth, _is_valid_hex, remove_bearer_if_exists
-from propelauth_py.errors import EndUserApiKeyException, EndUserApiKeyNotFoundException, EndUserApiKeyRateLimitedException
+from propelauth_py.errors import EndUserApiKeyException, EndUserApiKeyNotFoundException, EndUserApiKeyRateLimitedException, RateLimitedException
 from propelauth_py.types.end_user_api_keys import ApiKeyFull, ApiKeyResultPage, ApiKeyNew, ApiKeyValidation
 from propelauth_py.types.user import UserMetadata, OrgFromApiKey
 from propelauth_py.user import OrgMemberInfo
@@ -21,6 +21,8 @@ def _fetch_api_key(auth_url, integration_api_key, api_key_id) -> ApiKeyFull:
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise EndUserApiKeyException(response.json())
     elif response.status_code == 404:
@@ -71,6 +73,8 @@ def _fetch_current_api_keys(
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise EndUserApiKeyException(response.json())
     elif not response.ok:
@@ -131,6 +135,8 @@ def _fetch_archived_api_keys(
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise EndUserApiKeyException(response.json())
     elif not response.ok:
@@ -181,6 +187,8 @@ def _create_api_key(
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise EndUserApiKeyException(response.json())
     elif not response.ok:
@@ -205,7 +213,11 @@ def _validate_api_key(auth_url, integration_api_key, api_key_token) -> ApiKeyVal
     elif response.status_code == 404:
         raise EndUserApiKeyNotFoundException()
     elif response.status_code == 429:
-        raise EndUserApiKeyRateLimitedException(response.json())
+        try:
+            end_user_rate_limit_response = response.json()
+            raise EndUserApiKeyRateLimitedException(end_user_rate_limit_response)
+        except requests.exceptions.JSONDecodeError:
+            raise RateLimitedException(response.text)
     elif not response.ok:
         raise RuntimeError("Unknown error when validating end user api key")
 
@@ -294,6 +306,8 @@ def _update_api_key(
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise EndUserApiKeyException(response.json())
     elif response.status_code == 404:
@@ -316,6 +330,8 @@ def _delete_api_key(auth_url, integration_api_key, api_key_id) -> bool:
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise EndUserApiKeyException(response.json())
     elif response.status_code == 404:

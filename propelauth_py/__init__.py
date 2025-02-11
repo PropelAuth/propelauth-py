@@ -86,6 +86,7 @@ from propelauth_py.errors import (
     UnauthorizedException,
     EndUserApiKeyRateLimitedException,
     EndUserApiKeyException,
+    RateLimitedException,
 )
 from propelauth_py.types.login_method import (
     EmailConfirmationLinkLoginMethod,

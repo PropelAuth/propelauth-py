@@ -10,6 +10,7 @@ from propelauth_py.errors import (
     BadRequestException,
     EndUserApiKeyException,
     UpdateUserMetadataException,
+    RateLimitedException,
 )
 
 BASE_ENDPOINT_PATH = "/api/backend/v1"
@@ -27,6 +28,8 @@ def _fetch_org(auth_url, integration_api_key, org_id) -> Optional[Organization]:
     response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return None
     elif response.status_code == 426:
@@ -72,6 +75,8 @@ def _fetch_org_by_query(
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise ValueError("Bad request: " + response.text)
     elif response.status_code == 426:
@@ -111,6 +116,8 @@ def _fetch_custom_role_mappings(auth_url, integration_api_key) -> CustomRoleMapp
     response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 426:
         raise RuntimeError(
             "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
@@ -157,6 +164,8 @@ def _fetch_pending_invites(
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 426:
         raise RuntimeError(
             "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
@@ -198,6 +207,8 @@ def _fetch_saml_sp_metadata(auth_url, integration_api_key, org_id) -> Optional[S
     response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return None
     elif not response.ok:
@@ -243,6 +254,8 @@ def _create_org(
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
     elif not response.ok:
@@ -263,6 +276,8 @@ def _allow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id) -
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return False
     elif not response.ok:
@@ -279,6 +294,8 @@ def _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return False
     elif not response.ok:
@@ -302,6 +319,8 @@ def _create_org_saml_connection_link(
     response = requests.post(url, json=body, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
     elif response.status_code == 426:
@@ -329,6 +348,8 @@ def _add_user_to_org(
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
     elif response.status_code == 404:
@@ -346,6 +367,8 @@ def _remove_user_from_org(auth_url, integration_api_key, user_id, org_id) -> boo
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
     elif response.status_code == 404:
@@ -370,6 +393,8 @@ def _change_user_role_in_org(
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
     elif response.status_code == 404:
@@ -396,6 +421,8 @@ def _set_saml_idp_metadata(auth_url, integration_api_key, org_id, saml_idp_metad
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
     elif response.status_code == 404:
@@ -414,6 +441,8 @@ def _saml_go_live(auth_url, integration_api_key, org_id) -> bool:
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
     elif response.status_code == 404:
@@ -465,6 +494,8 @@ def _update_org_metadata(
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise UpdateUserMetadataException(response.json())
     elif response.status_code == 404:
@@ -492,6 +523,8 @@ def _subscribe_org_to_role_mapping(
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise UpdateUserMetadataException(response.json())
     elif response.status_code == 404:
@@ -518,6 +551,8 @@ def _delete_org(auth_url, integration_api_key, org_id) -> bool:
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return False
     elif not response.ok:
@@ -533,6 +568,8 @@ def _revoke_pending_org_invite(auth_url, integration_api_key, org_id, invitee_em
     response = requests.delete(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
     elif not response.ok:
@@ -550,6 +587,8 @@ def _delete_saml_connection(auth_url, integration_api_key, org_id) -> bool:
     response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
     elif response.status_code == 404:
