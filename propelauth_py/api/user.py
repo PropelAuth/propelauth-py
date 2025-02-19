@@ -21,18 +21,18 @@ ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1/user"
 #       GET        #
 ####################
 def _fetch_user_metadata_by_user_id(
-    auth_url, integration_api_key, user_id, include_orgs=False
+    auth_hostname, integration_api_key, user_id, include_orgs=False
 ) -> Optional[UserMetadata]:
     if not _is_valid_id(user_id):
         return None
 
     user_info_url = f"{ENDPOINT_URL}/{user_id}"
     query = {"include_orgs": include_orgs}
-    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_url)
+    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_hostname)
 
 
 def _fetch_user_signup_query_params_by_user_id(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     user_id,
 ) -> Optional[UserSignupQueryParams]:
@@ -45,7 +45,7 @@ def _fetch_user_signup_query_params_by_user_id(
     response = requests.get(
         url=user_signup_query_params_url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -64,27 +64,27 @@ def _fetch_user_signup_query_params_by_user_id(
 
 
 def _fetch_user_metadata_by_email(
-    auth_url, integration_api_key, email, include_orgs=False
+    auth_hostname, integration_api_key, email, include_orgs=False
 ) -> Optional[UserMetadata]:
     user_info_url = f"{ENDPOINT_URL}/email"
     query = {"include_orgs": include_orgs, "email": email}
-    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_url)
+    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_hostname)
 
 
 def _fetch_user_metadata_by_username(
-    auth_url, integration_api_key, username, include_orgs=False
+    auth_hostname, integration_api_key, username, include_orgs=False
 ) -> Optional[UserMetadata]:
     user_info_url = f"{ENDPOINT_URL}/username"
     query = {"include_orgs": include_orgs, "username": username}
-    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_url)
+    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_hostname)
 
 
-def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_url) -> Optional[UserMetadata]:
+def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_hostname) -> Optional[UserMetadata]:
     response = requests.get(
         user_info_url,
         params=_format_params(query),
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -123,47 +123,47 @@ def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, aut
 
 
 def _fetch_batch_user_metadata_by_user_ids(
-    auth_url, integration_api_key, user_ids, include_orgs
+    auth_hostname, integration_api_key, user_ids, include_orgs
 ) -> Dict[str, UserMetadata]:
     user_info_url = f"{ENDPOINT_URL}/user_ids"
     params = {"include_orgs": include_orgs}
     body = {"user_ids": user_ids}
     return _fetch_batch_user_metadata_by_query(
-        user_info_url, integration_api_key, params, body, lambda x: x["user_id"], auth_url,
+        user_info_url, integration_api_key, params, body, lambda x: x["user_id"], auth_hostname,
     )
 
 
 def _fetch_batch_user_metadata_by_emails(
-    auth_url, integration_api_key, emails, include_orgs
+    auth_hostname, integration_api_key, emails, include_orgs
 ) -> Dict[str, UserMetadata]:
     user_info_url = f"{ENDPOINT_URL}/emails"
     params = {"include_orgs": include_orgs}
     body = {"emails": emails}
     return _fetch_batch_user_metadata_by_query(
-        user_info_url, integration_api_key, params, body, lambda x: x["email"], auth_url,
+        user_info_url, integration_api_key, params, body, lambda x: x["email"], auth_hostname,
     )
 
 
 def _fetch_batch_user_metadata_by_usernames(
-    auth_url, integration_api_key, usernames, include_orgs
+    auth_hostname, integration_api_key, usernames, include_orgs
 ) -> Dict[str, UserMetadata]:
     user_info_url = f"{ENDPOINT_URL}/usernames"
     params = {"include_orgs": include_orgs}
     body = {"usernames": usernames}
     return _fetch_batch_user_metadata_by_query(
-        user_info_url, integration_api_key, params, body, lambda x: x["username"], auth_url,
+        user_info_url, integration_api_key, params, body, lambda x: x["username"], auth_hostname,
     )
 
 
 def _fetch_batch_user_metadata_by_query(
-    user_info_url, integration_api_key, params, body, key_fn, auth_url
+    user_info_url, integration_api_key, params, body, key_fn, auth_hostname
 ) -> Dict[str, UserMetadata]:
     response = requests.post(
         user_info_url,
         params=_format_params(params),
         json=body,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -183,7 +183,7 @@ def _fetch_batch_user_metadata_by_query(
 
 
 def _fetch_users_by_query(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     page_size,
     page_number,
@@ -205,7 +205,7 @@ def _fetch_users_by_query(
         url,
         params=_format_params(params),
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -258,7 +258,7 @@ def _fetch_users_by_query(
 
 
 def _fetch_users_in_org(
-    auth_url, integration_api_key, org_id, page_size, page_number, include_orgs, role
+    auth_hostname, integration_api_key, org_id, page_size, page_number, include_orgs, role
 ) -> UsersPagedResponse:
     if not _is_valid_id(org_id):
         return UsersPagedResponse(
@@ -280,7 +280,7 @@ def _fetch_users_in_org(
         url,
         params=_format_params(params),
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -336,7 +336,7 @@ def _fetch_users_in_org(
 #       POST     #
 ####################
 def _create_user(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     email,
     email_confirmed,
@@ -373,7 +373,7 @@ def _create_user(
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -391,7 +391,7 @@ def _create_user(
     )
 
 
-def _disable_user(auth_url, integration_api_key, user_id) -> bool:
+def _disable_user(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -400,7 +400,7 @@ def _disable_user(auth_url, integration_api_key, user_id) -> bool:
     response = requests.post(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -415,7 +415,7 @@ def _disable_user(auth_url, integration_api_key, user_id) -> bool:
     return True
 
 
-def _enable_user(auth_url, integration_api_key, user_id) -> bool:
+def _enable_user(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -424,7 +424,7 @@ def _enable_user(auth_url, integration_api_key, user_id) -> bool:
     response = requests.post(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -439,7 +439,7 @@ def _enable_user(auth_url, integration_api_key, user_id) -> bool:
     return True
 
 
-def _disable_user_2fa(auth_url, integration_api_key, user_id) -> bool:
+def _disable_user_2fa(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -448,7 +448,7 @@ def _disable_user_2fa(auth_url, integration_api_key, user_id) -> bool:
     response = requests.post(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -464,13 +464,12 @@ def _disable_user_2fa(auth_url, integration_api_key, user_id) -> bool:
 
 
 def _invite_user_to_org(
-    auth_url, integration_api_key, email, org_id, role, additional_roles=[]
+    auth_hostname, integration_api_key, email, org_id, role, additional_roles=[]
 ) -> bool:
     if not _is_valid_id(org_id):
         return False
 
-    endpoint_path = "/api/backend/v1/invite_user"
-    url = auth_url + endpoint_path
+    url = BACKEND_API_BASE_URL + "/api/backend/v1/invite_user"
     json = {
         "email": email,
         "org_id": org_id,
@@ -481,7 +480,7 @@ def _invite_user_to_org(
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -502,7 +501,7 @@ def _invite_user_to_org(
     return True
 
 
-def _resend_email_confirmation(auth_url, integration_api_key, user_id) -> bool:
+def _resend_email_confirmation(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -516,7 +515,7 @@ def _resend_email_confirmation(auth_url, integration_api_key, user_id) -> bool:
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -541,7 +540,7 @@ def _resend_email_confirmation(auth_url, integration_api_key, user_id) -> bool:
     return True
 
 
-def _logout_all_user_sessions(auth_url, integration_api_key, user_id) -> bool:
+def _logout_all_user_sessions(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -550,7 +549,7 @@ def _logout_all_user_sessions(auth_url, integration_api_key, user_id) -> bool:
     response = requests.post(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -569,7 +568,7 @@ def _logout_all_user_sessions(auth_url, integration_api_key, user_id) -> bool:
 #     PATCH/PUT    #
 ####################
 def _update_user_metadata(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     user_id,
     username=None,
@@ -604,7 +603,7 @@ def _update_user_metadata(
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -622,7 +621,7 @@ def _update_user_metadata(
 
 
 def _update_user_password(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     user_id,
     password,
@@ -642,7 +641,7 @@ def _update_user_password(
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -659,7 +658,7 @@ def _update_user_password(
     return True
 
 
-def _clear_user_password(auth_url, integration_api_key, user_id) -> bool:
+def _clear_user_password(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -668,7 +667,7 @@ def _clear_user_password(auth_url, integration_api_key, user_id) -> bool:
     response = requests.put(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -686,7 +685,7 @@ def _clear_user_password(auth_url, integration_api_key, user_id) -> bool:
 
 
 def _update_user_email(
-    auth_url, integration_api_key, user_id, new_email, require_email_confirmation
+    auth_hostname, integration_api_key, user_id, new_email, require_email_confirmation
 ) -> bool:
     if not _is_valid_id(user_id):
         return False
@@ -701,7 +700,7 @@ def _update_user_email(
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -718,7 +717,7 @@ def _update_user_email(
     return True
 
 
-def _enable_user_can_create_orgs(auth_url, integration_api_key, user_id) -> bool:
+def _enable_user_can_create_orgs(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -727,7 +726,7 @@ def _enable_user_can_create_orgs(auth_url, integration_api_key, user_id) -> bool
     response = requests.put(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -742,7 +741,7 @@ def _enable_user_can_create_orgs(auth_url, integration_api_key, user_id) -> bool
     return True
 
 
-def _disable_user_can_create_orgs(auth_url, integration_api_key, user_id) -> bool:
+def _disable_user_can_create_orgs(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -751,7 +750,7 @@ def _disable_user_can_create_orgs(auth_url, integration_api_key, user_id) -> boo
     response = requests.put(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -769,7 +768,7 @@ def _disable_user_can_create_orgs(auth_url, integration_api_key, user_id) -> boo
 ####################
 #       DELETE     #
 ####################
-def _delete_user(auth_url, integration_api_key, user_id) -> bool:
+def _delete_user(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -778,7 +777,7 @@ def _delete_user(auth_url, integration_api_key, user_id) -> bool:
     response = requests.delete(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -798,8 +797,8 @@ def _delete_user(auth_url, integration_api_key, user_id) -> bool:
 ####################
 
 
-def _validate_personal_api_key(auth_url, integration_api_key, api_key_token) -> PersonalApiKeyValidation:
-    api_key_validation = _validate_api_key(auth_url, integration_api_key, api_key_token)
+def _validate_personal_api_key(auth_hostname, integration_api_key, api_key_token) -> PersonalApiKeyValidation:
+    api_key_validation = _validate_api_key(auth_hostname, integration_api_key, api_key_token)
     if not api_key_validation.user or api_key_validation.org:
         raise EndUserApiKeyException({"api_key_token": ["Not a personal API Key"]})
     return PersonalApiKeyValidation(

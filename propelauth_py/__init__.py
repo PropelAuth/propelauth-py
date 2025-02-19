@@ -106,50 +106,50 @@ from propelauth_py.validation import _validate_and_extract_auth_hostname
 
 class Auth:
     
-    def __init__(self, auth_url: str, integration_api_key: str, token_verification_metadata: Optional[TokenVerificationMetadata]):
-        self.auth_url = auth_url
+    def __init__(self, auth_hostname: str, integration_api_key: str, token_verification_metadata: Optional[TokenVerificationMetadata]):
+        self.auth_hostname = auth_hostname
         self.integration_api_key = integration_api_key
         self.token_verification_metadata = token_verification_metadata
 
     def fetch_user_metadata_by_user_id(self, user_id: str, include_orgs: bool = False):
-        return _fetch_user_metadata_by_user_id(self.auth_url, self.integration_api_key, user_id, include_orgs)
+        return _fetch_user_metadata_by_user_id(self.auth_hostname, self.integration_api_key, user_id, include_orgs)
 
     def fetch_user_metadata_by_email(self, email: str, include_orgs: bool = False):
-        return _fetch_user_metadata_by_email(self.auth_url, self.integration_api_key, email, include_orgs)
+        return _fetch_user_metadata_by_email(self.auth_hostname, self.integration_api_key, email, include_orgs)
     
     def fetch_user_metadata_by_username(self, username: str, include_orgs: bool = False):
         return _fetch_user_metadata_by_username(
-            self.auth_url, self.integration_api_key, username, include_orgs
+            self.auth_hostname, self.integration_api_key, username, include_orgs
         )
 
     def fetch_user_signup_query_params_by_user_id(self, user_id: str):
         return _fetch_user_signup_query_params_by_user_id(
-            self.auth_url, self.integration_api_key, user_id
+            self.auth_hostname, self.integration_api_key, user_id
         )
 
     def fetch_batch_user_metadata_by_user_ids(self, user_ids: List[str], include_orgs: bool = False):
         return _fetch_batch_user_metadata_by_user_ids(
-            self.auth_url, self.integration_api_key, user_ids, include_orgs
+            self.auth_hostname, self.integration_api_key, user_ids, include_orgs
         )
 
     def fetch_batch_user_metadata_by_emails(self, emails: List[str], include_orgs: bool = False):
         return _fetch_batch_user_metadata_by_emails(
-            self.auth_url, self.integration_api_key, emails, include_orgs
+            self.auth_hostname, self.integration_api_key, emails, include_orgs
         )
 
     def fetch_batch_user_metadata_by_usernames(self, usernames: List[str], include_orgs: bool = False):
         return _fetch_batch_user_metadata_by_usernames(
-            self.auth_url, self.integration_api_key, usernames, include_orgs
+            self.auth_hostname, self.integration_api_key, usernames, include_orgs
         )
 
     def fetch_org(self, org_id: str):
-        return _fetch_org(self.auth_url, self.integration_api_key, org_id)
+        return _fetch_org(self.auth_hostname, self.integration_api_key, org_id)
 
     def fetch_org_by_query(
         self, page_size: int = 10, page_number: int = 0, order_by: OrgQueryOrderBy = OrgQueryOrderBy.CREATED_AT_ASC, name: Optional[str] = None, legacy_org_id: Optional[str] = None, domain: Optional[str] = None
     ):
         return _fetch_org_by_query(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             page_size,
             page_number,
@@ -161,13 +161,13 @@ class Auth:
 
     def fetch_custom_role_mappings(self):
         return _fetch_custom_role_mappings(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
         )
 
     def fetch_pending_invites(self, page_number: int = 0, page_size: int = 10, org_id: Optional[str] = None):
         return _fetch_pending_invites(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             page_number,
             page_size,
@@ -184,7 +184,7 @@ class Auth:
         legacy_user_id: Optional[str] = None
     ):
         return _fetch_users_by_query(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             page_size,
             page_number,
@@ -198,7 +198,7 @@ class Auth:
         self, org_id: str, page_size: int = 10, page_number: int = 0, include_orgs: bool = False, role: Optional[str] = None
     ):
         return _fetch_users_in_org(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             org_id,
             page_size,
@@ -221,7 +221,7 @@ class Auth:
         ignore_domain_restrictions: bool = False
     ):
         return _create_user(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             email,
             email_confirmed,
@@ -237,7 +237,7 @@ class Auth:
 
     def invite_user_to_org(self, email: str, org_id: str, role: str, additional_roles: List[str] = []):
         return _invite_user_to_org(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             email,
             org_id,
@@ -247,21 +247,21 @@ class Auth:
 
     def resend_email_confirmation(self, user_id: str):
         return _resend_email_confirmation(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             user_id,
         )
 
     def logout_all_user_sessions(self, user_id: str):
         return _logout_all_user_sessions(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             user_id,
         )
 
     def update_user_email(self, user_id: str, new_email: str, require_email_confirmation: bool):
         return _update_user_email(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             user_id,
             new_email,
@@ -280,7 +280,7 @@ class Auth:
         update_password_required: Optional[bool] = None,
     ):
         return _update_user_metadata(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             user_id=user_id,
             username=username,
@@ -293,13 +293,13 @@ class Auth:
         )
 
     def clear_user_password(self, user_id: str):
-        return _clear_user_password(self.auth_url, self.integration_api_key, user_id)
+        return _clear_user_password(self.auth_hostname, self.integration_api_key, user_id)
 
     def update_user_password(
         self, user_id: str, password: str, ask_user_to_update_password_on_login: bool = False
     ):
         return _update_user_password(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             user_id,
             password,
@@ -315,7 +315,7 @@ class Auth:
         user_signup_query_parameters: Optional[Dict[str, str]] = None,
     ):
         return _create_magic_link(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             email,
             redirect_to_url,
@@ -326,7 +326,7 @@ class Auth:
 
     def create_access_token(self, user_id: str, duration_in_minutes: int):
         return _create_access_token(
-            self.auth_url, self.integration_api_key, user_id, duration_in_minutes
+            self.auth_hostname, self.integration_api_key, user_id, duration_in_minutes
         )
 
     def migrate_user_from_external_source(
@@ -345,7 +345,7 @@ class Auth:
         properties: Optional[Dict[str, Any]] = None,
     ):
         return _migrate_user_from_external_source(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             email,
             email_confirmed,
@@ -372,7 +372,7 @@ class Auth:
         legacy_org_id: Optional[str] = None,
     ):
         return _create_org(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             name,
             enable_auto_joining_by_domain,
@@ -395,7 +395,7 @@ class Auth:
         domain: Optional[str] = None,
     ):
         return _update_org_metadata(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             org_id=org_id,
             name=name,
@@ -409,7 +409,7 @@ class Auth:
 
     def subscribe_org_to_role_mapping(self, org_id: str, custom_role_mapping_name: str):
         return _subscribe_org_to_role_mapping(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             org_id,
             custom_role_mapping_name,
@@ -417,14 +417,14 @@ class Auth:
         
     def fetch_saml_sp_metadata(self, org_id: str):
         return _fetch_saml_sp_metadata(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             org_id,
         )
         
     def set_saml_idp_metadata(self, org_id: str, saml_idp_metadata: SamlIdpMetadata):
         return _set_saml_idp_metadata(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             org_id,
             saml_idp_metadata,
@@ -432,75 +432,75 @@ class Auth:
         
     def saml_go_live(self, org_id: str):
         return _saml_go_live(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             org_id,
         )
         
     def delete_saml_connection(self, org_id: str):
         return _delete_saml_connection(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             org_id,
         )
 
     def delete_org(self, org_id: str):
-        return _delete_org(self.auth_url, self.integration_api_key, org_id)
+        return _delete_org(self.auth_hostname, self.integration_api_key, org_id)
     
     def revoke_pending_org_invite(self, org_id: str, invitee_email: str):
-        return _revoke_pending_org_invite(self.auth_url, self.integration_api_key, org_id, invitee_email)
+        return _revoke_pending_org_invite(self.auth_hostname, self.integration_api_key, org_id, invitee_email)
 
 
     def add_user_to_org(self, user_id: str, org_id: str, role: str, additional_roles: List[str] = []):
         return _add_user_to_org(
-            self.auth_url, self.integration_api_key, user_id, org_id, role, additional_roles
+            self.auth_hostname, self.integration_api_key, user_id, org_id, role, additional_roles
         )
 
     def remove_user_from_org(self, user_id: str, org_id: str):
-        return _remove_user_from_org(self.auth_url, self.integration_api_key, user_id, org_id)
+        return _remove_user_from_org(self.auth_hostname, self.integration_api_key, user_id, org_id)
 
     def change_user_role_in_org(self, user_id: str, org_id: str, role: str, additional_roles: List[str] = []):
         return _change_user_role_in_org(
-            self.auth_url, self.integration_api_key, user_id, org_id, role, additional_roles
+            self.auth_hostname, self.integration_api_key, user_id, org_id, role, additional_roles
         )
 
     def delete_user(self, user_id: str):
-        return _delete_user(self.auth_url, self.integration_api_key, user_id)
+        return _delete_user(self.auth_hostname, self.integration_api_key, user_id)
 
     def disable_user(self, user_id: str):
-        return _disable_user(self.auth_url, self.integration_api_key, user_id)
+        return _disable_user(self.auth_hostname, self.integration_api_key, user_id)
 
     def enable_user(self, user_id: str):
-        return _enable_user(self.auth_url, self.integration_api_key, user_id)
+        return _enable_user(self.auth_hostname, self.integration_api_key, user_id)
 
     def disable_user_2fa(self, user_id: str):
-        return _disable_user_2fa(self.auth_url, self.integration_api_key, user_id)
+        return _disable_user_2fa(self.auth_hostname, self.integration_api_key, user_id)
 
     def enable_user_can_create_orgs(self, user_id: str):
-        return _enable_user_can_create_orgs(self.auth_url, self.integration_api_key, user_id)
+        return _enable_user_can_create_orgs(self.auth_hostname, self.integration_api_key, user_id)
 
     def disable_user_can_create_orgs(self, user_id: str):
-        return _disable_user_can_create_orgs(self.auth_url, self.integration_api_key, user_id)
+        return _disable_user_can_create_orgs(self.auth_hostname, self.integration_api_key, user_id)
 
     def allow_org_to_setup_saml_connection(self, org_id: str):
         return _allow_org_to_setup_saml_connection(
-            self.auth_url, self.integration_api_key, org_id
+            self.auth_hostname, self.integration_api_key, org_id
         )
 
     def disallow_org_to_setup_saml_connection(self, org_id: str):
         return _disallow_org_to_setup_saml_connection(
-            self.auth_url, self.integration_api_key, org_id
+            self.auth_hostname, self.integration_api_key, org_id
         )
 
     def create_org_saml_connection_link(self, org_id: str, expires_in_seconds=None):
         return _create_org_saml_connection_link(
-            self.auth_url, self.integration_api_key, org_id, expires_in_seconds
+            self.auth_hostname, self.integration_api_key, org_id, expires_in_seconds
         )
 
     # functions for end user api keys
 
     def fetch_api_key(self, api_key_id: str):
-        return _fetch_api_key(self.auth_url, self.integration_api_key, api_key_id)
+        return _fetch_api_key(self.auth_hostname, self.integration_api_key, api_key_id)
 
     def fetch_current_api_keys(
         self,
@@ -512,7 +512,7 @@ class Auth:
         api_key_type: Optional[str] = None,
     ):
         return _fetch_current_api_keys(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             org_id,
             user_id,
@@ -532,7 +532,7 @@ class Auth:
         api_key_type: Optional[str] = None,
     ):
         return _fetch_archived_api_keys(
-            self.auth_url,
+            self.auth_hostname,
             self.integration_api_key,
             org_id,
             user_id,
@@ -546,25 +546,25 @@ class Auth:
         self, org_id: Optional[str] = None, user_id: Optional[str] = None, expires_at_seconds: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None
     ):
         return _create_api_key(
-            self.auth_url, self.integration_api_key, org_id, user_id, expires_at_seconds, metadata
+            self.auth_hostname, self.integration_api_key, org_id, user_id, expires_at_seconds, metadata
         )
 
     def update_api_key(self, api_key_id: str, expires_at_seconds: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
         return _update_api_key(
-            self.auth_url, self.integration_api_key, api_key_id, expires_at_seconds, metadata
+            self.auth_hostname, self.integration_api_key, api_key_id, expires_at_seconds, metadata
         )
 
     def delete_api_key(self, api_key_id: str):
-        return _delete_api_key(self.auth_url, self.integration_api_key, api_key_id)
+        return _delete_api_key(self.auth_hostname, self.integration_api_key, api_key_id)
 
     def validate_personal_api_key(self, api_key_token: str):
-        return _validate_personal_api_key(self.auth_url, self.integration_api_key, api_key_token)
+        return _validate_personal_api_key(self.auth_hostname, self.integration_api_key, api_key_token)
 
     def validate_org_api_key(self, api_key_token: str):
-        return _validate_org_api_key(self.auth_url, self.integration_api_key, api_key_token)
+        return _validate_org_api_key(self.auth_hostname, self.integration_api_key, api_key_token)
 
     def validate_api_key(self, api_key_token: str):
-        return _validate_api_key(self.auth_url, self.integration_api_key, api_key_token)
+        return _validate_api_key(self.auth_hostname, self.integration_api_key, api_key_token)
     
 
     def validate_access_token_and_get_user(self, authorization_header: Optional[str]):
@@ -624,7 +624,8 @@ def init_base_auth(
     integration_api_key: str,
     token_verification_metadata: Optional[TokenVerificationMetadata] = None,
 ) -> Auth:
+    auth_hostname = _validate_and_extract_auth_hostname(auth_url)
     token_verification_metadata = _fetch_token_verification_metadata(
-        auth_url, integration_api_key, token_verification_metadata
+        auth_hostname, integration_api_key, token_verification_metadata
     )
-    return Auth(auth_url, integration_api_key, token_verification_metadata)
+    return Auth(auth_hostname, integration_api_key, token_verification_metadata)

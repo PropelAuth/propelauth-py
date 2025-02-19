@@ -8,7 +8,7 @@ ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1/migrate_user"
 
 
 def _migrate_user_from_external_source(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     email,
     email_confirmed,
@@ -44,7 +44,7 @@ def _migrate_user_from_external_source(
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:

@@ -24,7 +24,7 @@ class CreateMagicLinkResponse:
 #       POST       #
 ####################
 def _create_magic_link(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     email,
     redirect_to_url=None,
@@ -49,7 +49,7 @@ def _create_magic_link(
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:

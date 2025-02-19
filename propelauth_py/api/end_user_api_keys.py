@@ -13,7 +13,7 @@ ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1/end_user_api_keys"
 ####################
 #       GET        #
 ####################
-def _fetch_api_key(auth_url, integration_api_key, api_key_id) -> ApiKeyFull:
+def _fetch_api_key(auth_hostname, integration_api_key, api_key_id) -> ApiKeyFull:
     if not _is_valid_hex(api_key_id):
         raise EndUserApiKeyNotFoundException()
 
@@ -21,7 +21,7 @@ def _fetch_api_key(auth_url, integration_api_key, api_key_id) -> ApiKeyFull:
     response = requests.get(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -47,7 +47,7 @@ def _fetch_api_key(auth_url, integration_api_key, api_key_id) -> ApiKeyFull:
 
 
 def _fetch_current_api_keys(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     org_id=None,
     user_id=None,
@@ -76,7 +76,7 @@ def _fetch_current_api_keys(
         url, 
         auth=_ApiKeyAuth(integration_api_key),
         params=query_params,
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -112,7 +112,7 @@ def _fetch_current_api_keys(
 
 
 def _fetch_archived_api_keys(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     org_id=None,
     user_id=None,
@@ -141,7 +141,7 @@ def _fetch_archived_api_keys(
         url,
         auth=_ApiKeyAuth(integration_api_key),
         params=query_params,
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -180,7 +180,7 @@ def _fetch_archived_api_keys(
 #       POST       #
 ####################
 def _create_api_key(
-    auth_url, integration_api_key, org_id, user_id, expires_at_seconds, metadata
+    auth_hostname, integration_api_key, org_id, user_id, expires_at_seconds, metadata
 ) -> ApiKeyNew:
     url = ENDPOINT_URL
 
@@ -198,7 +198,7 @@ def _create_api_key(
         url,
         auth=_ApiKeyAuth(integration_api_key),
         json=json,
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -217,14 +217,14 @@ def _create_api_key(
     )
 
 
-def _validate_api_key(auth_url, integration_api_key, api_key_token) -> ApiKeyValidation:
+def _validate_api_key(auth_hostname, integration_api_key, api_key_token) -> ApiKeyValidation:
     url = f"{ENDPOINT_URL}/validate"
     json = {"api_key_token": remove_bearer_if_exists(api_key_token)}
     response = requests.post(
         url,
         auth=_ApiKeyAuth(integration_api_key),
         json=json,
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -310,7 +310,7 @@ def _validate_api_key(auth_url, integration_api_key, api_key_token) -> ApiKeyVal
 #    PUT/PATCH     #
 ####################
 def _update_api_key(
-    auth_url, integration_api_key, api_key_id, expires_at_seconds, metadata
+    auth_hostname, integration_api_key, api_key_id, expires_at_seconds, metadata
 ) -> bool:
     if not _is_valid_hex(api_key_id):
         return False
@@ -327,7 +327,7 @@ def _update_api_key(
         url,
         auth=_ApiKeyAuth(integration_api_key),
         json=json,
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -347,7 +347,7 @@ def _update_api_key(
 ####################
 #      DELETE      #
 ####################
-def _delete_api_key(auth_url, integration_api_key, api_key_id) -> bool:
+def _delete_api_key(auth_hostname, integration_api_key, api_key_id) -> bool:
     if not _is_valid_hex(api_key_id):
         return False
 
@@ -355,7 +355,7 @@ def _delete_api_key(auth_url, integration_api_key, api_key_id) -> bool:
     response = requests.delete(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:

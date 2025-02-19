@@ -20,7 +20,7 @@ ORG_ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1/org"
 ####################
 #       GET        #
 ####################
-def _fetch_org(auth_url, integration_api_key, org_id) -> Optional[Organization]:
+def _fetch_org(auth_hostname, integration_api_key, org_id) -> Optional[Organization]:
     if not _is_valid_id(org_id):
         return None
 
@@ -29,7 +29,7 @@ def _fetch_org(auth_url, integration_api_key, org_id) -> Optional[Organization]:
     response = requests.get(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -65,7 +65,7 @@ def _fetch_org(auth_url, integration_api_key, org_id) -> Optional[Organization]:
 
 
 def _fetch_org_by_query(
-    auth_url, integration_api_key, page_size, page_number, order_by, name, legacy_org_id, domain
+    auth_hostname, integration_api_key, page_size, page_number, order_by, name, legacy_org_id, domain
 ) -> OrgQueryResponse:
     url = f"{ORG_ENDPOINT_URL}/query"
     params = {
@@ -80,7 +80,7 @@ def _fetch_org_by_query(
         url,
         params=_format_params(params),
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -121,13 +121,13 @@ def _fetch_org_by_query(
     )
 
 
-def _fetch_custom_role_mappings(auth_url, integration_api_key) -> CustomRoleMappings:
+def _fetch_custom_role_mappings(auth_hostname, integration_api_key) -> CustomRoleMappings:
     url = "/api/backend/v1/custom_role_mappings"
 
     response = requests.get(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -158,7 +158,7 @@ def _fetch_custom_role_mappings(auth_url, integration_api_key) -> CustomRoleMapp
 
 
 def _fetch_pending_invites(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     page_number=0,
     page_size=10,
@@ -179,7 +179,7 @@ def _fetch_pending_invites(
         url,
         params=_format_params(params),
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -219,7 +219,7 @@ def _fetch_pending_invites(
         has_more_results=json_response.get('has_more_results')
     )
     
-def _fetch_saml_sp_metadata(auth_url, integration_api_key, org_id) -> Optional[SpMetadata]:
+def _fetch_saml_sp_metadata(auth_hostname, integration_api_key, org_id) -> Optional[SpMetadata]:
     if not _is_valid_id(org_id):
         return None
 
@@ -228,7 +228,7 @@ def _fetch_saml_sp_metadata(auth_url, integration_api_key, org_id) -> Optional[S
     response = requests.get(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -252,7 +252,7 @@ def _fetch_saml_sp_metadata(auth_url, integration_api_key, org_id) -> Optional[S
 #       POST       #
 ####################
 def _create_org(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     name,
     enable_auto_joining_by_domain=False,
@@ -281,7 +281,7 @@ def _create_org(
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -300,7 +300,7 @@ def _create_org(
     )
 
 
-def _allow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id) -> bool:
+def _allow_org_to_setup_saml_connection(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
         return False
 
@@ -309,7 +309,7 @@ def _allow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id) -
     response = requests.post(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -324,7 +324,7 @@ def _allow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id) -
     return True
 
 
-def _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id) -> bool:
+def _disallow_org_to_setup_saml_connection(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
         return False
 
@@ -333,7 +333,7 @@ def _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id
     response = requests.post(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -349,7 +349,7 @@ def _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id
 
 
 def _create_org_saml_connection_link(
-    auth_url, integration_api_key, org_id, expires_in_seconds=None
+    auth_hostname, integration_api_key, org_id, expires_in_seconds=None
 ):
     if not _is_valid_id(org_id):
         return None
@@ -364,7 +364,7 @@ def _create_org_saml_connection_link(
         url,
         json=body,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -385,7 +385,7 @@ def _create_org_saml_connection_link(
 
 
 def _add_user_to_org(
-    auth_url, integration_api_key, user_id, org_id, role, additional_roles=[]
+    auth_hostname, integration_api_key, user_id, org_id, role, additional_roles=[]
 ) -> bool:
     url = f"{ORG_ENDPOINT_URL}/add_user"
     json = {
@@ -399,7 +399,7 @@ def _add_user_to_org(
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -416,7 +416,7 @@ def _add_user_to_org(
     return True
 
 
-def _remove_user_from_org(auth_url, integration_api_key, user_id, org_id) -> bool:
+def _remove_user_from_org(auth_hostname, integration_api_key, user_id, org_id) -> bool:
     url = f"{ORG_ENDPOINT_URL}/remove_user"
     json = {"user_id": user_id, "org_id": org_id}
 
@@ -424,7 +424,7 @@ def _remove_user_from_org(auth_url, integration_api_key, user_id, org_id) -> boo
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -442,7 +442,7 @@ def _remove_user_from_org(auth_url, integration_api_key, user_id, org_id) -> boo
 
 
 def _change_user_role_in_org(
-    auth_url, integration_api_key, user_id, org_id, role, additional_roles=[]
+    auth_hostname, integration_api_key, user_id, org_id, role, additional_roles=[]
 ) -> bool:
     url = f"{ORG_ENDPOINT_URL}/change_role"
     json = {
@@ -456,7 +456,7 @@ def _change_user_role_in_org(
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -472,7 +472,7 @@ def _change_user_role_in_org(
 
     return True
 
-def _set_saml_idp_metadata(auth_url, integration_api_key, org_id, saml_idp_metadata: SamlIdpMetadata) -> bool:
+def _set_saml_idp_metadata(auth_hostname, integration_api_key, org_id, saml_idp_metadata: SamlIdpMetadata) -> bool:
     if not _is_valid_id(org_id):
         return False
 
@@ -490,7 +490,7 @@ def _set_saml_idp_metadata(auth_url, integration_api_key, org_id, saml_idp_metad
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -506,7 +506,7 @@ def _set_saml_idp_metadata(auth_url, integration_api_key, org_id, saml_idp_metad
 
     return True
 
-def _saml_go_live(auth_url, integration_api_key, org_id) -> bool:
+def _saml_go_live(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
         return False
 
@@ -515,7 +515,7 @@ def _saml_go_live(auth_url, integration_api_key, org_id) -> bool:
     response = requests.post(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -535,7 +535,7 @@ def _saml_go_live(auth_url, integration_api_key, org_id) -> bool:
 #     PATCH/PUT    #
 ####################
 def _update_org_metadata(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     org_id,
     name=None,
@@ -574,7 +574,7 @@ def _update_org_metadata(
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -592,7 +592,7 @@ def _update_org_metadata(
 
 
 def _subscribe_org_to_role_mapping(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     org_id,
     custom_role_mapping_name,
@@ -609,7 +609,7 @@ def _subscribe_org_to_role_mapping(
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -633,7 +633,7 @@ def _subscribe_org_to_role_mapping(
 ####################
 
 
-def _delete_org(auth_url, integration_api_key, org_id) -> bool:
+def _delete_org(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
         return False
 
@@ -642,7 +642,7 @@ def _delete_org(auth_url, integration_api_key, org_id) -> bool:
     response = requests.delete(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -656,7 +656,7 @@ def _delete_org(auth_url, integration_api_key, org_id) -> bool:
 
     return True
 
-def _revoke_pending_org_invite(auth_url, integration_api_key, org_id, invitee_email) -> bool:
+def _revoke_pending_org_invite(auth_hostname, integration_api_key, org_id, invitee_email) -> bool:
 
     url = "/api/backend/v1/pending_org_invites"
     json = {"org_id": org_id, "invitee_email": invitee_email}
@@ -665,7 +665,7 @@ def _revoke_pending_org_invite(auth_url, integration_api_key, org_id, invitee_em
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -680,7 +680,7 @@ def _revoke_pending_org_invite(auth_url, integration_api_key, org_id, invitee_em
     return response.json()
 
 
-def _delete_saml_connection(auth_url, integration_api_key, org_id) -> bool:
+def _delete_saml_connection(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
         return False
 
@@ -689,7 +689,7 @@ def _delete_saml_connection(auth_url, integration_api_key, org_id) -> bool:
     response = requests.delete(
         url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -711,8 +711,8 @@ def _delete_saml_connection(auth_url, integration_api_key, org_id) -> bool:
 ####################
 
 
-def _validate_org_api_key(auth_url, integration_api_key, api_key_token) -> OrgApiKeyValidation:
-    api_key_validation = _validate_api_key(auth_url, integration_api_key, api_key_token)
+def _validate_org_api_key(auth_hostname, integration_api_key, api_key_token) -> OrgApiKeyValidation:
+    api_key_validation = _validate_api_key(auth_hostname, integration_api_key, api_key_token)
     if not api_key_validation.org:
         raise EndUserApiKeyException({"api_key_token": ["Not an org API Key"]})
     return OrgApiKeyValidation(

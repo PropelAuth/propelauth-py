@@ -10,7 +10,7 @@ ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/v1/token_verification_metadata"
 #       GET        #
 ####################
 def _fetch_token_verification_metadata(
-    auth_url: str,
+    auth_hostname: str,
     integration_api_key: str,
     token_verification_metadata: Optional[TokenVerificationMetadata],
 ):
@@ -22,7 +22,7 @@ def _fetch_token_verification_metadata(
     response = requests.get(
         token_verification_metadata_url,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -38,5 +38,5 @@ def _fetch_token_verification_metadata(
     json_response = response.json()
     return TokenVerificationMetadata(
         verifier_key=json_response.get("verifier_key_pem"),
-        issuer=auth_url,
+        issuer="https://" + auth_hostname,
     )

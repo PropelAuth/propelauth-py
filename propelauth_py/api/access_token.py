@@ -18,7 +18,7 @@ class CreateAccessTokenResponse:
     def __eq__(self, other):
         return isinstance(other, CreateAccessTokenResponse)
 
-def _create_access_token(auth_url, integration_api_key, user_id, duration_in_minutes) -> CreateAccessTokenResponse:
+def _create_access_token(auth_hostname, integration_api_key, user_id, duration_in_minutes) -> CreateAccessTokenResponse:
     if not _is_valid_id(user_id):
         raise UserNotFoundException()
 
@@ -28,7 +28,7 @@ def _create_access_token(auth_url, integration_api_key, user_id, duration_in_min
         url,
         json=json,
         auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_url),
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
