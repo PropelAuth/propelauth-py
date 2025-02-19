@@ -624,7 +624,6 @@ def init_base_auth(
     integration_api_key: str,
     token_verification_metadata: Optional[TokenVerificationMetadata] = None,
 ) -> Auth:
-    auth_url = _validate_and_extract_auth_hostname(auth_url)
     token_verification_metadata = _fetch_token_verification_metadata(
         auth_url, integration_api_key, token_verification_metadata
     )

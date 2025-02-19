@@ -11,8 +11,8 @@ from propelauth_py.validation import _validate_and_extract_auth_hostname
 
 TestRsaKeys = namedtuple("TestRsaKeys", ["public_pem", "private_pem"])
 
-BASE_AUTH_URL = "https://test.propelauth.com"
-WRONG_BASE_AUTH_URL = "https://wrong.propelauth.com"
+TEST_BASE_AUTH_URL = "https://test.propelauth.com"
+WRONG_TEST_BASE_AUTH_URL = "https://wrong.propelauth.com"
 
 
 @pytest.fixture(scope='function')
@@ -37,7 +37,7 @@ def generate_rsa_keys():
 
 @pytest.fixture(scope='function')
 def auth(rsa_keys):
-    return mock_api_and_init_auth(BASE_AUTH_URL, 200, {
+    return mock_api_and_init_auth(TEST_BASE_AUTH_URL, 200, {
         "verifier_key_pem": rsa_keys.public_pem
     })
 
