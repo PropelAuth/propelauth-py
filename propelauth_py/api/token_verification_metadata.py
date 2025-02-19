@@ -1,9 +1,9 @@
 from typing import Optional
 import requests
-from propelauth_py.api import _ApiKeyAuth, TokenVerificationMetadata
+from propelauth_py.api import _ApiKeyAuth, TokenVerificationMetadata, _auth_hostname_header, BACKEND_API_BASE_URL
 from propelauth_py.errors import RateLimitedException
 
-ENDPOINT_PATH = "/api/v1/token_verification_metadata"
+ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/v1/token_verification_metadata"
 
 
 ####################
@@ -17,9 +17,12 @@ def _fetch_token_verification_metadata(
     if token_verification_metadata is not None:
         return token_verification_metadata
 
-    token_verification_metadata_url = auth_url + ENDPOINT_PATH
+    token_verification_metadata_url = ENDPOINT_URL
+
     response = requests.get(
-        token_verification_metadata_url, auth=_ApiKeyAuth(integration_api_key)
+        token_verification_metadata_url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")

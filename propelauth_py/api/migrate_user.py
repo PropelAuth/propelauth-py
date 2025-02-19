@@ -1,10 +1,10 @@
 import requests
 
-from propelauth_py.api import _ApiKeyAuth
+from propelauth_py.api import _ApiKeyAuth, _auth_hostname_header, BACKEND_API_BASE_URL
 from propelauth_py.errors import BadRequestException, RateLimitedException
 from propelauth_py.types.user import CreatedUser
 
-ENDPOINT_PATH = "/api/backend/v1/migrate_user"
+ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1/migrate_user"
 
 
 def _migrate_user_from_external_source(
@@ -23,7 +23,7 @@ def _migrate_user_from_external_source(
     picture_url=None,
     properties=None,
 ) -> CreatedUser:
-    url = auth_url + f"{ENDPOINT_PATH}/"
+    url = ENDPOINT_URL + "/"
     json = {
         "email": email,
         "email_confirmed": email_confirmed,
@@ -40,7 +40,13 @@ def _migrate_user_from_external_source(
     if properties is not None:
         json["properties"] = properties
 
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.post(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:

@@ -4,7 +4,7 @@ import pytest
 
 from propelauth_py import UnauthorizedException
 from tests.auth_helpers import create_access_token, random_user_id
-from tests.conftest import HTTP_BASE_AUTH_URL, generate_rsa_keys
+from tests.conftest import WRONG_BASE_AUTH_URL, generate_rsa_keys
 
 
 def test_validate_without_header(auth, rsa_keys):
@@ -41,7 +41,7 @@ def test_validate_with_expired_token(auth, rsa_keys):
 
 def test_validate_with_bad_issuer(auth, rsa_keys):
     user_id = random_user_id()
-    access_token = create_access_token({"user_id": user_id}, rsa_keys.private_pem, issuer=HTTP_BASE_AUTH_URL)
+    access_token = create_access_token({"user_id": user_id}, rsa_keys.private_pem, issuer=WRONG_BASE_AUTH_URL)
     with pytest.raises(UnauthorizedException):
         auth.validate_access_token_and_get_user("Bearer " + access_token)
 

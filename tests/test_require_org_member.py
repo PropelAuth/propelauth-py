@@ -5,7 +5,7 @@ import pytest
 from propelauth_py import UnauthorizedException
 from propelauth_py.errors import ForbiddenException
 from tests.auth_helpers import create_access_token, orgs_to_org_id_map, random_org, random_user_id, random_org_id
-from tests.conftest import HTTP_BASE_AUTH_URL, generate_rsa_keys
+from tests.conftest import WRONG_BASE_AUTH_URL, generate_rsa_keys
 
 
 def test_validate_without_auth(auth, rsa_keys):
@@ -189,7 +189,7 @@ def test_validate_org_member_with_bad_issuer(auth, rsa_keys):
     access_token = create_access_token({
         "user_id": user_id,
         "org_id_to_org_member_info": org_id_to_org_member_info
-    }, rsa_keys.private_pem, issuer=HTTP_BASE_AUTH_URL)
+    }, rsa_keys.private_pem, issuer=WRONG_BASE_AUTH_URL)
 
     with pytest.raises(UnauthorizedException):
         auth.validate_access_token_and_get_user_with_org("Bearer" + access_token, org["org_id"])
@@ -204,7 +204,7 @@ def test_validate_org_member_with_wrong_key(auth, rsa_keys):
     access_token = create_access_token({
         "user_id": user_id,
         "org_id_to_org_member_info": org_id_to_org_member_info
-    }, incorrect_rsa_keys.private_pem, issuer=HTTP_BASE_AUTH_URL)
+    }, incorrect_rsa_keys.private_pem, issuer=WRONG_BASE_AUTH_URL)
 
     with pytest.raises(UnauthorizedException):
         auth.validate_access_token_and_get_user_with_org("Bearer " + access_token, org["org_id"])

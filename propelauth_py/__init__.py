@@ -102,7 +102,7 @@ from propelauth_py.types.login_method import (
 )
 from propelauth_py.types.saml_types import SamlIdpMetadata
 
-from propelauth_py.validation import _validate_url
+from propelauth_py.validation import _validate_and_extract_auth_hostname
 
 class Auth:
     
@@ -624,7 +624,7 @@ def init_base_auth(
     integration_api_key: str,
     token_verification_metadata: Optional[TokenVerificationMetadata] = None,
 ) -> Auth:
-    auth_url = _validate_url(auth_url)
+    auth_url = _validate_and_extract_auth_hostname(auth_url)
     token_verification_metadata = _fetch_token_verification_metadata(
         auth_url, integration_api_key, token_verification_metadata
     )

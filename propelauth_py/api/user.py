@@ -1,7 +1,7 @@
 from typing import Optional, Dict
 import requests
 
-from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id
+from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id, BACKEND_API_BASE_URL, _auth_hostname_header
 from propelauth_py.api.end_user_api_keys import _validate_api_key
 from propelauth_py.types.user import UserMetadata, UsersPagedResponse, CreatedUser, PersonalApiKeyValidation, UserSignupQueryParams
 from propelauth_py.errors import (
@@ -14,7 +14,7 @@ from propelauth_py.errors import (
     RateLimitedException,
 )
 
-ENDPOINT_PATH = "/api/backend/v1/user"
+ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1/user"
 
 
 ####################
@@ -26,9 +26,9 @@ def _fetch_user_metadata_by_user_id(
     if not _is_valid_id(user_id):
         return None
 
-    user_info_url = auth_url + f"{ENDPOINT_PATH}/{user_id}"
+    user_info_url = f"{ENDPOINT_URL}/{user_id}"
     query = {"include_orgs": include_orgs}
-    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query)
+    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_url)
 
 
 def _fetch_user_signup_query_params_by_user_id(
@@ -40,10 +40,12 @@ def _fetch_user_signup_query_params_by_user_id(
         return None
 
     user_signup_query_params_url = (
-        auth_url + f"{ENDPOINT_PATH}/{user_id}/signup_query_parameters"
+        f"{ENDPOINT_URL}/{user_id}/signup_query_parameters"
     )
     response = requests.get(
-        url=user_signup_query_params_url, auth=_ApiKeyAuth(integration_api_key)
+        url=user_signup_query_params_url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
     )
 
     if response.status_code == 401:
@@ -64,24 +66,25 @@ def _fetch_user_signup_query_params_by_user_id(
 def _fetch_user_metadata_by_email(
     auth_url, integration_api_key, email, include_orgs=False
 ) -> Optional[UserMetadata]:
-    user_info_url = auth_url + f"{ENDPOINT_PATH}/email"
+    user_info_url = f"{ENDPOINT_URL}/email"
     query = {"include_orgs": include_orgs, "email": email}
-    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query)
+    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_url)
 
 
 def _fetch_user_metadata_by_username(
     auth_url, integration_api_key, username, include_orgs=False
 ) -> Optional[UserMetadata]:
-    user_info_url = auth_url + f"{ENDPOINT_PATH}/username"
+    user_info_url = f"{ENDPOINT_URL}/username"
     query = {"include_orgs": include_orgs, "username": username}
-    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query)
+    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_url)
 
 
-def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query) -> Optional[UserMetadata]:
+def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_url) -> Optional[UserMetadata]:
     response = requests.get(
         user_info_url,
         params=_format_params(query),
         auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -122,44 +125,45 @@ def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query) -> 
 def _fetch_batch_user_metadata_by_user_ids(
     auth_url, integration_api_key, user_ids, include_orgs
 ) -> Dict[str, UserMetadata]:
-    user_info_url = auth_url + f"{ENDPOINT_PATH}/user_ids"
+    user_info_url = f"{ENDPOINT_URL}/user_ids"
     params = {"include_orgs": include_orgs}
     body = {"user_ids": user_ids}
     return _fetch_batch_user_metadata_by_query(
-        user_info_url, integration_api_key, params, body, lambda x: x["user_id"]
+        user_info_url, integration_api_key, params, body, lambda x: x["user_id"], auth_url,
     )
 
 
 def _fetch_batch_user_metadata_by_emails(
     auth_url, integration_api_key, emails, include_orgs
 ) -> Dict[str, UserMetadata]:
-    user_info_url = auth_url + f"{ENDPOINT_PATH}/emails"
+    user_info_url = f"{ENDPOINT_URL}/emails"
     params = {"include_orgs": include_orgs}
     body = {"emails": emails}
     return _fetch_batch_user_metadata_by_query(
-        user_info_url, integration_api_key, params, body, lambda x: x["email"]
+        user_info_url, integration_api_key, params, body, lambda x: x["email"], auth_url,
     )
 
 
 def _fetch_batch_user_metadata_by_usernames(
     auth_url, integration_api_key, usernames, include_orgs
 ) -> Dict[str, UserMetadata]:
-    user_info_url = auth_url + f"{ENDPOINT_PATH}/usernames"
+    user_info_url = f"{ENDPOINT_URL}/usernames"
     params = {"include_orgs": include_orgs}
     body = {"usernames": usernames}
     return _fetch_batch_user_metadata_by_query(
-        user_info_url, integration_api_key, params, body, lambda x: x["username"]
+        user_info_url, integration_api_key, params, body, lambda x: x["username"], auth_url,
     )
 
 
 def _fetch_batch_user_metadata_by_query(
-    user_info_url, integration_api_key, params, body, key_fn
+    user_info_url, integration_api_key, params, body, key_fn, auth_url
 ) -> Dict[str, UserMetadata]:
     response = requests.post(
         user_info_url,
         params=_format_params(params),
         json=body,
         auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -188,7 +192,7 @@ def _fetch_users_by_query(
     include_orgs,
     legacy_user_id,
 ) -> UsersPagedResponse:
-    url = auth_url + f"{ENDPOINT_PATH}/query"
+    url = f"{ENDPOINT_URL}/query"
     params = {
         "page_size": page_size,
         "page_number": page_number,
@@ -198,7 +202,10 @@ def _fetch_users_by_query(
         "legacy_user_id": legacy_user_id,
     }
     response = requests.get(
-        url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key)
+        url,
+        params=_format_params(params),
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -262,7 +269,7 @@ def _fetch_users_in_org(
             has_more_results=False,
         )
 
-    url = auth_url + f"{ENDPOINT_PATH}/org/{org_id}"
+    url = f"{ENDPOINT_URL}/org/{org_id}"
     params = {
         "page_size": page_size,
         "page_number": page_number,
@@ -270,7 +277,10 @@ def _fetch_users_in_org(
         "role": role,
     }
     response = requests.get(
-        url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key)
+        url,
+        params=_format_params(params),
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -339,7 +349,7 @@ def _create_user(
     properties,
     ignore_domain_restrictions
 ) -> CreatedUser:
-    url = auth_url + f"{ENDPOINT_PATH}/"
+    url = f"{ENDPOINT_URL}/"
     json = {
         "email": email,
         "email_confirmed": email_confirmed,
@@ -358,7 +368,14 @@ def _create_user(
         json["properties"] = properties
     if ignore_domain_restrictions is not None:
         json["ignore_domain_restrictions"] = ignore_domain_restrictions
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+
+    response = requests.post(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -378,8 +395,14 @@ def _disable_user(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/disable"
-    response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ENDPOINT_URL}/{user_id}/disable"
+
+    response = requests.post(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -396,8 +419,14 @@ def _enable_user(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/enable"
-    response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ENDPOINT_URL}/{user_id}/enable"
+
+    response = requests.post(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -414,8 +443,13 @@ def _disable_user_2fa(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/disable_2fa"
-    response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ENDPOINT_URL}/{user_id}/disable_2fa"
+
+    response = requests.post(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -443,7 +477,12 @@ def _invite_user_to_org(
         "role": role,
         "additional_roles": additional_roles,
     }
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.post(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -467,12 +506,18 @@ def _resend_email_confirmation(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
-    endpoint_path = "/api/backend/v1/resend_email_confirmation"
-    url = auth_url + endpoint_path
+    url = BACKEND_API_BASE_URL + "/api/backend/v1/resend_email_confirmation"
+
     json = {
         "user_id": user_id,
     }
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+
+    response = requests.post(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -500,8 +545,13 @@ def _logout_all_user_sessions(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/logout_all_sessions"
-    response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ENDPOINT_URL}/{user_id}/logout_all_sessions"
+
+    response = requests.post(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -533,7 +583,7 @@ def _update_user_metadata(
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{user_id}"
+    url = f"{ENDPOINT_URL}/{user_id}"
     json = {}
     if username is not None:
         json["username"] = username
@@ -550,7 +600,13 @@ def _update_user_metadata(
     if update_password_required is not None:
         json["update_password_required"] = update_password_required
 
-    response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.put(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -575,14 +631,20 @@ def _update_user_password(
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/password"
+    url = f"{ENDPOINT_URL}/{user_id}/password"
     json = {"password": password}
     if ask_user_to_update_password_on_login is not None:
         json["ask_user_to_update_password_on_login"] = (
             ask_user_to_update_password_on_login
         )
 
-    response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.put(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -601,8 +663,14 @@ def _clear_user_password(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/clear_password"
-    response = requests.put(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ENDPOINT_URL}/{user_id}/clear_password"
+
+    response = requests.put(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -623,13 +691,19 @@ def _update_user_email(
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/email"
+    url = f"{ENDPOINT_URL}/{user_id}/email"
     json = {
         "new_email": new_email,
         "require_email_confirmation": require_email_confirmation,
     }
 
-    response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.put(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -648,8 +722,13 @@ def _enable_user_can_create_orgs(auth_url, integration_api_key, user_id) -> bool
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/can_create_orgs/enable"
-    response = requests.put(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ENDPOINT_URL}/{user_id}/can_create_orgs/enable"
+
+    response = requests.put(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -667,8 +746,13 @@ def _disable_user_can_create_orgs(auth_url, integration_api_key, user_id) -> boo
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{user_id}/can_create_orgs/disable"
-    response = requests.put(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ENDPOINT_URL}/{user_id}/can_create_orgs/disable"
+
+    response = requests.put(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -689,8 +773,14 @@ def _delete_user(auth_url, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{user_id}"
-    response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ENDPOINT_URL}/{user_id}"
+
+    response = requests.delete(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_url),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:

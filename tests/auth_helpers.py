@@ -4,6 +4,7 @@ from uuid import uuid4
 import jwt
 
 from tests.conftest import BASE_AUTH_URL
+from propelauth_py.validation import _validate_and_extract_auth_hostname
 
 
 def create_access_token(user, private_key_pem, issuer=BASE_AUTH_URL, expires_in=timedelta(minutes=30)):
@@ -11,7 +12,7 @@ def create_access_token(user, private_key_pem, issuer=BASE_AUTH_URL, expires_in=
     now = datetime.now(tz=timezone.utc)
     payload["iat"] = now
     payload["exp"] = now + expires_in
-    payload["iss"] = issuer
+    payload["iss"] = _validate_and_extract_auth_hostname(issuer)
     return jwt.encode(payload, private_key_pem, algorithm="RS256")
 
 
