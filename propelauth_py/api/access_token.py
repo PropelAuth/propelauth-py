@@ -1,6 +1,6 @@
 import requests
 from propelauth_py.api import _ApiKeyAuth, _is_valid_id
-from propelauth_py.errors import BadRequestException, UserNotFoundException
+from propelauth_py.errors import BadRequestException, UserNotFoundException, RateLimitedException
 
 ENDPOINT_PATH = "/api/backend/v1/access_token"
 
@@ -27,6 +27,8 @@ def _create_access_token(auth_url, integration_api_key, user_id, duration_in_min
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
     elif response.status_code == 403:

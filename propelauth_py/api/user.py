@@ -11,6 +11,7 @@ from propelauth_py.errors import (
     UpdateUserEmailException,
     UpdateUserMetadataException,
     UpdateUserPasswordException,
+    RateLimitedException,
 )
 
 ENDPOINT_PATH = "/api/backend/v1/user"
@@ -47,6 +48,8 @@ def _fetch_user_signup_query_params_by_user_id(
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return None
     elif not response.ok:
@@ -82,6 +85,8 @@ def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query) -> 
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise ValueError("Bad request: " + response.text)
     elif response.status_code == 404:
@@ -158,6 +163,8 @@ def _fetch_batch_user_metadata_by_query(
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise ValueError("Bad request: " + response.text)
     elif not response.ok:
@@ -195,6 +202,8 @@ def _fetch_users_by_query(
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise ValueError("Bad request: " + response.text)
     elif response.status_code == 426:
@@ -265,6 +274,8 @@ def _fetch_users_in_org(
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise ValueError("Bad request: " + response.text)
     elif response.status_code == 426:
@@ -350,6 +361,8 @@ def _create_user(
     response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise CreateUserException(response.json())
     elif not response.ok:
@@ -369,6 +382,8 @@ def _disable_user(auth_url, integration_api_key, user_id) -> bool:
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return False
     elif not response.ok:
@@ -385,6 +400,8 @@ def _enable_user(auth_url, integration_api_key, user_id) -> bool:
     response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return False
     elif not response.ok:
@@ -402,6 +419,8 @@ def _disable_user_2fa(auth_url, integration_api_key, user_id) -> bool:
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return False
     elif not response.ok:
@@ -428,6 +447,8 @@ def _invite_user_to_org(
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         try:
             response_json = response.json()
@@ -458,7 +479,12 @@ def _resend_email_confirmation(auth_url, integration_api_key, user_id) -> bool:
     elif response.status_code == 404:
         return False
     elif response.status_code == 429:
-        raise RuntimeError("Too many requests, please try again later.")
+        try:
+            # Check if this is specifically an email-send rate limit error
+            error_message = response.json()["user_facing_error"]
+            raise RateLimitedException(error_message)
+        except requests.exceptions.JSONDecodeError:
+            raise RateLimitedException(response.text)
     elif response.status_code == 400:
         if response.json().get("user_facing_error"):
             raise ValueError(response.json().get("user_facing_error"))
@@ -479,6 +505,8 @@ def _logout_all_user_sessions(auth_url, integration_api_key, user_id) -> bool:
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return False
     elif not response.ok:
@@ -525,6 +553,8 @@ def _update_user_metadata(
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise UpdateUserMetadataException(response.json())
     elif response.status_code == 404:
@@ -555,6 +585,8 @@ def _update_user_password(
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise UpdateUserPasswordException(response.json())
     elif response.status_code == 404:
@@ -573,6 +605,8 @@ def _clear_user_password(auth_url, integration_api_key, user_id) -> bool:
     response = requests.put(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise UpdateUserEmailException(response.json())
     elif response.status_code == 404:
@@ -598,6 +632,8 @@ def _update_user_email(
     response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise UpdateUserEmailException(response.json())
     elif response.status_code == 404:
@@ -617,6 +653,8 @@ def _enable_user_can_create_orgs(auth_url, integration_api_key, user_id) -> bool
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return False
     elif not response.ok:
@@ -634,6 +672,8 @@ def _disable_user_can_create_orgs(auth_url, integration_api_key, user_id) -> boo
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return False
     elif not response.ok:
@@ -653,6 +693,8 @@ def _delete_user(auth_url, integration_api_key, user_id) -> bool:
     response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key))
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 404:
         return False
     elif not response.ok:

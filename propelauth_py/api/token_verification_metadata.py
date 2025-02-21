@@ -1,6 +1,7 @@
 from typing import Optional
 import requests
 from propelauth_py.api import _ApiKeyAuth, TokenVerificationMetadata
+from propelauth_py.errors import RateLimitedException
 
 ENDPOINT_PATH = "/api/v1/token_verification_metadata"
 
@@ -22,6 +23,8 @@ def _fetch_token_verification_metadata(
     )
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise ValueError("Bad request")
     elif response.status_code == 404:
