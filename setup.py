@@ -21,7 +21,7 @@ setup(
     author="PropelAuth",
     author_email="support@propelauth.com",
     license="MIT",
-    install_requires=["pyjwt[crypto]>=2,<3", "requests"],
+    install_requires=["pyjwt[crypto]>=2,<3", "requests", "aiohttp>=3,<4"],
     setup_requires=pytest_runner,
     tests_require=["pytest==4.4.1"],
     test_suite="tests",

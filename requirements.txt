@@ -2,3 +2,4 @@ pyjwt[crypto]>=2,<3
 requests
 pytest
 requests-mock
+aiohttp>=3,<4
