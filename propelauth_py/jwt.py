@@ -4,6 +4,7 @@ import jwt
 
 from propelauth_py.errors import UnauthorizedException
 from propelauth_py.user import _to_user
+import logging
 
 OPTIONS = {
     "verify_signature": True,
@@ -17,14 +18,17 @@ OPTIONS = {
 
 def _validate_access_token_and_get_user(access_token, token_verification_metadata):
     try:
-        decoded_token = jwt.decode(access_token,
-                                   token_verification_metadata.verifier_key,
-                                   options=OPTIONS,
-                                   issuer=token_verification_metadata.issuer,
-                                   algorithms=["RS256"],
-                                   leeway=datetime.timedelta(seconds=60))
+        decoded_token = jwt.decode(
+            access_token,
+            token_verification_metadata.verifier_key,
+            options=OPTIONS,
+            issuer=token_verification_metadata.issuer,
+            algorithms=["RS256"],
+            leeway=datetime.timedelta(seconds=60),
+        )
         return _to_user(decoded_token)
     except UnauthorizedException as e:
         raise e
     except Exception:
+        logging.exception("An error occurred while validating the access token")
         raise UnauthorizedException.invalid_access_token()
