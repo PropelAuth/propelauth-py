@@ -51,6 +51,7 @@ def _fetch_org(auth_url, integration_api_key, org_id) -> Optional[Organization]:
         max_users=json_response.get('max_users'),
         metadata=json_response.get('metadata'),
         domain=json_response.get('domain'),
+        extra_domains=json_response.get('extra_domains'),
         domain_autojoin=json_response.get('domain_autojoin'),
         domain_restrict=json_response.get('domain_restrict'),
         custom_role_mapping_name=json_response.get('custom_role_mapping_name'),
