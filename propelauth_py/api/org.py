@@ -123,7 +123,7 @@ def _fetch_org_by_query(
 
 
 def _fetch_custom_role_mappings(auth_hostname, integration_api_key) -> CustomRoleMappings:
-    url = "/api/backend/v1/custom_role_mappings"
+    url = BASE_ENDPOINT_URL + "/custom_role_mappings"
 
     response = requests.get(
         url,
@@ -169,7 +169,7 @@ def _fetch_pending_invites(
         if not _is_valid_id(org_id):
             return None
 
-    url = "/api/backend/v1/pending_org_invites"
+    url = BASE_ENDPOINT_URL + "/pending_org_invites"
     params = {
         "page_number": page_number,
         "page_size": page_size,
@@ -659,7 +659,7 @@ def _delete_org(auth_hostname, integration_api_key, org_id) -> bool:
 
 def _revoke_pending_org_invite(auth_hostname, integration_api_key, org_id, invitee_email) -> bool:
 
-    url = "/api/backend/v1/pending_org_invites"
+    url = BASE_ENDPOINT_URL + "/pending_org_invites"
     json = {"org_id": org_id, "invitee_email": invitee_email}
 
     response = requests.delete(
