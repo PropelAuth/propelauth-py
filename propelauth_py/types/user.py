@@ -44,6 +44,7 @@ class Organization:
     max_users: Optional[int]
     metadata: Optional[Dict[str, Any]]
     domain: Optional[str]
+    extra_domains: List[str]
     domain_autojoin: bool
     domain_restrict: bool
     custom_role_mapping_name: Optional[str]
