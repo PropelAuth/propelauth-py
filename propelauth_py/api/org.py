@@ -1,7 +1,7 @@
 from typing import Optional
 import requests
 
-from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id
+from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id, _auth_hostname_header, BACKEND_API_BASE_URL
 from propelauth_py.api.end_user_api_keys import _validate_api_key
 from propelauth_py.types.user import Organization, OrgQueryResponse, Org, PendingInvite, PendingInvitesPage, CreatedOrg, OrgApiKeyValidation
 from propelauth_py.types.custom_role_mappings import CustomRoleMappings, CustomRoleMapping
@@ -13,19 +13,25 @@ from propelauth_py.errors import (
     RateLimitedException,
 )
 
-BASE_ENDPOINT_PATH = "/api/backend/v1"
-ORG_ENDPOINT_PATH = "/api/backend/v1/org"
+BASE_ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1"
+ORG_ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1/org"
 
 
 ####################
 #       GET        #
 ####################
-def _fetch_org(auth_url, integration_api_key, org_id) -> Optional[Organization]:
+def _fetch_org(auth_hostname, integration_api_key, org_id) -> Optional[Organization]:
     if not _is_valid_id(org_id):
         return None
 
-    url = auth_url + f"{ORG_ENDPOINT_PATH}/{org_id}"
-    response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ORG_ENDPOINT_URL}/{org_id}"
+
+    response = requests.get(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -60,9 +66,9 @@ def _fetch_org(auth_url, integration_api_key, org_id) -> Optional[Organization]:
 
 
 def _fetch_org_by_query(
-    auth_url, integration_api_key, page_size, page_number, order_by, name, legacy_org_id, domain
+    auth_hostname, integration_api_key, page_size, page_number, order_by, name, legacy_org_id, domain
 ) -> OrgQueryResponse:
-    url = auth_url + f"{ORG_ENDPOINT_PATH}/query"
+    url = f"{ORG_ENDPOINT_URL}/query"
     params = {
         "page_size": page_size,
         "page_number": page_number,
@@ -72,8 +78,12 @@ def _fetch_org_by_query(
         "domain": domain,
     }
     response = requests.get(
-        url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key)
+        url,
+        params=_format_params(params),
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
     )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -112,9 +122,15 @@ def _fetch_org_by_query(
     )
 
 
-def _fetch_custom_role_mappings(auth_url, integration_api_key) -> CustomRoleMappings:
-    url = auth_url + "/api/backend/v1/custom_role_mappings"
-    response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
+def _fetch_custom_role_mappings(auth_hostname, integration_api_key) -> CustomRoleMappings:
+    url = BASE_ENDPOINT_URL + "/custom_role_mappings"
+
+    response = requests.get(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -143,7 +159,7 @@ def _fetch_custom_role_mappings(auth_url, integration_api_key) -> CustomRoleMapp
 
 
 def _fetch_pending_invites(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     page_number=0,
     page_size=10,
@@ -153,7 +169,7 @@ def _fetch_pending_invites(
         if not _is_valid_id(org_id):
             return None
 
-    url = auth_url + "/api/backend/v1/pending_org_invites"
+    url = BASE_ENDPOINT_URL + "/pending_org_invites"
     params = {
         "page_number": page_number,
         "page_size": page_size,
@@ -161,8 +177,12 @@ def _fetch_pending_invites(
     }
 
     response = requests.get(
-        url, params=_format_params(params), auth=_ApiKeyAuth(integration_api_key)
+        url,
+        params=_format_params(params),
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
     )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -200,12 +220,18 @@ def _fetch_pending_invites(
         has_more_results=json_response.get('has_more_results')
     )
     
-def _fetch_saml_sp_metadata(auth_url, integration_api_key, org_id) -> Optional[SpMetadata]:
+def _fetch_saml_sp_metadata(auth_hostname, integration_api_key, org_id) -> Optional[SpMetadata]:
     if not _is_valid_id(org_id):
         return None
 
-    url = auth_url + f"{BASE_ENDPOINT_PATH}/saml_sp_metadata/{org_id}"
-    response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{BASE_ENDPOINT_URL}/saml_sp_metadata/{org_id}"
+
+    response = requests.get(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -227,7 +253,7 @@ def _fetch_saml_sp_metadata(auth_url, integration_api_key, org_id) -> Optional[S
 #       POST       #
 ####################
 def _create_org(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     name,
     enable_auto_joining_by_domain=False,
@@ -237,7 +263,7 @@ def _create_org(
     custom_role_mapping_name=None,
     legacy_org_id=None,
 ) -> CreatedOrg:
-    url = auth_url + f"{ORG_ENDPOINT_PATH}/"
+    url = f"{ORG_ENDPOINT_URL}/"
     json = {
         "name": name,
         "enable_auto_joining_by_domain": enable_auto_joining_by_domain,
@@ -252,7 +278,13 @@ def _create_org(
     if custom_role_mapping_name is not None:
         json["custom_role_mapping_name"] = custom_role_mapping_name
 
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.post(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -269,12 +301,18 @@ def _create_org(
     )
 
 
-def _allow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id) -> bool:
+def _allow_org_to_setup_saml_connection(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
         return False
 
-    url = auth_url + f"{ORG_ENDPOINT_PATH}/{org_id}/allow_saml"
-    response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ORG_ENDPOINT_URL}/{org_id}/allow_saml"
+
+    response = requests.post(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -287,12 +325,18 @@ def _allow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id) -
     return True
 
 
-def _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id) -> bool:
+def _disallow_org_to_setup_saml_connection(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
         return False
 
-    url = auth_url + f"{ORG_ENDPOINT_PATH}/{org_id}/disallow_saml"
-    response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ORG_ENDPOINT_URL}/{org_id}/disallow_saml"
+
+    response = requests.post(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -306,18 +350,24 @@ def _disallow_org_to_setup_saml_connection(auth_url, integration_api_key, org_id
 
 
 def _create_org_saml_connection_link(
-    auth_url, integration_api_key, org_id, expires_in_seconds=None
+    auth_hostname, integration_api_key, org_id, expires_in_seconds=None
 ):
     if not _is_valid_id(org_id):
         return None
 
-    url = auth_url + f"{ORG_ENDPOINT_PATH}/{org_id}/create_saml_connection_link"
+    url = f"{ORG_ENDPOINT_URL}/{org_id}/create_saml_connection_link"
 
     body = {}
     if expires_in_seconds is not None:
         body["expires_in_seconds"] = expires_in_seconds
 
-    response = requests.post(url, json=body, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.post(
+        url,
+        json=body,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -336,9 +386,9 @@ def _create_org_saml_connection_link(
 
 
 def _add_user_to_org(
-    auth_url, integration_api_key, user_id, org_id, role, additional_roles=[]
+    auth_hostname, integration_api_key, user_id, org_id, role, additional_roles=[]
 ) -> bool:
-    url = auth_url + f"{ORG_ENDPOINT_PATH}/add_user"
+    url = f"{ORG_ENDPOINT_URL}/add_user"
     json = {
         "user_id": user_id,
         "org_id": org_id,
@@ -346,7 +396,13 @@ def _add_user_to_org(
         "additional_roles": additional_roles,
     }
 
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.post(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -361,11 +417,17 @@ def _add_user_to_org(
     return True
 
 
-def _remove_user_from_org(auth_url, integration_api_key, user_id, org_id) -> bool:
-    url = auth_url + f"{ORG_ENDPOINT_PATH}/remove_user"
+def _remove_user_from_org(auth_hostname, integration_api_key, user_id, org_id) -> bool:
+    url = f"{ORG_ENDPOINT_URL}/remove_user"
     json = {"user_id": user_id, "org_id": org_id}
 
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.post(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -381,9 +443,9 @@ def _remove_user_from_org(auth_url, integration_api_key, user_id, org_id) -> boo
 
 
 def _change_user_role_in_org(
-    auth_url, integration_api_key, user_id, org_id, role, additional_roles=[]
+    auth_hostname, integration_api_key, user_id, org_id, role, additional_roles=[]
 ) -> bool:
-    url = auth_url + f"{ORG_ENDPOINT_PATH}/change_role"
+    url = f"{ORG_ENDPOINT_URL}/change_role"
     json = {
         "user_id": user_id,
         "org_id": org_id,
@@ -391,7 +453,13 @@ def _change_user_role_in_org(
         "additional_roles": additional_roles,
     }
 
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.post(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -405,11 +473,11 @@ def _change_user_role_in_org(
 
     return True
 
-def _set_saml_idp_metadata(auth_url, integration_api_key, org_id, saml_idp_metadata: SamlIdpMetadata) -> bool:
+def _set_saml_idp_metadata(auth_hostname, integration_api_key, org_id, saml_idp_metadata: SamlIdpMetadata) -> bool:
     if not _is_valid_id(org_id):
         return False
 
-    url = auth_url + f"{BASE_ENDPOINT_PATH}/saml_idp_metadata"
+    url = f"{BASE_ENDPOINT_URL}/saml_idp_metadata"
 
     required_fields = ["idp_entity_id", "idp_sso_url", "idp_certificate", "provider"]
     json = {"org_id": org_id}
@@ -419,7 +487,13 @@ def _set_saml_idp_metadata(auth_url, integration_api_key, org_id, saml_idp_metad
             raise ValueError(f"Missing required field '{field}' in SAML IdP metadata")
         json[field] = saml_idp_metadata[field]
 
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.post(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -433,13 +507,18 @@ def _set_saml_idp_metadata(auth_url, integration_api_key, org_id, saml_idp_metad
 
     return True
 
-def _saml_go_live(auth_url, integration_api_key, org_id) -> bool:
+def _saml_go_live(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
         return False
 
-    url = auth_url + f"{BASE_ENDPOINT_PATH}/saml_idp_metadata/go_live/{org_id}"
+    url = f"{BASE_ENDPOINT_URL}/saml_idp_metadata/go_live/{org_id}"
 
-    response = requests.post(url, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.post(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -457,7 +536,7 @@ def _saml_go_live(auth_url, integration_api_key, org_id) -> bool:
 #     PATCH/PUT    #
 ####################
 def _update_org_metadata(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     org_id,
     name=None,
@@ -473,7 +552,7 @@ def _update_org_metadata(
     if not _is_valid_id(org_id):
         return False
 
-    url = auth_url + f"{ORG_ENDPOINT_PATH}/{org_id}"
+    url = f"{ORG_ENDPOINT_URL}/{org_id}"
     json = {}
     if name is not None:
         json["name"] = name
@@ -492,7 +571,13 @@ def _update_org_metadata(
     if legacy_org_id is not None:
         json["legacy_org_id"] = legacy_org_id
 
-    response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.put(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -508,7 +593,7 @@ def _update_org_metadata(
 
 
 def _subscribe_org_to_role_mapping(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     org_id,
     custom_role_mapping_name,
@@ -516,12 +601,18 @@ def _subscribe_org_to_role_mapping(
     if not _is_valid_id(org_id):
         return False
 
-    url = auth_url + f"{ORG_ENDPOINT_PATH}/{org_id}"
+    url = f"{ORG_ENDPOINT_URL}/{org_id}"
     json = {
         "custom_role_mapping_name": custom_role_mapping_name,
     }
 
-    response = requests.put(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.put(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -543,12 +634,17 @@ def _subscribe_org_to_role_mapping(
 ####################
 
 
-def _delete_org(auth_url, integration_api_key, org_id) -> bool:
+def _delete_org(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
         return False
 
-    url = auth_url + f"{ORG_ENDPOINT_PATH}/{org_id}"
-    response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ORG_ENDPOINT_URL}/{org_id}"
+
+    response = requests.delete(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -561,12 +657,18 @@ def _delete_org(auth_url, integration_api_key, org_id) -> bool:
 
     return True
 
-def _revoke_pending_org_invite(auth_url, integration_api_key, org_id, invitee_email) -> bool:
+def _revoke_pending_org_invite(auth_hostname, integration_api_key, org_id, invitee_email) -> bool:
 
-    url = auth_url + "/api/backend/v1/pending_org_invites"
+    url = BASE_ENDPOINT_URL + "/pending_org_invites"
     json = {"org_id": org_id, "invitee_email": invitee_email}
 
-    response = requests.delete(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.delete(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -579,13 +681,18 @@ def _revoke_pending_org_invite(auth_url, integration_api_key, org_id, invitee_em
     return response.json()
 
 
-def _delete_saml_connection(auth_url, integration_api_key, org_id) -> bool:
+def _delete_saml_connection(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
         return False
 
-    url = auth_url + f"{BASE_ENDPOINT_PATH}/saml_idp_metadata/{org_id}"
+    url = f"{BASE_ENDPOINT_URL}/saml_idp_metadata/{org_id}"
 
-    response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.delete(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:
@@ -605,8 +712,8 @@ def _delete_saml_connection(auth_url, integration_api_key, org_id) -> bool:
 ####################
 
 
-def _validate_org_api_key(auth_url, integration_api_key, api_key_token) -> OrgApiKeyValidation:
-    api_key_validation = _validate_api_key(auth_url, integration_api_key, api_key_token)
+def _validate_org_api_key(auth_hostname, integration_api_key, api_key_token) -> OrgApiKeyValidation:
+    api_key_validation = _validate_api_key(auth_hostname, integration_api_key, api_key_token)
     if not api_key_validation.org:
         raise EndUserApiKeyException({"api_key_token": ["Not an org API Key"]})
     return OrgApiKeyValidation(
