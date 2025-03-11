@@ -9,12 +9,13 @@ from propelauth_py.types.login_method import (
     SamlSsoLoginMethod,
     ImpersonationLoginMethod,
     GeneratedFromBackendApiLoginMethod,
-    UnknownLoginMethod
+    UnknownLoginMethod,
 )
 from dataclasses import dataclass, field
 
 MULTI_ROLE = "multi_role"
 SINGLE_ROLE = "single_role_in_hierarchy"
+
 
 @dataclass
 class OrgMemberInfo:
@@ -27,19 +28,25 @@ class OrgMemberInfo:
     org_role_structure: str = SINGLE_ROLE
     assigned_additional_roles: List[str] = field(default_factory=list)
     url_safe_org_name: str = ""
-    
+    legacy_org_id: Optional[str] = None
+
     def __getitem__(self, key):
         return getattr(self, key)
 
     def user_is_role(self, role: str) -> bool:
         """returns true if the user is the role"""
-        return (role == self.user_assigned_role or 
-            (self.org_role_structure == MULTI_ROLE and role in self.assigned_additional_roles))
+        return role == self.user_assigned_role or (
+            self.org_role_structure == MULTI_ROLE
+            and role in self.assigned_additional_roles
+        )
 
     def user_is_at_least_role(self, role: str) -> bool:
         """returns true if the user can act as the role"""
         if self.org_role_structure == MULTI_ROLE:
-            return role == self.user_assigned_role or role in self.assigned_additional_roles
+            return (
+                role == self.user_assigned_role
+                or role in self.assigned_additional_roles
+            )
         else:
             return role in self.user_inherited_roles_plus_current_role
 
@@ -55,20 +62,21 @@ class OrgMemberInfo:
 
         return True
 
+
 @dataclass
 class User:
     user_id: str
     org_id_to_org_member_info: Optional[Dict[str, OrgMemberInfo]]
     email: str
     login_method: Union[
-        PasswordLoginMethod, 
-        MagicLinkLoginMethod, 
-        SocialSsoLoginMethod, 
-        EmailConfirmationLinkLoginMethod, 
-        SamlSsoLoginMethod, 
-        ImpersonationLoginMethod, 
-        GeneratedFromBackendApiLoginMethod, 
-        UnknownLoginMethod
+        PasswordLoginMethod,
+        MagicLinkLoginMethod,
+        SocialSsoLoginMethod,
+        EmailConfirmationLinkLoginMethod,
+        SamlSsoLoginMethod,
+        ImpersonationLoginMethod,
+        GeneratedFromBackendApiLoginMethod,
+        UnknownLoginMethod,
     ]
     first_name: Optional[str] = None
     last_name: Optional[str] = None
@@ -163,7 +171,9 @@ class UserAndOrgMemberInfo:
         return getattr(self, key)
 
 
-def _to_org_member_info(org_id_to_org_member_info_json) -> Optional[Dict[str, OrgMemberInfo]]:
+def _to_org_member_info(
+    org_id_to_org_member_info_json,
+) -> Optional[Dict[str, OrgMemberInfo]]:
     if org_id_to_org_member_info_json is None:
         return None
 
@@ -181,8 +191,13 @@ def _to_org_member_info(org_id_to_org_member_info_json) -> Optional[Dict[str, Or
                     "inherited_user_roles_plus_current_role"
                 ],
                 user_permissions=org_member_info_json["user_permissions"],
-                org_role_structure=org_member_info_json.get("org_role_structure", SINGLE_ROLE),
-                assigned_additional_roles=org_member_info_json.get("additional_roles", []),
+                org_role_structure=org_member_info_json.get(
+                    "org_role_structure", SINGLE_ROLE
+                ),
+                assigned_additional_roles=org_member_info_json.get(
+                    "additional_roles", []
+                ),
+                legacy_org_id=org_member_info_json.get("legacy_org_id"),
             )
     return org_id_to_org_member_info
 
