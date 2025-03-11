@@ -47,6 +47,7 @@ def test_to_user():
         "org_role_structure": org_role_structure,
         "url_safe_org_name": "orga",
         "additional_roles": [],
+        "legacy_org_id": "legacy_org_id_a",
     }
     org_b = {
         "org_id": str(uuid4()),
@@ -58,6 +59,7 @@ def test_to_user():
         "org_role_structure": org_role_structure,
         "url_safe_org_name": "orgb",
         "additional_roles": [],
+        "legacy_org_id": "legacy_org_id_b",
     }
     org_c = {
         "org_id": str(uuid4()),
@@ -104,6 +106,7 @@ def test_to_user():
             org_role_structure=org_role_structure,
             url_safe_org_name=org_a["url_safe_org_name"],
             assigned_additional_roles=[],
+            legacy_org_id="legacy_org_id_a",
         ),
         org_b["org_id"]: OrgMemberInfo(
             org_id=org_b["org_id"],
@@ -115,6 +118,7 @@ def test_to_user():
             org_role_structure=org_role_structure,
             url_safe_org_name=org_b["url_safe_org_name"],
             assigned_additional_roles=[],
+            legacy_org_id="legacy_org_id_b",
         ),
         org_c["org_id"]: OrgMemberInfo(
             org_id=org_c["org_id"],
@@ -126,6 +130,7 @@ def test_to_user():
             org_role_structure=org_role_structure,
             url_safe_org_name=org_c["url_safe_org_name"],
             assigned_additional_roles=[],
+            legacy_org_id=None,
         ),
     }
     expected_user = User(
@@ -160,6 +165,7 @@ def test_to_user_with_active_org():
         "org_role_structure": org_role_structure,
         "url_safe_org_name": "orga",
         "additional_roles": [],
+        "legacy_org_id": "legacy_org_id",
     }
     login_method = {
         "login_method": "social_sso",
@@ -190,6 +196,7 @@ def test_to_user_with_active_org():
             org_role_structure=org_role_structure,
             url_safe_org_name=org_member_info["url_safe_org_name"],
             assigned_additional_roles=[],
+            legacy_org_id="legacy_org_id",
         ),
     }
     expected_user = User(
@@ -204,6 +211,7 @@ def test_to_user_with_active_org():
     )
 
     assert user == expected_user
+
 
 def test_to_user_multi_role():
     user_id = str(uuid4())
