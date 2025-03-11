@@ -1,6 +1,11 @@
 from typing import Optional
 import requests
-from propelauth_py.api import _ApiKeyAuth, _is_valid_hex, remove_bearer_if_exists
+from propelauth_py.api import (
+    _ApiKeyAuth,
+    _is_valid_hex,
+    remove_bearer_if_exists,
+    BACKEND_API_BASE_URL,
+)
 from propelauth_py.errors import (
     EndUserApiKeyException,
     EndUserApiKeyNotFoundException,
@@ -16,18 +21,22 @@ from propelauth_py.types.end_user_api_keys import (
 from propelauth_py.types.user import UserMetadata, OrgFromApiKey
 from propelauth_py.user import OrgMemberInfo
 
-ENDPOINT_PATH = "/api/backend/v1/end_user_api_keys"
+ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1/end_user_api_keys"
 
 
 ####################
 #       GET        #
 ####################
-def _fetch_api_key(auth_url, integration_api_key, api_key_id) -> ApiKeyFull:
+def _fetch_api_key(auth_hostname, integration_api_key, api_key_id) -> ApiKeyFull:
     if not _is_valid_hex(api_key_id):
         raise EndUserApiKeyNotFoundException()
 
-    url = auth_url + f"{ENDPOINT_PATH}/{api_key_id}"
-    response = requests.get(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ENDPOINT_URL}/{api_key_id}"    
+    response = requests.get(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -52,7 +61,7 @@ def _fetch_api_key(auth_url, integration_api_key, api_key_id) -> ApiKeyFull:
 
 
 def _fetch_current_api_keys(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     org_id=None,
     user_id=None,
@@ -61,7 +70,7 @@ def _fetch_current_api_keys(
     page_number=None,
     api_key_type=None,
 ) -> ApiKeyResultPage:
-    url = auth_url + ENDPOINT_PATH
+    url = ENDPOINT_URL
 
     query_params = {}
     if org_id:
@@ -78,7 +87,10 @@ def _fetch_current_api_keys(
         query_params["api_key_type"] = api_key_type
 
     response = requests.get(
-        url, auth=_ApiKeyAuth(integration_api_key), params=query_params
+        url, 
+        auth=_ApiKeyAuth(integration_api_key),
+        params=query_params,
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -114,7 +126,7 @@ def _fetch_current_api_keys(
 
 
 def _fetch_archived_api_keys(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     org_id=None,
     user_id=None,
@@ -123,7 +135,7 @@ def _fetch_archived_api_keys(
     page_number=None,
     api_key_type=None,
 ) -> ApiKeyResultPage:
-    url = auth_url + f"{ENDPOINT_PATH}/archived"
+    url = f"{ENDPOINT_URL}/archived"
 
     query_params = {}
     if org_id:
@@ -140,7 +152,10 @@ def _fetch_archived_api_keys(
         query_params["api_key_type"] = api_key_type
 
     response = requests.get(
-        url, auth=_ApiKeyAuth(integration_api_key), params=query_params
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        params=query_params,
+        headers=_auth_hostname_header(auth_hostname),
     )
 
     if response.status_code == 401:
@@ -179,9 +194,9 @@ def _fetch_archived_api_keys(
 #       POST       #
 ####################
 def _create_api_key(
-    auth_url, integration_api_key, org_id, user_id, expires_at_seconds, metadata
+    auth_hostname, integration_api_key, org_id, user_id, expires_at_seconds, metadata
 ) -> ApiKeyNew:
-    url = auth_url + ENDPOINT_PATH
+    url = ENDPOINT_URL
 
     json = {}
     if org_id:
@@ -193,7 +208,12 @@ def _create_api_key(
     if metadata:
         json["metadata"] = metadata
 
-    response = requests.post(url, auth=_ApiKeyAuth(integration_api_key), json=json)
+    response = requests.post(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        json=json,
+        headers=_auth_hostname_header(auth_hostname),
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -211,10 +231,15 @@ def _create_api_key(
     )
 
 
-def _validate_api_key(auth_url, integration_api_key, api_key_token) -> ApiKeyValidation:
-    url = auth_url + f"{ENDPOINT_PATH}/validate"
+def _validate_api_key(auth_hostname, integration_api_key, api_key_token) -> ApiKeyValidation:
+    url = f"{ENDPOINT_URL}/validate"
     json = {"api_key_token": remove_bearer_if_exists(api_key_token)}
-    response = requests.post(url, auth=_ApiKeyAuth(integration_api_key), json=json)
+    response = requests.post(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        json=json,
+        headers=_auth_hostname_header(auth_hostname),
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -302,12 +327,12 @@ def _validate_api_key(auth_url, integration_api_key, api_key_token) -> ApiKeyVal
 #    PUT/PATCH     #
 ####################
 def _update_api_key(
-    auth_url, integration_api_key, api_key_id, expires_at_seconds, metadata
+    auth_hostname, integration_api_key, api_key_id, expires_at_seconds, metadata
 ) -> bool:
     if not _is_valid_hex(api_key_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{api_key_id}"
+    url = f"{ENDPOINT_URL}/{api_key_id}"
 
     json = {}
     if expires_at_seconds:
@@ -315,7 +340,12 @@ def _update_api_key(
     if metadata:
         json["metadata"] = metadata
 
-    response = requests.patch(url, auth=_ApiKeyAuth(integration_api_key), json=json)
+    response = requests.patch(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        json=json,
+        headers=_auth_hostname_header(auth_hostname),
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
@@ -334,12 +364,16 @@ def _update_api_key(
 ####################
 #      DELETE      #
 ####################
-def _delete_api_key(auth_url, integration_api_key, api_key_id) -> bool:
+def _delete_api_key(auth_hostname, integration_api_key, api_key_id) -> bool:
     if not _is_valid_hex(api_key_id):
         return False
 
-    url = auth_url + f"{ENDPOINT_PATH}/{api_key_id}"
-    response = requests.delete(url, auth=_ApiKeyAuth(integration_api_key))
+    url = f"{ENDPOINT_URL}/{api_key_id}"
+    response = requests.delete(
+        url,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
 
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")

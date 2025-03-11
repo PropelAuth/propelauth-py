@@ -6,11 +6,13 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import generate_private_key
 
 from propelauth_py import init_base_auth
+from propelauth_py.api import _auth_hostname_header, BACKEND_API_BASE_URL
+from propelauth_py.validation import _validate_and_extract_auth_hostname
 
 TestRsaKeys = namedtuple("TestRsaKeys", ["public_pem", "private_pem"])
 
-BASE_AUTH_URL = "https://test.propelauth.com"
-HTTP_BASE_AUTH_URL = "http://test.propelauth.com"
+TEST_BASE_AUTH_URL = "https://test.propelauth.com"
+WRONG_TEST_BASE_AUTH_URL = "https://wrong.propelauth.com"
 
 
 @pytest.fixture(scope='function')
@@ -35,7 +37,7 @@ def generate_rsa_keys():
 
 @pytest.fixture(scope='function')
 def auth(rsa_keys):
-    return mock_api_and_init_auth(BASE_AUTH_URL, 200, {
+    return mock_api_and_init_auth(TEST_BASE_AUTH_URL, 200, {
         "verifier_key_pem": rsa_keys.public_pem
     })
 
@@ -43,8 +45,9 @@ def auth(rsa_keys):
 def mock_api_and_init_auth(auth_url, status_code, json):
     with requests_mock.Mocker() as m:
         api_key = "api_key"
-        m.get(BASE_AUTH_URL + "/api/v1/token_verification_metadata",
+        m.get(BACKEND_API_BASE_URL + "/api/v1/token_verification_metadata",
               request_headers={'Authorization': 'Bearer ' + api_key},
               json=json,
-              status_code=status_code)
+              status_code=status_code,
+              headers=_auth_hostname_header(_validate_and_extract_auth_hostname(auth_url)))
         return init_base_auth(auth_url, api_key)

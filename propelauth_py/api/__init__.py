@@ -2,6 +2,8 @@ from collections import namedtuple
 from enum import Enum
 from uuid import UUID
 
+BACKEND_API_BASE_URL = "https://propelauth-api.com"
+
 TokenVerificationMetadata = namedtuple(
     "TokenVerificationMetadata", ["verifier_key", "issuer"]
 )
@@ -74,3 +76,6 @@ def _is_valid_hex(identifier):
         return True
     except ValueError:
         return False
+
+def _auth_hostname_header(auth_hostname: str) -> dict[str, str]:
+    return {"X-Propelauth-url": auth_hostname}

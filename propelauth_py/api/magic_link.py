@@ -1,9 +1,9 @@
 import requests
 
-from propelauth_py.api import _ApiKeyAuth
+from propelauth_py.api import _ApiKeyAuth, _auth_hostname_header, BACKEND_API_BASE_URL
 from propelauth_py.errors import BadRequestException, RateLimitedException
 
-ENDPOINT_PATH = "/api/backend/v1/magic_link"
+ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1/magic_link"
 
 class CreateMagicLinkResponse:
     def __init__(
@@ -24,7 +24,7 @@ class CreateMagicLinkResponse:
 #       POST       #
 ####################
 def _create_magic_link(
-    auth_url,
+    auth_hostname,
     integration_api_key,
     email,
     redirect_to_url=None,
@@ -32,7 +32,7 @@ def _create_magic_link(
     create_new_user_if_one_doesnt_exist=None,
     user_signup_query_parameters=None,
 ) -> CreateMagicLinkResponse:
-    url = auth_url + ENDPOINT_PATH
+    url = ENDPOINT_URL
     json = {"email": email}
     if redirect_to_url is not None:
         json["redirect_to_url"] = redirect_to_url
@@ -45,7 +45,13 @@ def _create_magic_link(
             "create_new_user_if_one_doesnt_exist"
         ] = create_new_user_if_one_doesnt_exist
 
-    response = requests.post(url, json=json, auth=_ApiKeyAuth(integration_api_key))
+    response = requests.post(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
     if response.status_code == 401:
         raise ValueError("integration_api_key is incorrect")
     elif response.status_code == 429:

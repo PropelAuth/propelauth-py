@@ -61,7 +61,7 @@ from propelauth_py.api.user import (
     _update_user_password,
     _validate_personal_api_key,
 )
-from tests.conftest import BASE_AUTH_URL, mock_api_and_init_auth, rsa_keys
+from tests.conftest import TEST_BASE_AUTH_URL, mock_api_and_init_auth, rsa_keys
 
 IMPORTED_FUNCTIONS = [
     _fetch_user_metadata_by_user_id,
@@ -148,7 +148,7 @@ def test_auth_tuple_contains_all_expected_functions(rsa_keys):
     Test that the Auth tuple contains all expected functions.
     """
     mock_auth_class = mock_api_and_init_auth(
-        BASE_AUTH_URL, 200, {"verifier_key_pem": rsa_keys.public_pem}
+        TEST_BASE_AUTH_URL, 200, {"verifier_key_pem": rsa_keys.public_pem}
     )
     auth_methods = [
         func for func in dir(mock_auth_class)
