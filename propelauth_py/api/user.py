@@ -1,9 +1,21 @@
 from typing import Optional, Dict
 import requests
 
-from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id, BACKEND_API_BASE_URL, _auth_hostname_header
+from propelauth_py.api import (
+    _ApiKeyAuth,
+    _format_params,
+    _is_valid_id,
+    BACKEND_API_BASE_URL,
+    _auth_hostname_header,
+)
 from propelauth_py.api.end_user_api_keys import _validate_api_key
-from propelauth_py.types.user import UserMetadata, UsersPagedResponse, CreatedUser, PersonalApiKeyValidation, UserSignupQueryParams
+from propelauth_py.types.user import (
+    UserMetadata,
+    UsersPagedResponse,
+    CreatedUser,
+    PersonalApiKeyValidation,
+    UserSignupQueryParams,
+)
 from propelauth_py.errors import (
     CreateUserException,
     EndUserApiKeyException,
@@ -28,7 +40,9 @@ def _fetch_user_metadata_by_user_id(
 
     user_info_url = f"{ENDPOINT_URL}/{user_id}"
     query = {"include_orgs": include_orgs}
-    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_hostname)
+    return _fetch_user_metadata_by_query(
+        integration_api_key, user_info_url, query, auth_hostname
+    )
 
 
 def _fetch_user_signup_query_params_by_user_id(
@@ -39,9 +53,7 @@ def _fetch_user_signup_query_params_by_user_id(
     if not _is_valid_id(user_id):
         return None
 
-    user_signup_query_params_url = (
-        f"{ENDPOINT_URL}/{user_id}/signup_query_parameters"
-    )
+    user_signup_query_params_url = f"{ENDPOINT_URL}/{user_id}/signup_query_parameters"
     response = requests.get(
         url=user_signup_query_params_url,
         auth=_ApiKeyAuth(integration_api_key),
@@ -59,7 +71,7 @@ def _fetch_user_signup_query_params_by_user_id(
 
     json_response = response.json()
     return UserSignupQueryParams(
-        user_signup_query_parameters=json_response.get('user_signup_query_parameters')
+        user_signup_query_parameters=json_response.get("user_signup_query_parameters")
     )
 
 
@@ -68,7 +80,9 @@ def _fetch_user_metadata_by_email(
 ) -> Optional[UserMetadata]:
     user_info_url = f"{ENDPOINT_URL}/email"
     query = {"include_orgs": include_orgs, "email": email}
-    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_hostname)
+    return _fetch_user_metadata_by_query(
+        integration_api_key, user_info_url, query, auth_hostname
+    )
 
 
 def _fetch_user_metadata_by_username(
@@ -76,10 +90,14 @@ def _fetch_user_metadata_by_username(
 ) -> Optional[UserMetadata]:
     user_info_url = f"{ENDPOINT_URL}/username"
     query = {"include_orgs": include_orgs, "username": username}
-    return _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_hostname)
+    return _fetch_user_metadata_by_query(
+        integration_api_key, user_info_url, query, auth_hostname
+    )
 
 
-def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, auth_hostname) -> Optional[UserMetadata]:
+def _fetch_user_metadata_by_query(
+    integration_api_key, user_info_url, query, auth_hostname
+) -> Optional[UserMetadata]:
     response = requests.get(
         user_info_url,
         params=_format_params(query),
@@ -100,25 +118,25 @@ def _fetch_user_metadata_by_query(integration_api_key, user_info_url, query, aut
     json_response = response.json()
 
     return UserMetadata(
-        user_id=json_response.get('user_id'),
-        email=json_response.get('email'),
-        email_confirmed=json_response.get('email_confirmed'),
-        has_password=json_response.get('has_password'),
-        username=json_response.get('username'),
-        first_name=json_response.get('first_name'),
-        last_name=json_response.get('last_name'),
-        picture_url=json_response.get('picture_url'),
-        locked=json_response.get('locked'),
-        enabled=json_response.get('enabled'),
-        mfa_enabled=json_response.get('mfa_enabled'),
-        can_create_orgs=json_response.get('can_create_orgs'),
-        created_at=json_response.get('created_at'),
-        last_active_at=json_response.get('last_active_at'),
-        org_id_to_org_info=json_response.get('org_id_to_org_info'),
-        legacy_org_id=json_response.get('legacy_org_id'),
-        impersonator_user_id=json_response.get('impersonator_user_id'),
-        metadata=json_response.get('metadata'),
-        properties=json_response.get('properties')
+        user_id=json_response.get("user_id"),
+        email=json_response.get("email"),
+        email_confirmed=json_response.get("email_confirmed"),
+        has_password=json_response.get("has_password"),
+        username=json_response.get("username"),
+        first_name=json_response.get("first_name"),
+        last_name=json_response.get("last_name"),
+        picture_url=json_response.get("picture_url"),
+        locked=json_response.get("locked"),
+        enabled=json_response.get("enabled"),
+        mfa_enabled=json_response.get("mfa_enabled"),
+        can_create_orgs=json_response.get("can_create_orgs"),
+        created_at=json_response.get("created_at"),
+        last_active_at=json_response.get("last_active_at"),
+        org_id_to_org_info=json_response.get("org_id_to_org_info"),
+        legacy_org_id=json_response.get("legacy_org_id"),
+        impersonator_user_id=json_response.get("impersonator_user_id"),
+        metadata=json_response.get("metadata"),
+        properties=json_response.get("properties"),
     )
 
 
@@ -129,7 +147,12 @@ def _fetch_batch_user_metadata_by_user_ids(
     params = {"include_orgs": include_orgs}
     body = {"user_ids": user_ids}
     return _fetch_batch_user_metadata_by_query(
-        user_info_url, integration_api_key, params, body, lambda x: x["user_id"], auth_hostname,
+        user_info_url,
+        integration_api_key,
+        params,
+        body,
+        lambda x: x["user_id"],
+        auth_hostname,
     )
 
 
@@ -140,7 +163,12 @@ def _fetch_batch_user_metadata_by_emails(
     params = {"include_orgs": include_orgs}
     body = {"emails": emails}
     return _fetch_batch_user_metadata_by_query(
-        user_info_url, integration_api_key, params, body, lambda x: x["email"], auth_hostname,
+        user_info_url,
+        integration_api_key,
+        params,
+        body,
+        lambda x: x["email"],
+        auth_hostname,
     )
 
 
@@ -151,7 +179,12 @@ def _fetch_batch_user_metadata_by_usernames(
     params = {"include_orgs": include_orgs}
     body = {"usernames": usernames}
     return _fetch_batch_user_metadata_by_query(
-        user_info_url, integration_api_key, params, body, lambda x: x["username"], auth_hostname,
+        user_info_url,
+        integration_api_key,
+        params,
+        body,
+        lambda x: x["username"],
+        auth_hostname,
     )
 
 
@@ -222,43 +255,49 @@ def _fetch_users_by_query(
         raise RuntimeError("Unknown error when fetching orgs by query")
 
     json_response = response.json()
-    
+
     users = [
         UserMetadata(
-            user_id=key.get('user_id'),
-            email=key.get('email'),
-            email_confirmed=key.get('email_confirmed'),
-            has_password=key.get('has_password'),
-            username=key.get('username'),
-            first_name=key.get('first_name'),
-            last_name=key.get('last_name'),
-            picture_url=key.get('picture_url'),
-            locked=key.get('locked'),
-            enabled=key.get('enabled'),
-            mfa_enabled=key.get('mfa_enabled'),
-            can_create_orgs=key.get('can_create_orgs'),
-            created_at=key.get('created_at'),
-            last_active_at=key.get('last_active_at'),
-            org_id_to_org_info=key.get('org_id_to_org_info'),
-            legacy_org_id=key.get('legacy_org_id'),
-            impersonator_user_id=key.get('impersonator_user_id'),
-            metadata=key.get('metadata'),
-            properties=key.get('properties')
+            user_id=key.get("user_id"),
+            email=key.get("email"),
+            email_confirmed=key.get("email_confirmed"),
+            has_password=key.get("has_password"),
+            username=key.get("username"),
+            first_name=key.get("first_name"),
+            last_name=key.get("last_name"),
+            picture_url=key.get("picture_url"),
+            locked=key.get("locked"),
+            enabled=key.get("enabled"),
+            mfa_enabled=key.get("mfa_enabled"),
+            can_create_orgs=key.get("can_create_orgs"),
+            created_at=key.get("created_at"),
+            last_active_at=key.get("last_active_at"),
+            org_id_to_org_info=key.get("org_id_to_org_info"),
+            legacy_org_id=key.get("legacy_org_id"),
+            impersonator_user_id=key.get("impersonator_user_id"),
+            metadata=key.get("metadata"),
+            properties=key.get("properties"),
         )
-        for key in json_response.get('users')
+        for key in json_response.get("users")
     ]
-    
+
     return UsersPagedResponse(
         users=users,
-        total_users=json_response.get('total_users'),
-        current_page=json_response.get('current_page'),
-        page_size=json_response.get('page_size'),
-        has_more_results=json_response.get('has_more_results')
+        total_users=json_response.get("total_users"),
+        current_page=json_response.get("current_page"),
+        page_size=json_response.get("page_size"),
+        has_more_results=json_response.get("has_more_results"),
     )
 
 
 def _fetch_users_in_org(
-    auth_hostname, integration_api_key, org_id, page_size, page_number, include_orgs, role
+    auth_hostname,
+    integration_api_key,
+    org_id,
+    page_size,
+    page_number,
+    include_orgs,
+    role,
 ) -> UsersPagedResponse:
     if not _is_valid_id(org_id):
         return UsersPagedResponse(
@@ -297,38 +336,38 @@ def _fetch_users_in_org(
         raise RuntimeError("Unknown error when fetching users in org")
 
     json_response = response.json()
-    
+
     users = [
         UserMetadata(
-            user_id=key.get('user_id'),
-            email=key.get('email'),
-            email_confirmed=key.get('email_confirmed'),
-            has_password=key.get('has_password'),
-            username=key.get('username'),
-            first_name=key.get('first_name'),
-            last_name=key.get('last_name'),
-            picture_url=key.get('picture_url'),
-            locked=key.get('locked'),
-            enabled=key.get('enabled'),
-            mfa_enabled=key.get('mfa_enabled'),
-            can_create_orgs=key.get('can_create_orgs'),
-            created_at=key.get('created_at'),
-            last_active_at=key.get('last_active_at'),
-            org_id_to_org_info=key.get('org_id_to_org_info'),
-            legacy_org_id=key.get('legacy_org_id'),
-            impersonator_user_id=key.get('impersonator_user_id'),
-            metadata=key.get('metadata'),
-            properties=key.get('properties')
+            user_id=key.get("user_id"),
+            email=key.get("email"),
+            email_confirmed=key.get("email_confirmed"),
+            has_password=key.get("has_password"),
+            username=key.get("username"),
+            first_name=key.get("first_name"),
+            last_name=key.get("last_name"),
+            picture_url=key.get("picture_url"),
+            locked=key.get("locked"),
+            enabled=key.get("enabled"),
+            mfa_enabled=key.get("mfa_enabled"),
+            can_create_orgs=key.get("can_create_orgs"),
+            created_at=key.get("created_at"),
+            last_active_at=key.get("last_active_at"),
+            org_id_to_org_info=key.get("org_id_to_org_info"),
+            legacy_org_id=key.get("legacy_org_id"),
+            impersonator_user_id=key.get("impersonator_user_id"),
+            metadata=key.get("metadata"),
+            properties=key.get("properties"),
         )
-        for key in json_response.get('users')
+        for key in json_response.get("users")
     ]
-    
+
     return UsersPagedResponse(
         users=users,
-        total_users=json_response.get('total_users'),
-        current_page=json_response.get('current_page'),
-        page_size=json_response.get('page_size'),
-        has_more_results=json_response.get('has_more_results')
+        total_users=json_response.get("total_users"),
+        current_page=json_response.get("current_page"),
+        page_size=json_response.get("page_size"),
+        has_more_results=json_response.get("has_more_results"),
     )
 
 
@@ -347,7 +386,7 @@ def _create_user(
     first_name,
     last_name,
     properties,
-    ignore_domain_restrictions
+    ignore_domain_restrictions,
 ) -> CreatedUser:
     url = f"{ENDPOINT_URL}/"
     json = {
@@ -386,9 +425,7 @@ def _create_user(
         raise RuntimeError("Unknown error when creating user")
 
     json_response = response.json()
-    return CreatedUser(
-        user_id=json_response.get('user_id')
-    )
+    return CreatedUser(user_id=json_response.get("user_id"))
 
 
 def _disable_user(auth_hostname, integration_api_key, user_id) -> bool:
@@ -578,7 +615,7 @@ def _update_user_metadata(
     properties=None,
     picture_url=None,
     update_password_required=None,
-)-> bool:
+) -> bool:
     if not _is_valid_id(user_id):
         return False
 
@@ -797,8 +834,12 @@ def _delete_user(auth_hostname, integration_api_key, user_id) -> bool:
 ####################
 
 
-def _validate_personal_api_key(auth_hostname, integration_api_key, api_key_token) -> PersonalApiKeyValidation:
-    api_key_validation = _validate_api_key(auth_hostname, integration_api_key, api_key_token)
+def _validate_personal_api_key(
+    auth_hostname, integration_api_key, api_key_token
+) -> PersonalApiKeyValidation:
+    api_key_validation = _validate_api_key(
+        auth_hostname, integration_api_key, api_key_token
+    )
     if not api_key_validation.user or api_key_validation.org:
         raise EndUserApiKeyException({"api_key_token": ["Not a personal API Key"]})
     return PersonalApiKeyValidation(
