@@ -1,4 +1,5 @@
 from collections import namedtuple
+from typing import Dict
 from enum import Enum
 from uuid import UUID
 
@@ -77,5 +78,6 @@ def _is_valid_hex(identifier):
     except ValueError:
         return False
 
-def _auth_hostname_header(auth_hostname: str) -> dict[str, str]:
+
+def _auth_hostname_header(auth_hostname: str) -> Dict[str, str]:
     return {"X-Propelauth-url": auth_hostname}

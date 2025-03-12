@@ -1,4 +1,3 @@
-from typing import Optional
 import requests
 from propelauth_py.api import (
     _ApiKeyAuth,
@@ -20,6 +19,7 @@ from propelauth_py.types.end_user_api_keys import (
 )
 from propelauth_py.types.user import UserMetadata, OrgFromApiKey
 from propelauth_py.user import OrgMemberInfo
+from propelauth_py.api import _auth_hostname_header
 
 ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1/end_user_api_keys"
 
@@ -31,7 +31,7 @@ def _fetch_api_key(auth_hostname, integration_api_key, api_key_id) -> ApiKeyFull
     if not _is_valid_hex(api_key_id):
         raise EndUserApiKeyNotFoundException()
 
-    url = f"{ENDPOINT_URL}/{api_key_id}"    
+    url = f"{ENDPOINT_URL}/{api_key_id}"
     response = requests.get(
         url,
         auth=_ApiKeyAuth(integration_api_key),
@@ -87,7 +87,7 @@ def _fetch_current_api_keys(
         query_params["api_key_type"] = api_key_type
 
     response = requests.get(
-        url, 
+        url,
         auth=_ApiKeyAuth(integration_api_key),
         params=query_params,
         headers=_auth_hostname_header(auth_hostname),
@@ -231,7 +231,9 @@ def _create_api_key(
     )
 
 
-def _validate_api_key(auth_hostname, integration_api_key, api_key_token) -> ApiKeyValidation:
+def _validate_api_key(
+    auth_hostname, integration_api_key, api_key_token
+) -> ApiKeyValidation:
     url = f"{ENDPOINT_URL}/validate"
     json = {"api_key_token": remove_bearer_if_exists(api_key_token)}
     response = requests.post(
