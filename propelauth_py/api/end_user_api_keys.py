@@ -5,6 +5,7 @@ from propelauth_py.api import (
     _is_valid_hex,
     remove_bearer_if_exists,
     BACKEND_API_BASE_URL,
+    _auth_hostname_header,
 )
 from propelauth_py.errors import (
     EndUserApiKeyException,
