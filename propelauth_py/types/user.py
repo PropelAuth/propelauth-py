@@ -120,7 +120,7 @@ class UserMetadata:
     created_at: int
     last_active_at: int
     org_id_to_org_info: Optional[OrgIdToOrgMemberInfo]
-    legacy_org_id: Optional[str]
+    legacy_user_id: Optional[str]
     impersonator_user_id: Optional[str]
     metadata: Optional[Dict[str, Any]]
     properties: Optional[Dict[str, Any]]
