@@ -549,7 +549,6 @@ def _update_org_metadata(
     legacy_org_id=None,
     require_2fa_by=None,
     extra_domains=None,
-    # TODO: Add `require_2fa_by` optional argument.
 ) -> bool:
     if not _is_valid_id(org_id):
         return False
