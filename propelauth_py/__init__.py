@@ -278,6 +278,7 @@ class Auth:
         properties: Optional[Dict[str, Any]] = None,
         picture_url: Optional[str] = None,
         update_password_required: Optional[bool] = None,
+        legacy_user_id: Optional[str] = None,
     ):
         return _update_user_metadata(
             self.auth_hostname,
@@ -290,6 +291,7 @@ class Auth:
             properties=properties,
             picture_url=picture_url,
             update_password_required=update_password_required,
+            legacy_user_id=legacy_user_id
         )
 
     def clear_user_password(self, user_id: str):
@@ -393,6 +395,8 @@ class Auth:
         can_join_on_email_domain_match: Optional[bool] = None,
         members_must_have_email_domain_match: Optional[bool] = None,
         domain: Optional[str] = None,
+        require_2fa_by: Optional[str] = None,
+        extra_domains: Optional[List[str]] = None,
     ):
         return _update_org_metadata(
             self.auth_hostname,
@@ -405,6 +409,8 @@ class Auth:
             can_join_on_email_domain_match=can_join_on_email_domain_match,
             members_must_have_email_domain_match=members_must_have_email_domain_match,
             domain=domain,
+            require_2fa_by=require_2fa_by,
+            extra_domains=extra_domains
         )
 
     def subscribe_org_to_role_mapping(self, org_id: str, custom_role_mapping_name: str):

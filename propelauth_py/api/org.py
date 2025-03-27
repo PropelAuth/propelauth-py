@@ -547,6 +547,8 @@ def _update_org_metadata(
     members_must_have_email_domain_match=None,  # In the backend, this is the `domain_restrict` argument.
     domain=None,
     legacy_org_id=None,
+    require_2fa_by=None,
+    extra_domains=None,
     # TODO: Add `require_2fa_by` optional argument.
 ) -> bool:
     if not _is_valid_id(org_id):
@@ -570,6 +572,10 @@ def _update_org_metadata(
         json["domain"] = domain
     if legacy_org_id is not None:
         json["legacy_org_id"] = legacy_org_id
+    if require_2fa_by is not None:
+        json["require_2fa_by"] = require_2fa_by
+    if extra_domains is not None:
+        json["extra_domains"] = extra_domains
 
     response = requests.put(
         url,
