@@ -18,12 +18,15 @@ class CreateAccessTokenResponse:
     def __eq__(self, other):
         return isinstance(other, CreateAccessTokenResponse)
 
-def _create_access_token(auth_hostname, integration_api_key, user_id, duration_in_minutes) -> CreateAccessTokenResponse:
+def _create_access_token(auth_hostname, integration_api_key, user_id, duration_in_minutes, active_org_id) -> CreateAccessTokenResponse:
     if not _is_valid_id(user_id):
         raise UserNotFoundException()
 
     url = ENDPOINT_URL
     json = {"user_id": user_id, "duration_in_minutes": duration_in_minutes}
+    if active_org_id:
+        json["active_org_id"] = active_org_id
+        
     response = requests.post(
         url,
         json=json,

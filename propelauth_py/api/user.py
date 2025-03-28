@@ -615,6 +615,7 @@ def _update_user_metadata(
     properties=None,
     picture_url=None,
     update_password_required=None,
+    legacy_user_id=None,
 ) -> bool:
     if not _is_valid_id(user_id):
         return False
@@ -635,6 +636,8 @@ def _update_user_metadata(
         json["picture_url"] = picture_url
     if update_password_required is not None:
         json["update_password_required"] = update_password_required
+    if legacy_user_id is not None:
+        json["legacy_user_id"] = legacy_user_id
 
     response = requests.put(
         url,
