@@ -326,9 +326,14 @@ class Auth:
             user_signup_query_parameters,
         )
 
-    def create_access_token(self, user_id: str, duration_in_minutes: int):
+    def create_access_token(
+        self, 
+        user_id: str, 
+        duration_in_minutes: int,
+        active_org_id: Optional[str] = None
+    ):
         return _create_access_token(
-            self.auth_hostname, self.integration_api_key, user_id, duration_in_minutes
+            self.auth_hostname, self.integration_api_key, user_id, duration_in_minutes, active_org_id
         )
 
     def migrate_user_from_external_source(
