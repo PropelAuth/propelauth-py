@@ -12,7 +12,7 @@ from propelauth_py.api.end_user_api_keys import (
     _validate_api_key,
 )
 from propelauth_py.api.magic_link import _create_magic_link
-from propelauth_py.api.migrate_user import _migrate_user_from_external_source
+from propelauth_py.api.migrate_user import _migrate_user_from_external_source, _migrate_user_password
 from propelauth_py.api.org import (
     _add_user_to_org,
     _allow_org_to_setup_saml_connection,
@@ -100,6 +100,7 @@ IMPORTED_FUNCTIONS = [
     _create_magic_link,
     _create_access_token,
     _migrate_user_from_external_source,
+    _migrate_user_password,
     _fetch_api_key,
     _fetch_current_api_keys,
     _fetch_archived_api_keys,

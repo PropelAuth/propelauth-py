@@ -40,7 +40,7 @@ from propelauth_py.api.end_user_api_keys import (
     _validate_api_key,
 )
 from propelauth_py.api.magic_link import _create_magic_link
-from propelauth_py.api.migrate_user import _migrate_user_from_external_source
+from propelauth_py.api.migrate_user import _migrate_user_from_external_source, _migrate_user_password
 from propelauth_py.api.org import (
     _add_user_to_org,
     _allow_org_to_setup_saml_connection,
@@ -366,6 +366,18 @@ class Auth:
             username,
             picture_url,
             properties,
+        )
+        
+    def migrate_user_password(
+        self,
+        user_id: str,
+        password_hash: str,
+    ):
+        return _migrate_user_password(
+            self.auth_hostname,
+            self.integration_api_key,
+            user_id,
+            password_hash
         )
 
     def create_org(
