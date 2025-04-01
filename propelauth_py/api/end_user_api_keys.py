@@ -279,7 +279,7 @@ def _validate_api_key(
             created_at=user_data.get("created_at"),
             last_active_at=user_data.get("last_active_at"),
             org_id_to_org_info=user_data.get("org_id_to_org_info"),
-            legacy_org_id=user_data.get("legacy_org_id"),
+            legacy_user_id=user_data.get("legacy_user_id"),
             impersonator_user_id=user_data.get("impersonator_user_id"),
             metadata=user_data.get("metadata"),
             properties=user_data.get("properties"),
