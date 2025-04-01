@@ -12,7 +12,7 @@ pytest_runner = ["pytest-runner"] if needs_pytest else []
 
 setup(
     name="propelauth-py",
-    version="4.2.4",
+    version="4.2.5",
     description="A python authentication library",
     long_description=README,
     long_description_content_type="text/markdown",
