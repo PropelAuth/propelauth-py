@@ -66,6 +66,10 @@ from propelauth_py.api.org import (
 from propelauth_py.api.token_verification_metadata import (
     _fetch_token_verification_metadata,
 )
+from propelauth_py.api.step_up_mfa import (
+    _verify_totp_challenge,
+    _verify_step_up_grant,
+)
 
 from propelauth_py.auth_fns import (
     validate_all_permissions_and_get_org,
@@ -101,6 +105,15 @@ from propelauth_py.types.login_method import (
     UnknownLoginMethod,
 )
 from propelauth_py.types.saml_types import SamlIdpMetadata
+from propelauth_py.types.step_up_mfa import (
+    StepUpMfaTokenType,
+    StepUpMfaVerifyTotpResponse,
+    StepUpMfaVerifyTotpSuccessResponse,
+    StepUpMfaVerifyTotpErrorResponse,
+    StepUpMfaVerifyGrantResponse,
+    StepUpMfaVerifyGrantSuccessResponse,
+    StepUpMfaVerifyGrantErrorResponse,
+)
 
 from propelauth_py.validation import _validate_and_extract_auth_hostname
 
@@ -589,6 +602,11 @@ class Auth:
     def validate_api_key(self, api_key_token: str):
         return _validate_api_key(self.auth_hostname, self.integration_api_key, api_key_token)
     
+    def verify_totp_challenge(self, action_type: str, user_id: str, code: str, token_type: StepUpMfaTokenType, valid_for_seconds: int) -> StepUpMfaVerifyTotpResponse:
+        return _verify_totp_challenge(self.auth_hostname, self.integration_api_key, action_type, user_id, code, token_type, valid_for_seconds)
+    
+    def verify_step_up_grant(self, action_type: str, user_id: str, grant: str) -> StepUpMfaVerifyGrantResponse:
+        return _verify_step_up_grant(self.auth_hostname, self.integration_api_key, action_type, user_id, grant)
 
     def validate_access_token_and_get_user(self, authorization_header: Optional[str]):
         access_token = _extract_token_from_authorization_header(authorization_header)
