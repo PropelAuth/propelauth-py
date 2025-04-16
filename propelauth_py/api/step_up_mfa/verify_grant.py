@@ -43,10 +43,10 @@ def _verify_step_up_grant(
         error_response = response.json()
         error_code = error_response.get("error_code")
         if error_code == "invalid_request_fields":
-            field_to_errors = error_response.get("field_to_errors", {})
+            field_to_errors = error_response.get("field_errors", {})
             if field_to_errors.get("grant") == "grant_not_found":
                 return False
-            raise BadRequestException(error_response.get("field_to_errors", {}))
+            raise BadRequestException(error_response.get("user_facing_errors", {}))
         elif error_code == "feature_gated":
             raise FeatureGatedException()
         else:
