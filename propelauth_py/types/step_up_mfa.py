@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 
-class StepUpMfaTokenType(str, Enum):
+class StepUpMfaGrantType(str, Enum):
     ONE_TIME_USE = "ONE_TIME_USE"
     TIME_BASED = "TIME_BASED"
 

@@ -53,7 +53,7 @@ from propelauth_py.api.step_up_mfa.verify_totp_challenge import (
 )
 from propelauth_py.api.step_up_mfa.verify_grant import _verify_step_up_grant
 from propelauth_py.types.step_up_mfa import (
-    StepUpMfaTokenType,
+    StepUpMfaGrantType,
     StepUpMfaVerifyTotpResponse,
 )
 from propelauth_py.api.org import (
@@ -695,20 +695,64 @@ class Auth:
         action_type: str,
         user_id: str,
         code: str,
-        token_type: StepUpMfaTokenType,
+        grant_type: StepUpMfaGrantType,
         valid_for_seconds: int,
     ) -> StepUpMfaVerifyTotpResponse:
+        """Verify a TOTP code for step-up MFA authentication.
+
+        This function verifies if the provided TOTP code is valid for the given user and returns a grant
+        that can be verified for future sensitive operations.
+
+        Args:
+            action_type: Identifier for the type of action requiring step-up verification
+            user_id: ID of the user performing the action
+            code: The TOTP code provided by the user
+            grant_type: Type of grant to generate (ONE_TIME_USE or TIME_BASED)
+            valid_for_seconds: How long the verification grant should be valid for
+
+        Returns:
+            StepUpMfaVerifyTotpResponse: Response containing the step_up_grant
+
+        Raises:
+            UserNotFoundException: If the user doesn't exist
+            MfaNotEnabledException: If MFA is not enabled for the user
+            IncorrectMfaCodeException: If the provided TOTP code is incorrect
+            FeatureGatedException: If step-up MFA is not allowed on your current pricing plan
+            BadRequestException: If there are validation errors with the input parameters
+            RateLimitedException: If too many requests are made in a short period
+            ValueError: If the integration_api_key is incorrect
+            RuntimeError: For unknown errors
+        """
         return _verify_step_up_totp_challenge(
             self.auth_hostname,
             self.integration_api_key,
             action_type,
             user_id,
             code,
-            token_type,
+            grant_type,
             valid_for_seconds,
         )
 
     def verify_step_up_grant(self, action_type: str, user_id: str, grant: str) -> bool:
+        """Verify a step-up MFA grant for a sensitive operation.
+
+        This function verifies if the provided grant is valid for the given user and action type.
+
+        Args:
+            action_type: Identifier for the type of action requiring step-up verification
+            user_id: ID of the user performing the action
+            grant: The step-up grant to verify (obtained from verify_step_up_totp_challenge)
+
+        Returns:
+            bool: True if the grant is valid, False if not found
+
+        Raises:
+            FeatureGatedException: If step-up MFA is not allowed on your current pricing plan
+            BadRequestException: If there are validation errors with the input parameters
+            RateLimitedException: If too many requests are made in a short period
+            ValueError: If the integration_api_key is incorrect
+            RuntimeError: For unknown errors
+        """
         return _verify_step_up_grant(
             self.auth_hostname, self.integration_api_key, action_type, user_id, grant
         )
