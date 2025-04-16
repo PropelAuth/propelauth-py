@@ -40,6 +40,7 @@ class EndUserApiKeyException(Exception):
 class EndUserApiKeyNotFoundException(Exception):
     pass
 
+
 class EndUserApiKeyRateLimitedException(Exception):
     def __init__(self, field_to_errors):
         self.wait_seconds = field_to_errors.get("wait_seconds")
@@ -47,9 +48,28 @@ class EndUserApiKeyRateLimitedException(Exception):
         self.error_code = field_to_errors.get("error_code")
         self.field_to_errors = field_to_errors
 
+
 class RateLimitedException(Exception):
     def __init__(self, error_message):
         self.error_message = error_message
+
+
+class MfaNotEnabledException(Exception):
+    pass
+
+
+class IncorrectMfaCodeException(Exception):
+    pass
+
+
+class FeatureGatedException(Exception):
+    def __init__(self, message="Feature is not available on current plan"):
+        self.message = message
+
+
+class StepUpMfaGrantNotFoundException(Exception):
+    def __init__(self, message="The grant you provided was not found"):
+        self.message = message
 
 
 class UnauthorizedException(Exception):

@@ -1,7 +1,12 @@
 from typing import Optional, Any, Dict, List
 from propelauth_py.user import UserAndOrgMemberInfo, User
 from propelauth_py.jwt import _validate_access_token_and_get_user
-from propelauth_py.api import token_verification_metadata, TokenVerificationMetadata, OrgQueryOrderBy, UserQueryOrderBy
+from propelauth_py.api import (
+    token_verification_metadata,
+    TokenVerificationMetadata,
+    OrgQueryOrderBy,
+    UserQueryOrderBy,
+)
 from propelauth_py.api.user import (
     _clear_user_password,
     _fetch_user_metadata_by_user_id,
@@ -27,7 +32,6 @@ from propelauth_py.api.user import (
     _validate_personal_api_key,
     _invite_user_to_org,
     _resend_email_confirmation,
-
 )
 from propelauth_py.api.access_token import _create_access_token
 from propelauth_py.api.end_user_api_keys import (
@@ -40,7 +44,18 @@ from propelauth_py.api.end_user_api_keys import (
     _validate_api_key,
 )
 from propelauth_py.api.magic_link import _create_magic_link
-from propelauth_py.api.migrate_user import _migrate_user_from_external_source, _migrate_user_password
+from propelauth_py.api.migrate_user import (
+    _migrate_user_from_external_source,
+    _migrate_user_password,
+)
+from propelauth_py.api.step_up_mfa.verify_totp_challenge import (
+    _verify_step_up_totp_challenge,
+)
+from propelauth_py.api.step_up_mfa.verify_grant import _verify_step_up_grant
+from propelauth_py.types.step_up_mfa import (
+    StepUpMfaTokenType,
+    StepUpMfaVerifyTotpResponse,
+)
 from propelauth_py.api.org import (
     _add_user_to_org,
     _allow_org_to_setup_saml_connection,
@@ -104,20 +119,32 @@ from propelauth_py.types.saml_types import SamlIdpMetadata
 
 from propelauth_py.validation import _validate_and_extract_auth_hostname
 
+
 class Auth:
-    
-    def __init__(self, auth_hostname: str, integration_api_key: str, token_verification_metadata: Optional[TokenVerificationMetadata]):
+
+    def __init__(
+        self,
+        auth_hostname: str,
+        integration_api_key: str,
+        token_verification_metadata: Optional[TokenVerificationMetadata],
+    ):
         self.auth_hostname = auth_hostname
         self.integration_api_key = integration_api_key
         self.token_verification_metadata = token_verification_metadata
 
     def fetch_user_metadata_by_user_id(self, user_id: str, include_orgs: bool = False):
-        return _fetch_user_metadata_by_user_id(self.auth_hostname, self.integration_api_key, user_id, include_orgs)
+        return _fetch_user_metadata_by_user_id(
+            self.auth_hostname, self.integration_api_key, user_id, include_orgs
+        )
 
     def fetch_user_metadata_by_email(self, email: str, include_orgs: bool = False):
-        return _fetch_user_metadata_by_email(self.auth_hostname, self.integration_api_key, email, include_orgs)
-    
-    def fetch_user_metadata_by_username(self, username: str, include_orgs: bool = False):
+        return _fetch_user_metadata_by_email(
+            self.auth_hostname, self.integration_api_key, email, include_orgs
+        )
+
+    def fetch_user_metadata_by_username(
+        self, username: str, include_orgs: bool = False
+    ):
         return _fetch_user_metadata_by_username(
             self.auth_hostname, self.integration_api_key, username, include_orgs
         )
@@ -127,17 +154,23 @@ class Auth:
             self.auth_hostname, self.integration_api_key, user_id
         )
 
-    def fetch_batch_user_metadata_by_user_ids(self, user_ids: List[str], include_orgs: bool = False):
+    def fetch_batch_user_metadata_by_user_ids(
+        self, user_ids: List[str], include_orgs: bool = False
+    ):
         return _fetch_batch_user_metadata_by_user_ids(
             self.auth_hostname, self.integration_api_key, user_ids, include_orgs
         )
 
-    def fetch_batch_user_metadata_by_emails(self, emails: List[str], include_orgs: bool = False):
+    def fetch_batch_user_metadata_by_emails(
+        self, emails: List[str], include_orgs: bool = False
+    ):
         return _fetch_batch_user_metadata_by_emails(
             self.auth_hostname, self.integration_api_key, emails, include_orgs
         )
 
-    def fetch_batch_user_metadata_by_usernames(self, usernames: List[str], include_orgs: bool = False):
+    def fetch_batch_user_metadata_by_usernames(
+        self, usernames: List[str], include_orgs: bool = False
+    ):
         return _fetch_batch_user_metadata_by_usernames(
             self.auth_hostname, self.integration_api_key, usernames, include_orgs
         )
@@ -146,7 +179,13 @@ class Auth:
         return _fetch_org(self.auth_hostname, self.integration_api_key, org_id)
 
     def fetch_org_by_query(
-        self, page_size: int = 10, page_number: int = 0, order_by: OrgQueryOrderBy = OrgQueryOrderBy.CREATED_AT_ASC, name: Optional[str] = None, legacy_org_id: Optional[str] = None, domain: Optional[str] = None
+        self,
+        page_size: int = 10,
+        page_number: int = 0,
+        order_by: OrgQueryOrderBy = OrgQueryOrderBy.CREATED_AT_ASC,
+        name: Optional[str] = None,
+        legacy_org_id: Optional[str] = None,
+        domain: Optional[str] = None,
     ):
         return _fetch_org_by_query(
             self.auth_hostname,
@@ -165,7 +204,9 @@ class Auth:
             self.integration_api_key,
         )
 
-    def fetch_pending_invites(self, page_number: int = 0, page_size: int = 10, org_id: Optional[str] = None):
+    def fetch_pending_invites(
+        self, page_number: int = 0, page_size: int = 10, org_id: Optional[str] = None
+    ):
         return _fetch_pending_invites(
             self.auth_hostname,
             self.integration_api_key,
@@ -181,7 +222,7 @@ class Auth:
         order_by: UserQueryOrderBy = UserQueryOrderBy.CREATED_AT_ASC,
         email_or_username: Optional[str] = None,
         include_orgs: bool = False,
-        legacy_user_id: Optional[str] = None
+        legacy_user_id: Optional[str] = None,
     ):
         return _fetch_users_by_query(
             self.auth_hostname,
@@ -191,11 +232,16 @@ class Auth:
             order_by,
             email_or_username,
             include_orgs,
-            legacy_user_id
+            legacy_user_id,
         )
 
     def fetch_users_in_org(
-        self, org_id: str, page_size: int = 10, page_number: int = 0, include_orgs: bool = False, role: Optional[str] = None
+        self,
+        org_id: str,
+        page_size: int = 10,
+        page_number: int = 0,
+        include_orgs: bool = False,
+        role: Optional[str] = None,
     ):
         return _fetch_users_in_org(
             self.auth_hostname,
@@ -218,7 +264,7 @@ class Auth:
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
         properties: Optional[Dict[str, Any]] = None,
-        ignore_domain_restrictions: bool = False
+        ignore_domain_restrictions: bool = False,
     ):
         return _create_user(
             self.auth_hostname,
@@ -232,10 +278,12 @@ class Auth:
             first_name,
             last_name,
             properties,
-            ignore_domain_restrictions
+            ignore_domain_restrictions,
         )
 
-    def invite_user_to_org(self, email: str, org_id: str, role: str, additional_roles: List[str] = []):
+    def invite_user_to_org(
+        self, email: str, org_id: str, role: str, additional_roles: List[str] = []
+    ):
         return _invite_user_to_org(
             self.auth_hostname,
             self.integration_api_key,
@@ -259,7 +307,9 @@ class Auth:
             user_id,
         )
 
-    def update_user_email(self, user_id: str, new_email: str, require_email_confirmation: bool):
+    def update_user_email(
+        self, user_id: str, new_email: str, require_email_confirmation: bool
+    ):
         return _update_user_email(
             self.auth_hostname,
             self.integration_api_key,
@@ -291,14 +341,19 @@ class Auth:
             properties=properties,
             picture_url=picture_url,
             update_password_required=update_password_required,
-            legacy_user_id=legacy_user_id
+            legacy_user_id=legacy_user_id,
         )
 
     def clear_user_password(self, user_id: str):
-        return _clear_user_password(self.auth_hostname, self.integration_api_key, user_id)
+        return _clear_user_password(
+            self.auth_hostname, self.integration_api_key, user_id
+        )
 
     def update_user_password(
-        self, user_id: str, password: str, ask_user_to_update_password_on_login: bool = False
+        self,
+        user_id: str,
+        password: str,
+        ask_user_to_update_password_on_login: bool = False,
     ):
         return _update_user_password(
             self.auth_hostname,
@@ -309,7 +364,7 @@ class Auth:
         )
 
     def create_magic_link(
-        self, 
+        self,
         email: str,
         redirect_to_url: Optional[str] = None,
         expires_in_hours: Optional[str] = None,
@@ -327,13 +382,17 @@ class Auth:
         )
 
     def create_access_token(
-        self, 
-        user_id: str, 
+        self,
+        user_id: str,
         duration_in_minutes: int,
-        active_org_id: Optional[str] = None
+        active_org_id: Optional[str] = None,
     ):
         return _create_access_token(
-            self.auth_hostname, self.integration_api_key, user_id, duration_in_minutes, active_org_id
+            self.auth_hostname,
+            self.integration_api_key,
+            user_id,
+            duration_in_minutes,
+            active_org_id,
         )
 
     def migrate_user_from_external_source(
@@ -367,17 +426,14 @@ class Auth:
             picture_url,
             properties,
         )
-        
+
     def migrate_user_password(
         self,
         user_id: str,
         password_hash: str,
     ):
         return _migrate_user_password(
-            self.auth_hostname,
-            self.integration_api_key,
-            user_id,
-            password_hash
+            self.auth_hostname, self.integration_api_key, user_id, password_hash
         )
 
     def create_org(
@@ -427,7 +483,7 @@ class Auth:
             members_must_have_email_domain_match=members_must_have_email_domain_match,
             domain=domain,
             require_2fa_by=require_2fa_by,
-            extra_domains=extra_domains
+            extra_domains=extra_domains,
         )
 
     def subscribe_org_to_role_mapping(self, org_id: str, custom_role_mapping_name: str):
@@ -437,14 +493,14 @@ class Auth:
             org_id,
             custom_role_mapping_name,
         )
-        
+
     def fetch_saml_sp_metadata(self, org_id: str):
         return _fetch_saml_sp_metadata(
             self.auth_hostname,
             self.integration_api_key,
             org_id,
         )
-        
+
     def set_saml_idp_metadata(self, org_id: str, saml_idp_metadata: SamlIdpMetadata):
         return _set_saml_idp_metadata(
             self.auth_hostname,
@@ -452,14 +508,14 @@ class Auth:
             org_id,
             saml_idp_metadata,
         )
-        
+
     def saml_go_live(self, org_id: str):
         return _saml_go_live(
             self.auth_hostname,
             self.integration_api_key,
             org_id,
         )
-        
+
     def delete_saml_connection(self, org_id: str):
         return _delete_saml_connection(
             self.auth_hostname,
@@ -469,22 +525,39 @@ class Auth:
 
     def delete_org(self, org_id: str):
         return _delete_org(self.auth_hostname, self.integration_api_key, org_id)
-    
+
     def revoke_pending_org_invite(self, org_id: str, invitee_email: str):
-        return _revoke_pending_org_invite(self.auth_hostname, self.integration_api_key, org_id, invitee_email)
+        return _revoke_pending_org_invite(
+            self.auth_hostname, self.integration_api_key, org_id, invitee_email
+        )
 
-
-    def add_user_to_org(self, user_id: str, org_id: str, role: str, additional_roles: List[str] = []):
+    def add_user_to_org(
+        self, user_id: str, org_id: str, role: str, additional_roles: List[str] = []
+    ):
         return _add_user_to_org(
-            self.auth_hostname, self.integration_api_key, user_id, org_id, role, additional_roles
+            self.auth_hostname,
+            self.integration_api_key,
+            user_id,
+            org_id,
+            role,
+            additional_roles,
         )
 
     def remove_user_from_org(self, user_id: str, org_id: str):
-        return _remove_user_from_org(self.auth_hostname, self.integration_api_key, user_id, org_id)
+        return _remove_user_from_org(
+            self.auth_hostname, self.integration_api_key, user_id, org_id
+        )
 
-    def change_user_role_in_org(self, user_id: str, org_id: str, role: str, additional_roles: List[str] = []):
+    def change_user_role_in_org(
+        self, user_id: str, org_id: str, role: str, additional_roles: List[str] = []
+    ):
         return _change_user_role_in_org(
-            self.auth_hostname, self.integration_api_key, user_id, org_id, role, additional_roles
+            self.auth_hostname,
+            self.integration_api_key,
+            user_id,
+            org_id,
+            role,
+            additional_roles,
         )
 
     def delete_user(self, user_id: str):
@@ -500,10 +573,14 @@ class Auth:
         return _disable_user_2fa(self.auth_hostname, self.integration_api_key, user_id)
 
     def enable_user_can_create_orgs(self, user_id: str):
-        return _enable_user_can_create_orgs(self.auth_hostname, self.integration_api_key, user_id)
+        return _enable_user_can_create_orgs(
+            self.auth_hostname, self.integration_api_key, user_id
+        )
 
     def disable_user_can_create_orgs(self, user_id: str):
-        return _disable_user_can_create_orgs(self.auth_hostname, self.integration_api_key, user_id)
+        return _disable_user_can_create_orgs(
+            self.auth_hostname, self.integration_api_key, user_id
+        )
 
     def allow_org_to_setup_saml_connection(self, org_id: str):
         return _allow_org_to_setup_saml_connection(
@@ -566,80 +643,176 @@ class Auth:
         )
 
     def create_api_key(
-        self, org_id: Optional[str] = None, user_id: Optional[str] = None, expires_at_seconds: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None
+        self,
+        org_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        expires_at_seconds: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         return _create_api_key(
-            self.auth_hostname, self.integration_api_key, org_id, user_id, expires_at_seconds, metadata
+            self.auth_hostname,
+            self.integration_api_key,
+            org_id,
+            user_id,
+            expires_at_seconds,
+            metadata,
         )
 
-    def update_api_key(self, api_key_id: str, expires_at_seconds: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None):
+    def update_api_key(
+        self,
+        api_key_id: str,
+        expires_at_seconds: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
         return _update_api_key(
-            self.auth_hostname, self.integration_api_key, api_key_id, expires_at_seconds, metadata
+            self.auth_hostname,
+            self.integration_api_key,
+            api_key_id,
+            expires_at_seconds,
+            metadata,
         )
 
     def delete_api_key(self, api_key_id: str):
         return _delete_api_key(self.auth_hostname, self.integration_api_key, api_key_id)
 
     def validate_personal_api_key(self, api_key_token: str):
-        return _validate_personal_api_key(self.auth_hostname, self.integration_api_key, api_key_token)
+        return _validate_personal_api_key(
+            self.auth_hostname, self.integration_api_key, api_key_token
+        )
 
     def validate_org_api_key(self, api_key_token: str):
-        return _validate_org_api_key(self.auth_hostname, self.integration_api_key, api_key_token)
+        return _validate_org_api_key(
+            self.auth_hostname, self.integration_api_key, api_key_token
+        )
 
     def validate_api_key(self, api_key_token: str):
-        return _validate_api_key(self.auth_hostname, self.integration_api_key, api_key_token)
-    
+        return _validate_api_key(
+            self.auth_hostname, self.integration_api_key, api_key_token
+        )
+
+    def verify_step_up_totp_challenge(
+        self,
+        action_type: str,
+        user_id: str,
+        code: str,
+        token_type: StepUpMfaTokenType,
+        valid_for_seconds: int,
+    ) -> StepUpMfaVerifyTotpResponse:
+        return _verify_step_up_totp_challenge(
+            self.auth_hostname,
+            self.integration_api_key,
+            action_type,
+            user_id,
+            code,
+            token_type,
+            valid_for_seconds,
+        )
+
+    def verify_step_up_grant(self, action_type: str, user_id: str, grant: str) -> bool:
+        return _verify_step_up_grant(
+            self.auth_hostname, self.integration_api_key, action_type, user_id, grant
+        )
 
     def validate_access_token_and_get_user(self, authorization_header: Optional[str]):
         access_token = _extract_token_from_authorization_header(authorization_header)
-        user = _validate_access_token_and_get_user(access_token, self.token_verification_metadata)
+        user = _validate_access_token_and_get_user(
+            access_token, self.token_verification_metadata
+        )
         return user
-    
-    def validate_access_token_and_get_user_with_org(self, authorization_header: Optional[str], required_org_id: str):
+
+    def validate_access_token_and_get_user_with_org(
+        self, authorization_header: Optional[str], required_org_id: str
+    ):
         access_token = _extract_token_from_authorization_header(authorization_header)
-        user = _validate_access_token_and_get_user(access_token, self.token_verification_metadata)
-        org_member_info = validate_org_access_and_get_org_member_info(user, required_org_id)
+        user = _validate_access_token_and_get_user(
+            access_token, self.token_verification_metadata
+        )
+        org_member_info = validate_org_access_and_get_org_member_info(
+            user, required_org_id
+        )
         return UserAndOrgMemberInfo(user, org_member_info)
-    
-    def validate_access_token_and_get_user_with_org_by_minimum_role(self, authorization_header: Optional[str], required_org_id: str, minimum_required_role: str):
+
+    def validate_access_token_and_get_user_with_org_by_minimum_role(
+        self,
+        authorization_header: Optional[str],
+        required_org_id: str,
+        minimum_required_role: str,
+    ):
         access_token = _extract_token_from_authorization_header(authorization_header)
-        user = _validate_access_token_and_get_user(access_token, self.token_verification_metadata)
-        org_member_info = validate_minimum_org_role_and_get_org(user, required_org_id, minimum_required_role)
+        user = _validate_access_token_and_get_user(
+            access_token, self.token_verification_metadata
+        )
+        org_member_info = validate_minimum_org_role_and_get_org(
+            user, required_org_id, minimum_required_role
+        )
         return UserAndOrgMemberInfo(user, org_member_info)
-    
-    def validate_access_token_and_get_user_with_org_by_exact_role(self, authorization_header: Optional[str], required_org_id: str, required_role: str):
+
+    def validate_access_token_and_get_user_with_org_by_exact_role(
+        self,
+        authorization_header: Optional[str],
+        required_org_id: str,
+        required_role: str,
+    ):
         access_token = _extract_token_from_authorization_header(authorization_header)
-        user = _validate_access_token_and_get_user(access_token, self.token_verification_metadata)
-        org_member_info = validate_exact_org_role_and_get_org(user, required_org_id, required_role)
+        user = _validate_access_token_and_get_user(
+            access_token, self.token_verification_metadata
+        )
+        org_member_info = validate_exact_org_role_and_get_org(
+            user, required_org_id, required_role
+        )
         return UserAndOrgMemberInfo(user, org_member_info)
-    
-    def validate_access_token_and_get_user_with_org_by_permission(self, authorization_header: Optional[str], required_org_id: str, permission: str):
+
+    def validate_access_token_and_get_user_with_org_by_permission(
+        self, authorization_header: Optional[str], required_org_id: str, permission: str
+    ):
         access_token = _extract_token_from_authorization_header(authorization_header)
-        user = _validate_access_token_and_get_user(access_token, self.token_verification_metadata)
-        org_member_info = validate_permission_and_get_org(user, required_org_id, permission)
+        user = _validate_access_token_and_get_user(
+            access_token, self.token_verification_metadata
+        )
+        org_member_info = validate_permission_and_get_org(
+            user, required_org_id, permission
+        )
         return UserAndOrgMemberInfo(user, org_member_info)
-    
-    def validate_access_token_and_get_user_with_org_by_all_permissions(self, authorization_header: Optional[str], required_org_id: str, permissions: List[str]):
+
+    def validate_access_token_and_get_user_with_org_by_all_permissions(
+        self,
+        authorization_header: Optional[str],
+        required_org_id: str,
+        permissions: List[str],
+    ):
         access_token = _extract_token_from_authorization_header(authorization_header)
-        user = _validate_access_token_and_get_user(access_token, self.token_verification_metadata)
-        org_member_info = validate_all_permissions_and_get_org(user, required_org_id, permissions)
+        user = _validate_access_token_and_get_user(
+            access_token, self.token_verification_metadata
+        )
+        org_member_info = validate_all_permissions_and_get_org(
+            user, required_org_id, permissions
+        )
         return UserAndOrgMemberInfo(user, org_member_info)
-    
+
     def validate_org_access_and_get_org(self, user: User, required_org_id: str):
         return validate_org_access_and_get_org_member_info(user, required_org_id)
-    
-    def validate_minimum_org_role_and_get_org(self, user: User, required_org_id: str, minimum_role: str):
-        return validate_minimum_org_role_and_get_org(user, required_org_id, minimum_role)
-    
-    def validate_exact_org_role_and_get_org(self, user: User, required_org_id: str, exact_role: str):
+
+    def validate_minimum_org_role_and_get_org(
+        self, user: User, required_org_id: str, minimum_role: str
+    ):
+        return validate_minimum_org_role_and_get_org(
+            user, required_org_id, minimum_role
+        )
+
+    def validate_exact_org_role_and_get_org(
+        self, user: User, required_org_id: str, exact_role: str
+    ):
         return validate_exact_org_role_and_get_org(user, required_org_id, exact_role)
-    
-    def validate_permission_and_get_org(self, user: User, required_org_id: str, permission: str):
+
+    def validate_permission_and_get_org(
+        self, user: User, required_org_id: str, permission: str
+    ):
         return validate_permission_and_get_org(user, required_org_id, permission)
-    
-    def validate_all_permissions_and_get_org(self, user: User, required_org_id: str, permissions: List[str]):
+
+    def validate_all_permissions_and_get_org(
+        self, user: User, required_org_id: str, permissions: List[str]
+    ):
         return validate_all_permissions_and_get_org(user, required_org_id, permissions)
-    
 
 
 def init_base_auth(
