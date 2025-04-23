@@ -1,3 +1,6 @@
+import json
+
+import httpx
 import requests
 from propelauth_py.api import (
     _ApiKeyAuth,
@@ -258,8 +261,42 @@ def _validate_api_key(
     elif not response.ok:
         raise RuntimeError("Unknown error when validating end user api key")
 
-    json_response = response.json()
+    return _get_api_key_validation(response.json())
 
+
+async def _validate_api_key_async(
+    *,
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    api_key_token,
+) -> ApiKeyValidation:
+    response = await httpx_client.post(
+        url=f"{ENDPOINT_URL}/validate",
+        json={"api_key_token": remove_bearer_if_exists(api_key_token)},
+        headers={
+            "X-Propelauth-url": auth_hostname,
+            "Authorization": f"Bearer {integration_api_key}",
+        },
+    )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif response.status_code == 404:
+        raise EndUserApiKeyNotFoundException()
+    elif response.status_code == 429:
+        try:
+            end_user_rate_limit_response = response.json()
+            raise EndUserApiKeyRateLimitedException(end_user_rate_limit_response)
+        except json.JSONDecodeError:
+            raise RateLimitedException(response.text)
+
+    response.raise_for_status()
+    return _get_api_key_validation(response.json())
+
+
+def _get_api_key_validation(json_response: dict) -> ApiKeyValidation:
     user = None
     if json_response.get("user") is not None:
         user_data = json_response.get("user")

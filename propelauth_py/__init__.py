@@ -1,3 +1,5 @@
+import asyncio
+import httpx
 from typing import Optional, Any, Dict, List
 from propelauth_py.user import UserAndOrgMemberInfo, User
 from propelauth_py.jwt import _validate_access_token_and_get_user
@@ -42,6 +44,7 @@ from propelauth_py.api.end_user_api_keys import (
     _fetch_current_api_keys,
     _update_api_key,
     _validate_api_key,
+    _validate_api_key_async,
 )
 from propelauth_py.api.magic_link import _create_magic_link
 from propelauth_py.api.migrate_user import (
@@ -121,7 +124,6 @@ from propelauth_py.validation import _validate_and_extract_auth_hostname
 
 
 class Auth:
-
     def __init__(
         self,
         auth_hostname: str,
@@ -859,6 +861,42 @@ class Auth:
         return validate_all_permissions_and_get_org(user, required_org_id, permissions)
 
 
+class AsyncAuth:
+    def __init__(
+        self,
+        auth_hostname: str,
+        integration_api_key: str,
+        token_verification_metadata: Optional[TokenVerificationMetadata],
+        httpx_client: Optional[httpx.AsyncClient] = None,
+    ):
+        self.auth_hostname = auth_hostname
+        self.integration_api_key = integration_api_key
+        self.token_verification_metadata = token_verification_metadata
+        self.httpx_client = httpx_client or httpx.AsyncClient()
+
+    async def cleanup(self):
+        try:
+            await self.httpx_client.aclose()
+        except Exception:
+            pass
+
+    def __del__(self):
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(self.cleanup())
+        except Exception:
+            pass
+
+    async def validate_api_key(self, api_key_token: str):
+        return await _validate_api_key_async(
+            auth_hostname=self.auth_hostname,
+            integration_api_key=self.integration_api_key,
+            api_key_token=api_key_token,
+            httpx_client=self.httpx_client,
+        )
+
+
 def init_base_auth(
     auth_url: str,
     integration_api_key: str,
@@ -869,3 +907,15 @@ def init_base_auth(
         auth_hostname, integration_api_key, token_verification_metadata
     )
     return Auth(auth_hostname, integration_api_key, token_verification_metadata)
+
+
+def init_base_async_auth(
+    auth_url: str,
+    integration_api_key: str,
+    token_verification_metadata: Optional[TokenVerificationMetadata] = None,
+) -> AsyncAuth:
+    auth_hostname = _validate_and_extract_auth_hostname(auth_url)
+    token_verification_metadata = _fetch_token_verification_metadata(
+        auth_hostname, integration_api_key, token_verification_metadata
+    )
+    return AsyncAuth(auth_hostname, integration_api_key, token_verification_metadata)
