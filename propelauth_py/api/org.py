@@ -1,8 +1,8 @@
 from typing import Optional
 import requests
-
-from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id, _auth_hostname_header, BACKEND_API_BASE_URL
-from propelauth_py.api.end_user_api_keys import _validate_api_key
+import httpx
+from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id, _auth_hostname_header, BACKEND_API_BASE_URL, _get_async_headers
+from propelauth_py.api.end_user_api_keys import _validate_api_key, _validate_api_key_async
 from propelauth_py.types.user import Organization, OrgQueryResponse, Org, PendingInvite, PendingInvitesPage, CreatedOrg, OrgApiKeyValidation
 from propelauth_py.types.custom_role_mappings import CustomRoleMappings, CustomRoleMapping
 from propelauth_py.types.saml_types import SamlIdpMetadata, SpMetadata
@@ -46,6 +46,53 @@ def _fetch_org(auth_hostname, integration_api_key, org_id) -> Optional[Organizat
     elif not response.ok:
         raise RuntimeError("Unknown error when fetching org")
 
+    json_response = response.json()
+    return Organization(
+        org_id=json_response.get('org_id'),
+        name=json_response.get('name'),
+        url_safe_org_slug=json_response.get('url_safe_org_slug'),
+        can_setup_saml=json_response.get('can_setup_saml'),
+        is_saml_configured=json_response.get('is_saml_configured'),
+        is_saml_in_test_mode=json_response.get('is_saml_in_test_mode'),
+        max_users=json_response.get('max_users'),
+        metadata=json_response.get('metadata'),
+        domain=json_response.get('domain'),
+        extra_domains=json_response.get('extra_domains'),
+        domain_autojoin=json_response.get('domain_autojoin'),
+        domain_restrict=json_response.get('domain_restrict'),
+        custom_role_mapping_name=json_response.get('custom_role_mapping_name'),
+        legacy_org_id=json_response.get('legacy_org_id')
+    )
+    
+async def _fetch_org_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id
+) -> Optional[Organization]:
+    if not _is_valid_id(org_id):
+        return None
+
+    url = f"{ORG_ENDPOINT_URL}/{org_id}"
+
+    response = await httpx_client.get(
+        url=url,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return None
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+        
+    response.raise_for_status()
     json_response = response.json()
     return Organization(
         org_id=json_response.get('org_id'),
@@ -120,6 +167,70 @@ def _fetch_org_by_query(
         page_size=json_response.get('page_size'),
         has_more_results=json_response.get('has_more_results')
     )
+    
+async def _fetch_org_by_query_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    page_size,
+    page_number,
+    order_by,
+    name,
+    legacy_org_id,
+    domain
+) -> OrgQueryResponse:
+    url = f"{ORG_ENDPOINT_URL}/query"
+    params = {
+        "page_size": page_size,
+        "page_number": page_number,
+        "order_by": order_by,
+        "name": name,
+        "legacy_org_id": legacy_org_id,
+        "domain": domain,
+    }
+    formatted_params = _format_params(params)
+    
+    response = await httpx_client.get(
+        url=url,
+        params=formatted_params,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise ValueError("Bad request: " + response.text)
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+        
+    response.raise_for_status()
+    json_response = response.json()
+    
+    orgs = [
+        Org(
+            org_id=key.get('org_id'),
+            name=key.get('name'),
+            max_users=key.get('max_users'),
+            is_saml_configured=key.get('is_saml_configured'),
+            legacy_org_id=key.get('legacy_org_id'),
+            metadata=key.get('metadata'),
+            custom_role_mapping_name=key.get('custom_role_mapping_name')
+        )
+        for key in json_response.get('orgs')
+    ]
+    
+    return OrgQueryResponse(
+        orgs=orgs,
+        total_orgs=json_response.get('total_orgs'),
+        current_page=json_response.get('current_page'),
+        page_size=json_response.get('page_size'),
+        has_more_results=json_response.get('has_more_results')
+    )
 
 
 def _fetch_custom_role_mappings(auth_hostname, integration_api_key) -> CustomRoleMappings:
@@ -143,6 +254,43 @@ def _fetch_custom_role_mappings(auth_hostname, integration_api_key) -> CustomRol
     elif not response.ok:
         raise RuntimeError("Unknown error when fetching org")
 
+    json_response = response.json()
+    
+    role_mappings = [
+        CustomRoleMapping(
+            custom_role_mapping_name=key.get('custom_role_mapping_name'),
+            num_orgs_subscribed=key.get('num_orgs_subscribed')
+        )
+        for key in json_response.get('custom_role_mappings')
+    ]
+    
+    return CustomRoleMappings(
+        custom_role_mappings=role_mappings
+    )
+    
+async def _fetch_custom_role_mappings_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key
+) -> CustomRoleMappings:
+    url = BASE_ENDPOINT_URL + "/custom_role_mappings"
+
+    response = await httpx_client.get(
+        url=url,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+        
+    response.raise_for_status()
     json_response = response.json()
     
     role_mappings = [
@@ -220,6 +368,68 @@ def _fetch_pending_invites(
         has_more_results=json_response.get('has_more_results')
     )
     
+async def _fetch_pending_invites_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    page_number=0,
+    page_size=10,
+    org_id=None,
+) -> Optional[PendingInvitesPage]:
+    if org_id:
+        if not _is_valid_id(org_id):
+            return None
+
+    url = BASE_ENDPOINT_URL + "/pending_org_invites"
+    params = {
+        "page_number": page_number,
+        "page_size": page_size,
+        "org_id": org_id,
+    }
+    formatted_params = _format_params(params)
+
+    response = await httpx_client.get(
+        url=url,
+        params=formatted_params,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+        
+    response.raise_for_status()
+    json_response = response.json()
+    
+    invites = [
+        PendingInvite(
+            invitee_email=key.get('invitee_email'),
+            org_id=key.get('org_id'),
+            org_name=key.get('org_name'),
+            role_in_org=key.get('role_in_org'),
+            additional_roles_in_org=key.get('additional_roles_in_org'),
+            created_at=key.get('created_at'),
+            expires_at=key.get('expires_at'),
+            inviter_email=key.get('inviter_email'),
+            inviter_user_id=key.get('inviter_user_id'),
+        )
+        for key in json_response.get('invites')
+    ]
+    
+    return PendingInvitesPage(
+        invites=invites,
+        total_invites=json_response.get('total_invites'),
+        current_page=json_response.get('current_page'),
+        page_size=json_response.get('page_size'),
+        has_more_results=json_response.get('has_more_results')
+    )
+    
 def _fetch_saml_sp_metadata(auth_hostname, integration_api_key, org_id) -> Optional[SpMetadata]:
     if not _is_valid_id(org_id):
         return None
@@ -241,6 +451,37 @@ def _fetch_saml_sp_metadata(auth_hostname, integration_api_key, org_id) -> Optio
     elif not response.ok:
         raise RuntimeError("Unknown error when fetching org SAML SP metadata")
 
+    json_response = response.json()
+    return SpMetadata(
+        entity_id=json_response.get('entity_id'),
+        acs_url=json_response.get('acs_url'),
+        logout_url=json_response.get('logout_url'),
+    )
+    
+async def _fetch_saml_sp_metadata_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id
+) -> Optional[SpMetadata]:
+    if not _is_valid_id(org_id):
+        return None
+
+    url = f"{BASE_ENDPOINT_URL}/saml_sp_metadata/{org_id}"
+
+    response = await httpx_client.get(
+        url=url,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return None
+        
+    response.raise_for_status()
     json_response = response.json()
     return SpMetadata(
         entity_id=json_response.get('entity_id'),
@@ -299,6 +540,53 @@ def _create_org(
         org_id=json_response.get('org_id'),
         name=json_response.get('name')
     )
+    
+async def _create_org_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    name,
+    enable_auto_joining_by_domain=False,
+    members_must_have_matching_domain=False,
+    domain=None,
+    max_users=None,
+    custom_role_mapping_name=None,
+    legacy_org_id=None,
+) -> CreatedOrg:
+    url = f"{ORG_ENDPOINT_URL}/"
+    json_body = {
+        "name": name,
+        "enable_auto_joining_by_domain": enable_auto_joining_by_domain,
+        "members_must_have_matching_domain": members_must_have_matching_domain,
+    }
+    if domain:
+        json_body["domain"] = domain
+    if max_users is not None:
+        json_body["max_users"] = max_users
+    if legacy_org_id:
+        json_body["legacy_org_id"] = legacy_org_id
+    if custom_role_mapping_name is not None:
+        json_body["custom_role_mapping_name"] = custom_role_mapping_name
+
+    response = await httpx_client.post(
+        url=url,
+        json=json_body,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+        
+    response.raise_for_status()
+    json_response = response.json()
+    return CreatedOrg(
+        org_id=json_response.get('org_id'),
+        name=json_response.get('name')
+    )
 
 
 def _allow_org_to_setup_saml_connection(auth_hostname, integration_api_key, org_id) -> bool:
@@ -324,6 +612,32 @@ def _allow_org_to_setup_saml_connection(auth_hostname, integration_api_key, org_
 
     return True
 
+async def _allow_org_to_setup_saml_connection_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id
+) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = f"{ORG_ENDPOINT_URL}/{org_id}/allow_saml"
+
+    response = await httpx_client.post(
+        url=url,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return False
+        
+    response.raise_for_status()
+    return True
+
 
 def _disallow_org_to_setup_saml_connection(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
@@ -346,6 +660,32 @@ def _disallow_org_to_setup_saml_connection(auth_hostname, integration_api_key, o
     elif not response.ok:
         raise RuntimeError("Unknown error when allowing org to setup SAML connection")
 
+    return True
+
+async def _disallow_org_to_setup_saml_connection_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id
+) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = f"{ORG_ENDPOINT_URL}/{org_id}/disallow_saml"
+
+    response = await httpx_client.post(
+        url=url,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return False
+        
+    response.raise_for_status()
     return True
 
 
@@ -384,6 +724,43 @@ def _create_org_saml_connection_link(
 
     return response.json()
 
+async def _create_org_saml_connection_link_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id,
+    expires_in_seconds=None
+):
+    if not _is_valid_id(org_id):
+        return None
+
+    url = f"{ORG_ENDPOINT_URL}/{org_id}/create_saml_connection_link"
+
+    json_body = {}
+    if expires_in_seconds is not None:
+        json_body["expires_in_seconds"] = expires_in_seconds
+
+    response = await httpx_client.post(
+        url=url,
+        json=json_body,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+        
+    response.raise_for_status()
+    return response.json()
+
 
 def _add_user_to_org(
     auth_hostname, integration_api_key, user_id, org_id, role, additional_roles=[]
@@ -416,6 +793,41 @@ def _add_user_to_org(
 
     return True
 
+async def _add_user_to_org_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id,
+    org_id,
+    role,
+    additional_roles=[]
+) -> bool:
+    url = f"{ORG_ENDPOINT_URL}/add_user"
+    json_body = {
+        "user_id": user_id,
+        "org_id": org_id,
+        "role": role,
+        "additional_roles": additional_roles,
+    }
+
+    response = await httpx_client.post(
+        url=url,
+        json=json_body,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 404:
+        return False
+        
+    response.raise_for_status()
+    return True
+
 
 def _remove_user_from_org(auth_hostname, integration_api_key, user_id, org_id) -> bool:
     url = f"{ORG_ENDPOINT_URL}/remove_user"
@@ -439,6 +851,34 @@ def _remove_user_from_org(auth_hostname, integration_api_key, user_id, org_id) -
     elif not response.ok:
         raise RuntimeError("Unknown error when removing a user from the org")
 
+    return True
+
+async def _remove_user_from_org_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id,
+    org_id
+) -> bool:
+    url = f"{ORG_ENDPOINT_URL}/remove_user"
+    json_body = {"user_id": user_id, "org_id": org_id}
+
+    response = await httpx_client.post(
+        url=url,
+        json=json_body,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 404:
+        return False
+        
+    response.raise_for_status()
     return True
 
 
@@ -471,6 +911,41 @@ def _change_user_role_in_org(
     elif not response.ok:
         raise RuntimeError("Unknown error when changing a user's role(s) in the org")
 
+    return True
+
+async def _change_user_role_in_org_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id,
+    org_id,
+    role,
+    additional_roles=[]
+) -> bool:
+    url = f"{ORG_ENDPOINT_URL}/change_role"
+    json_body = {
+        "user_id": user_id,
+        "org_id": org_id,
+        "role": role,
+        "additional_roles": additional_roles,
+    }
+
+    response = await httpx_client.post(
+        url=url,
+        json=json_body,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 404:
+        return False
+        
+    response.raise_for_status()
     return True
 
 def _set_saml_idp_metadata(auth_hostname, integration_api_key, org_id, saml_idp_metadata: SamlIdpMetadata) -> bool:
@@ -507,6 +982,44 @@ def _set_saml_idp_metadata(auth_hostname, integration_api_key, org_id, saml_idp_
 
     return True
 
+async def _set_saml_idp_metadata_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id,
+    saml_idp_metadata: SamlIdpMetadata
+) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = f"{BASE_ENDPOINT_URL}/saml_idp_metadata"
+
+    required_fields = ["idp_entity_id", "idp_sso_url", "idp_certificate", "provider"]
+    json_body = {"org_id": org_id}
+    
+    for field in required_fields:
+        if field not in saml_idp_metadata:
+            raise ValueError(f"Missing required field '{field}' in SAML IdP metadata")
+        json_body[field] = saml_idp_metadata[field]
+
+    response = await httpx_client.post(
+        url=url,
+        json=json_body,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 404:
+        return False
+        
+    response.raise_for_status()
+    return True
+
 def _saml_go_live(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
         return False
@@ -530,6 +1043,34 @@ def _saml_go_live(auth_hostname, integration_api_key, org_id) -> bool:
     elif not response.ok:
         raise RuntimeError("Unknown error when setting SAML connection to go live")
 
+    return True
+
+async def _saml_go_live_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id
+) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = f"{BASE_ENDPOINT_URL}/saml_idp_metadata/go_live/{org_id}"
+
+    response = await httpx_client.post(
+        url=url,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 404:
+        return False
+        
+    response.raise_for_status()
     return True
 
 ####################
@@ -596,6 +1137,66 @@ def _update_org_metadata(
 
     return True
 
+async def _update_org_metadata_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id,
+    name=None,
+    can_setup_saml=None,
+    metadata=None,
+    max_users=None,
+    can_join_on_email_domain_match=None,  # In the backend, this is the `domain_autojoin` argument.
+    members_must_have_email_domain_match=None,  # In the backend, this is the `domain_restrict` argument.
+    domain=None,
+    legacy_org_id=None,
+    require_2fa_by=None,
+    extra_domains=None,
+) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = f"{ORG_ENDPOINT_URL}/{org_id}"
+    json_body = {}
+    if name is not None:
+        json_body["name"] = name
+    if can_setup_saml is not None:
+        json_body["can_setup_saml"] = can_setup_saml
+    if metadata is not None:
+        json_body["metadata"] = metadata
+    if max_users is not None:
+        json_body["max_users"] = max_users
+    if can_join_on_email_domain_match is not None:
+        json_body["autojoin_by_domain"] = can_join_on_email_domain_match
+    if members_must_have_email_domain_match is not None:
+        json_body["restrict_to_domain"] = members_must_have_email_domain_match
+    if domain is not None:
+        json_body["domain"] = domain
+    if legacy_org_id is not None:
+        json_body["legacy_org_id"] = legacy_org_id
+    if require_2fa_by is not None:
+        json_body["require_2fa_by"] = require_2fa_by
+    if extra_domains is not None:
+        json_body["extra_domains"] = extra_domains
+
+    response = await httpx_client.put(
+        url=url,
+        json=json_body,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise UpdateUserMetadataException(response.json())
+    elif response.status_code == 404:
+        return False
+        
+    response.raise_for_status()
+    return True
+
 
 def _subscribe_org_to_role_mapping(
     auth_hostname,
@@ -633,6 +1234,39 @@ def _subscribe_org_to_role_mapping(
 
     return True
 
+async def _subscribe_org_to_role_mapping_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id,
+    custom_role_mapping_name,
+) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = f"{ORG_ENDPOINT_URL}/{org_id}"
+    json_body = {
+        "custom_role_mapping_name": custom_role_mapping_name,
+    }
+
+    response = await httpx_client.put(
+        url=url,
+        json=json_body,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise UpdateUserMetadataException(response.json())
+    elif response.status_code == 404:
+        return False
+        
+    response.raise_for_status()
+    return True
+
 
 ####################
 #      DELETE      #
@@ -662,6 +1296,32 @@ def _delete_org(auth_hostname, integration_api_key, org_id) -> bool:
 
     return True
 
+async def _delete_org_async(
+    httpx_client: httpx.AsyncClient, 
+    auth_hostname,
+    integration_api_key,
+    org_id
+) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = f"{ORG_ENDPOINT_URL}/{org_id}"
+
+    response = await httpx_client.delete(
+        url=url,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return False
+        
+    response.raise_for_status()
+    return True
+
 def _revoke_pending_org_invite(auth_hostname, integration_api_key, org_id, invitee_email) -> bool:
 
     url = BASE_ENDPOINT_URL + "/pending_org_invites"
@@ -683,6 +1343,33 @@ def _revoke_pending_org_invite(auth_hostname, integration_api_key, org_id, invit
     elif not response.ok:
         raise RuntimeError("Unknown error when revoking pending org invite")
 
+    return response.json()
+
+async def _revoke_pending_org_invite_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id,
+    invitee_email
+) -> bool:
+    url = BASE_ENDPOINT_URL + "/pending_org_invites"
+    json_body = {"org_id": org_id, "invitee_email": invitee_email}
+
+    response = await httpx_client.request(
+        method="DELETE",
+        url=url,
+        json=json_body,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+        
+    response.raise_for_status()
     return response.json()
 
 
@@ -711,6 +1398,34 @@ def _delete_saml_connection(auth_hostname, integration_api_key, org_id) -> bool:
 
     return True
 
+async def _delete_saml_connection_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id
+) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = f"{BASE_ENDPOINT_URL}/saml_idp_metadata/{org_id}"
+
+    response = await httpx_client.delete(
+        url=url,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 404:
+        return False
+        
+    response.raise_for_status()
+    return True
+
 
 ####################
 #      HELPERS     #
@@ -719,6 +1434,27 @@ def _delete_saml_connection(auth_hostname, integration_api_key, org_id) -> bool:
 
 def _validate_org_api_key(auth_hostname, integration_api_key, api_key_token) -> OrgApiKeyValidation:
     api_key_validation = _validate_api_key(auth_hostname, integration_api_key, api_key_token)
+    if not api_key_validation.org:
+        raise EndUserApiKeyException({"api_key_token": ["Not an org API Key"]})
+    return OrgApiKeyValidation(
+        org=api_key_validation.org,
+        metadata=api_key_validation.metadata,
+        user=api_key_validation.user,
+        user_in_org=api_key_validation.user_in_org,
+    )
+    
+async def _validate_org_api_key_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    api_key_token
+) -> OrgApiKeyValidation:
+    api_key_validation = await _validate_api_key_async(
+        httpx_client,
+        auth_hostname,
+        integration_api_key,
+        api_key_token
+    )
     if not api_key_validation.org:
         raise EndUserApiKeyException({"api_key_token": ["Not an org API Key"]})
     return OrgApiKeyValidation(

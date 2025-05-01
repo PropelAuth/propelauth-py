@@ -1,5 +1,6 @@
 from typing import Optional, Dict
 import requests
+import httpx
 
 from propelauth_py.api import (
     _ApiKeyAuth,
@@ -7,8 +8,9 @@ from propelauth_py.api import (
     _is_valid_id,
     BACKEND_API_BASE_URL,
     _auth_hostname_header,
+    _get_async_headers,
 )
-from propelauth_py.api.end_user_api_keys import _validate_api_key
+from propelauth_py.api.end_user_api_keys import _validate_api_key, _validate_api_key_async
 from propelauth_py.types.user import (
     UserMetadata,
     UsersPagedResponse,
@@ -17,6 +19,7 @@ from propelauth_py.types.user import (
     UserSignupQueryParams,
 )
 from propelauth_py.errors import (
+    BadRequestException,
     CreateUserException,
     EndUserApiKeyException,
     InviteUserToOrgException,
@@ -42,6 +45,22 @@ def _fetch_user_metadata_by_user_id(
     query = {"include_orgs": include_orgs}
     return _fetch_user_metadata_by_query(
         integration_api_key, user_info_url, query, auth_hostname
+    )
+    
+async def _fetch_user_metadata_by_user_id_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id,
+    include_orgs=False
+) -> Optional[UserMetadata]:
+    if not _is_valid_id(user_id):
+        return None
+
+    user_info_url = f"{ENDPOINT_URL}/{user_id}"
+    query = {"include_orgs": include_orgs}
+    return await _fetch_user_metadata_by_query_async(
+        httpx_client, integration_api_key, user_info_url, query, auth_hostname
     )
 
 
@@ -73,6 +92,37 @@ def _fetch_user_signup_query_params_by_user_id(
     return UserSignupQueryParams(
         user_signup_query_parameters=json_response.get("user_signup_query_parameters")
     )
+    
+async def _fetch_user_signup_query_params_by_user_id_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id,
+) -> Optional[UserSignupQueryParams]:
+    if not _is_valid_id(user_id):
+        return None
+
+    url = f"{ENDPOINT_URL}/{user_id}/signup_query_parameters"
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.get(
+        url=url,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return None
+
+    response.raise_for_status()
+
+    json_response = response.json()
+    return UserSignupQueryParams(
+        user_signup_query_parameters=json_response.get("user_signup_query_parameters")
+    )
 
 
 def _fetch_user_metadata_by_email(
@@ -83,6 +133,19 @@ def _fetch_user_metadata_by_email(
     return _fetch_user_metadata_by_query(
         integration_api_key, user_info_url, query, auth_hostname
     )
+    
+async def _fetch_user_metadata_by_email_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    email,
+    include_orgs=False
+) -> Optional[UserMetadata]:
+    user_info_url = f"{ENDPOINT_URL}/email"
+    query = {"include_orgs": include_orgs, "email": email}
+    return await _fetch_user_metadata_by_query_async(
+        httpx_client, integration_api_key, user_info_url, query, auth_hostname
+    )
 
 
 def _fetch_user_metadata_by_username(
@@ -92,6 +155,19 @@ def _fetch_user_metadata_by_username(
     query = {"include_orgs": include_orgs, "username": username}
     return _fetch_user_metadata_by_query(
         integration_api_key, user_info_url, query, auth_hostname
+    )
+    
+async def _fetch_user_metadata_by_username_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    username,
+    include_orgs=False
+) -> Optional[UserMetadata]:
+    user_info_url = f"{ENDPOINT_URL}/username"
+    query = {"include_orgs": include_orgs, "username": username}
+    return await _fetch_user_metadata_by_query_async(
+        httpx_client, integration_api_key, user_info_url, query, auth_hostname
     )
 
 
@@ -138,6 +214,56 @@ def _fetch_user_metadata_by_query(
         metadata=json_response.get("metadata"),
         properties=json_response.get("properties"),
     )
+    
+async def _fetch_user_metadata_by_query_async(
+    httpx_client: httpx.AsyncClient,
+    integration_api_key,
+    user_info_url,
+    query,
+    auth_hostname,
+) -> Optional[UserMetadata]:
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+    params = _format_params(query)
+
+    response = await httpx_client.get(
+        url=user_info_url,
+        params=params,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 404:
+        return None
+
+    response.raise_for_status()
+
+    json_response = response.json()
+    return UserMetadata(
+        user_id=json_response.get("user_id"),
+        email=json_response.get("email"),
+        email_confirmed=json_response.get("email_confirmed"),
+        has_password=json_response.get("has_password"),
+        username=json_response.get("username"),
+        first_name=json_response.get("first_name"),
+        last_name=json_response.get("last_name"),
+        picture_url=json_response.get("picture_url"),
+        locked=json_response.get("locked"),
+        enabled=json_response.get("enabled"),
+        mfa_enabled=json_response.get("mfa_enabled"),
+        can_create_orgs=json_response.get("can_create_orgs"),
+        created_at=json_response.get("created_at"),
+        last_active_at=json_response.get("last_active_at"),
+        org_id_to_org_info=json_response.get("org_id_to_org_info"),
+        legacy_user_id=json_response.get("legacy_user_id"),
+        impersonator_user_id=json_response.get("impersonator_user_id"),
+        metadata=json_response.get("metadata"),
+        properties=json_response.get("properties"),
+    )
 
 
 def _fetch_batch_user_metadata_by_user_ids(
@@ -147,6 +273,26 @@ def _fetch_batch_user_metadata_by_user_ids(
     params = {"include_orgs": include_orgs}
     body = {"user_ids": user_ids}
     return _fetch_batch_user_metadata_by_query(
+        user_info_url,
+        integration_api_key,
+        params,
+        body,
+        lambda x: x["user_id"],
+        auth_hostname,
+    )
+    
+async def _fetch_batch_user_metadata_by_user_ids_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_ids,
+    include_orgs,
+) -> Dict[str, UserMetadata]:
+    user_info_url = f"{ENDPOINT_URL}/user_ids"
+    params = {"include_orgs": include_orgs}
+    body = {"user_ids": user_ids}
+    return await _fetch_batch_user_metadata_by_query_async(
+        httpx_client,
         user_info_url,
         integration_api_key,
         params,
@@ -170,6 +316,26 @@ def _fetch_batch_user_metadata_by_emails(
         lambda x: x["email"],
         auth_hostname,
     )
+    
+async def _fetch_batch_user_metadata_by_emails_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    emails,
+    include_orgs,
+) -> Dict[str, UserMetadata]:
+    user_info_url = f"{ENDPOINT_URL}/emails"
+    params = {"include_orgs": include_orgs}
+    body = {"emails": emails}
+    return await _fetch_batch_user_metadata_by_query_async(
+        httpx_client,
+        user_info_url,
+        integration_api_key,
+        params,
+        body,
+        lambda x: x["email"],
+        auth_hostname,
+    )
 
 
 def _fetch_batch_user_metadata_by_usernames(
@@ -179,6 +345,26 @@ def _fetch_batch_user_metadata_by_usernames(
     params = {"include_orgs": include_orgs}
     body = {"usernames": usernames}
     return _fetch_batch_user_metadata_by_query(
+        user_info_url,
+        integration_api_key,
+        params,
+        body,
+        lambda x: x["username"],
+        auth_hostname,
+    )
+    
+async def _fetch_batch_user_metadata_by_usernames_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    usernames,
+    include_orgs,
+) -> Dict[str, UserMetadata]:
+    user_info_url = f"{ENDPOINT_URL}/usernames"
+    params = {"include_orgs": include_orgs}
+    body = {"usernames": usernames}
+    return await _fetch_batch_user_metadata_by_query_async(
+        httpx_client,
         user_info_url,
         integration_api_key,
         params,
@@ -206,6 +392,41 @@ def _fetch_batch_user_metadata_by_query(
         raise ValueError("Bad request: " + response.text)
     elif not response.ok:
         raise RuntimeError("Unknown error when fetching batch user metadata")
+
+    json_response = response.json()
+    return_value = {}
+    for single_item in json_response:
+        return_value[key_fn(single_item)] = single_item
+
+    return return_value
+
+async def _fetch_batch_user_metadata_by_query_async(
+    httpx_client: httpx.AsyncClient,
+    user_info_url,
+    integration_api_key,
+    params,
+    body,
+    key_fn,
+    auth_hostname
+) -> Dict[str, UserMetadata]:
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+    formatted_params = _format_params(params)
+
+    response = await httpx_client.post(
+        user_info_url,
+        params=formatted_params,
+        json=body,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+
+    response.raise_for_status()
 
     json_response = response.json()
     return_value = {}
@@ -253,6 +474,84 @@ def _fetch_users_by_query(
         )
     elif not response.ok:
         raise RuntimeError("Unknown error when fetching orgs by query")
+
+    json_response = response.json()
+
+    users = [
+        UserMetadata(
+            user_id=key.get("user_id"),
+            email=key.get("email"),
+            email_confirmed=key.get("email_confirmed"),
+            has_password=key.get("has_password"),
+            username=key.get("username"),
+            first_name=key.get("first_name"),
+            last_name=key.get("last_name"),
+            picture_url=key.get("picture_url"),
+            locked=key.get("locked"),
+            enabled=key.get("enabled"),
+            mfa_enabled=key.get("mfa_enabled"),
+            can_create_orgs=key.get("can_create_orgs"),
+            created_at=key.get("created_at"),
+            last_active_at=key.get("last_active_at"),
+            org_id_to_org_info=key.get("org_id_to_org_info"),
+            legacy_user_id=key.get("legacy_user_id"),
+            impersonator_user_id=key.get("impersonator_user_id"),
+            metadata=key.get("metadata"),
+            properties=key.get("properties"),
+        )
+        for key in json_response.get("users")
+    ]
+
+    return UsersPagedResponse(
+        users=users,
+        total_users=json_response.get("total_users"),
+        current_page=json_response.get("current_page"),
+        page_size=json_response.get("page_size"),
+        has_more_results=json_response.get("has_more_results"),
+    )
+    
+async def _fetch_users_by_query_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    page_size,
+    page_number,
+    order_by,
+    email_or_username,
+    include_orgs,
+    legacy_user_id,
+) -> UsersPagedResponse:
+    url = f"{ENDPOINT_URL}/query"
+    params = {
+        "page_size": page_size,
+        "page_number": page_number,
+        "order_by": order_by,
+        "email_or_username": email_or_username,
+        "include_orgs": include_orgs,
+        "legacy_user_id": legacy_user_id,
+    }
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+    formatted_params = _format_params(params)
+
+    response = await httpx_client.get(
+        url,
+        params=formatted_params,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+
+    response.raise_for_status()
 
     json_response = response.json()
 
@@ -369,6 +668,90 @@ def _fetch_users_in_org(
         page_size=json_response.get("page_size"),
         has_more_results=json_response.get("has_more_results"),
     )
+    
+async def _fetch_users_in_org_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id,
+    page_size,
+    page_number,
+    include_orgs,
+    role,
+) -> UsersPagedResponse:
+    if not _is_valid_id(org_id):
+        return UsersPagedResponse(
+            users=[],
+            total_users=0,
+            current_page=page_number,
+            page_size=page_size,
+            has_more_results=False,
+        )
+
+    url = f"{ENDPOINT_URL}/org/{org_id}"
+    params = {
+        "page_size": page_size,
+        "page_number": page_number,
+        "include_orgs": include_orgs,
+        "role": role,
+    }
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+    formatted_params = _format_params(params)
+
+    response = await httpx_client.get(
+        url,
+        params=formatted_params,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+
+    response.raise_for_status()
+
+    json_response = response.json()
+
+    users = [
+        UserMetadata(
+            user_id=key.get("user_id"),
+            email=key.get("email"),
+            email_confirmed=key.get("email_confirmed"),
+            has_password=key.get("has_password"),
+            username=key.get("username"),
+            first_name=key.get("first_name"),
+            last_name=key.get("last_name"),
+            picture_url=key.get("picture_url"),
+            locked=key.get("locked"),
+            enabled=key.get("enabled"),
+            mfa_enabled=key.get("mfa_enabled"),
+            can_create_orgs=key.get("can_create_orgs"),
+            created_at=key.get("created_at"),
+            last_active_at=key.get("last_active_at"),
+            org_id_to_org_info=key.get("org_id_to_org_info"),
+            legacy_user_id=key.get("legacy_user_id"),
+            impersonator_user_id=key.get("impersonator_user_id"),
+            metadata=key.get("metadata"),
+            properties=key.get("properties"),
+        )
+        for key in json_response.get("users")
+    ]
+
+    return UsersPagedResponse(
+        users=users,
+        total_users=json_response.get("total_users"),
+        current_page=json_response.get("current_page"),
+        page_size=json_response.get("page_size"),
+        has_more_results=json_response.get("has_more_results"),
+    )
 
 
 ####################
@@ -427,6 +810,62 @@ def _create_user(
     json_response = response.json()
     return CreatedUser(user_id=json_response.get("user_id"))
 
+async def _create_user_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    email,
+    email_confirmed,
+    send_email_to_confirm_email_address,
+    ask_user_to_update_password_on_login,
+    password,
+    username,
+    first_name,
+    last_name,
+    properties,
+    ignore_domain_restrictions,
+) -> CreatedUser:
+    url = f"{ENDPOINT_URL}/"
+    json_body = {
+        "email": email,
+        "email_confirmed": email_confirmed,
+        "send_email_to_confirm_email_address": send_email_to_confirm_email_address,
+        "ask_user_to_update_password_on_login": ask_user_to_update_password_on_login,
+    }
+    # Add optional fields if they are provided
+    if password is not None:
+        json_body["password"] = password
+    if username is not None:
+        json_body["username"] = username
+    if first_name is not None:
+        json_body["first_name"] = first_name
+    if last_name is not None:
+        json_body["last_name"] = last_name
+    if properties is not None:
+        json_body["properties"] = properties
+    if ignore_domain_restrictions is not None:
+        json_body["ignore_domain_restrictions"] = ignore_domain_restrictions
+
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.post(
+        url,
+        json=json_body,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise CreateUserException(response.json())
+
+    response.raise_for_status()
+
+    json_response = response.json()
+    return CreatedUser(user_id=json_response.get("user_id"))
+
 
 def _disable_user(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
@@ -449,6 +888,33 @@ def _disable_user(auth_hostname, integration_api_key, user_id) -> bool:
     elif not response.ok:
         raise RuntimeError("Unknown error when disabling user")
 
+    return True
+
+async def _disable_user_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id
+) -> bool:
+    if not _is_valid_id(user_id):
+        return False
+
+    url = f"{ENDPOINT_URL}/{user_id}/disable"
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.post(
+        url,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return False
+
+    response.raise_for_status()
     return True
 
 
@@ -475,6 +941,33 @@ def _enable_user(auth_hostname, integration_api_key, user_id) -> bool:
 
     return True
 
+async def _enable_user_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id
+) -> bool:
+    if not _is_valid_id(user_id):
+        return False
+
+    url = f"{ENDPOINT_URL}/{user_id}/enable"
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.post(
+        url,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return False
+
+    response.raise_for_status()
+    return True
+
 
 def _disable_user_2fa(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
@@ -497,6 +990,33 @@ def _disable_user_2fa(auth_hostname, integration_api_key, user_id) -> bool:
     elif not response.ok:
         raise RuntimeError("Unknown error when enabling user")
 
+    return True
+
+async def _disable_user_2fa_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id
+) -> bool:
+    if not _is_valid_id(user_id):
+        return False
+
+    url = f"{ENDPOINT_URL}/{user_id}/disable_2fa"
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.post(
+        url,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return False
+
+    response.raise_for_status()
     return True
 
 
@@ -535,6 +1055,48 @@ def _invite_user_to_org(
     elif not response.ok:
         raise RuntimeError("Unknown error when updating metadata")
 
+    return True
+
+async def _invite_user_to_org_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    email,
+    org_id,
+    role,
+    additional_roles=[],
+) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = BACKEND_API_BASE_URL + "/api/backend/v1/invite_user"
+    json_body = {
+        "email": email,
+        "org_id": org_id,
+        "role": role,
+        "additional_roles": additional_roles if additional_roles else [], # Ensure it's a list
+    }
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.post(
+        url,
+        json=json_body,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        try:
+            raise InviteUserToOrgException(response.json())
+        except Exception:
+             raise BadRequestException(response.text)
+    elif response.status_code == 404:
+        return False 
+
+    response.raise_for_status()
     return True
 
 
@@ -576,6 +1138,53 @@ def _resend_email_confirmation(auth_hostname, integration_api_key, user_id) -> b
 
     return True
 
+async def _resend_email_confirmation_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id
+) -> bool:
+    if not _is_valid_id(user_id):
+        return False
+
+    url = BACKEND_API_BASE_URL + "/api/backend/v1/resend_email_confirmation"
+    json_body = {"user_id": user_id}
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.post(
+        url,
+        json=json_body,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 404:
+        return False
+    elif response.status_code == 429:
+        try:
+            error_message = response.json().get("user_facing_error", response.text)
+            raise RateLimitedException(error_message)
+        except httpx.ResponseNotRead:
+            raise RateLimitedException(response.text)
+        except Exception:
+            raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        try:
+            error_message = response.json().get("user_facing_error")
+            if error_message:
+                raise ValueError(error_message)
+            else:
+                raise BadRequestException(response.json())
+        except httpx.ResponseNotRead:
+             raise BadRequestException(response.text)
+        except Exception:
+            raise BadRequestException(response.text)
+
+
+    response.raise_for_status()
+    return True
+
 
 def _logout_all_user_sessions(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
@@ -598,6 +1207,33 @@ def _logout_all_user_sessions(auth_hostname, integration_api_key, user_id) -> bo
     elif not response.ok:
         raise RuntimeError("Unknown error when logging out all user sessions")
 
+    return True
+
+async def _logout_all_user_sessions_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id
+) -> bool:
+    if not _is_valid_id(user_id):
+        return False
+
+    url = f"{ENDPOINT_URL}/{user_id}/logout_all_sessions"
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.post(
+        url,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return False
+
+    response.raise_for_status()
     return True
 
 
@@ -659,6 +1295,62 @@ def _update_user_metadata(
 
     return True
 
+async def _update_user_metadata_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id,
+    username=None,
+    first_name=None,
+    last_name=None,
+    metadata=None,
+    properties=None,
+    picture_url=None,
+    update_password_required=None,
+    legacy_user_id=None,
+) -> bool:
+    if not _is_valid_id(user_id):
+        return False
+
+    url = f"{ENDPOINT_URL}/{user_id}"
+    json_body = {}
+    if username is not None:
+        json_body["username"] = username
+    if first_name is not None:
+        json_body["first_name"] = first_name
+    if last_name is not None:
+        json_body["last_name"] = last_name
+    if metadata is not None:
+        json_body["metadata"] = metadata
+    if properties is not None:
+        json_body["properties"] = properties
+    if picture_url is not None:
+        json_body["picture_url"] = picture_url
+    if update_password_required is not None:
+        json_body["update_password_required"] = update_password_required
+    if legacy_user_id is not None:
+        json_body["legacy_user_id"] = legacy_user_id
+
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.put(
+        url,
+        json=json_body,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise UpdateUserMetadataException(response.json())
+    elif response.status_code == 404:
+        return False
+
+    response.raise_for_status()
+    return True
+
 
 def _update_user_password(
     auth_hostname,
@@ -697,6 +1389,44 @@ def _update_user_password(
 
     return True
 
+async def _update_user_password_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id,
+    password,
+    ask_user_to_update_password_on_login,
+) -> bool:
+    if not _is_valid_id(user_id):
+        return False
+
+    url = f"{ENDPOINT_URL}/{user_id}/password"
+    json_body = {"password": password}
+    if ask_user_to_update_password_on_login is not None:
+        json_body["ask_user_to_update_password_on_login"] = (
+            ask_user_to_update_password_on_login
+        )
+
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.put(
+        url,
+        json=json_body,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise UpdateUserPasswordException(response.json())
+    elif response.status_code == 404:
+        return False
+
+    response.raise_for_status()
+    return True
+
 
 def _clear_user_password(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
@@ -721,6 +1451,35 @@ def _clear_user_password(auth_hostname, integration_api_key, user_id) -> bool:
     elif not response.ok:
         raise RuntimeError("Unknown error when updating user email")
 
+    return True
+
+async def _clear_user_password_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id
+) -> bool:
+    if not _is_valid_id(user_id):
+        return False
+
+    url = f"{ENDPOINT_URL}/{user_id}/clear_password"
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.put(
+        url,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise UpdateUserEmailException(response.json())
+    elif response.status_code == 404:
+        return False 
+
+    response.raise_for_status()
     return True
 
 
@@ -756,6 +1515,42 @@ def _update_user_email(
 
     return True
 
+async def _update_user_email_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id,
+    new_email,
+    require_email_confirmation
+) -> bool:
+    if not _is_valid_id(user_id):
+        return False
+
+    url = f"{ENDPOINT_URL}/{user_id}/email"
+    json_body = {
+        "new_email": new_email,
+        "require_email_confirmation": require_email_confirmation,
+    }
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.put(
+        url,
+        json=json_body,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise UpdateUserEmailException(response.json())
+    elif response.status_code == 404:
+        return False
+
+    response.raise_for_status()
+    return True
+
 
 def _enable_user_can_create_orgs(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
@@ -780,6 +1575,33 @@ def _enable_user_can_create_orgs(auth_hostname, integration_api_key, user_id) ->
 
     return True
 
+async def _enable_user_can_create_orgs_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id
+) -> bool:
+    if not _is_valid_id(user_id):
+        return False
+
+    url = f"{ENDPOINT_URL}/{user_id}/can_create_orgs/enable"
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.put(
+        url,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return False
+
+    response.raise_for_status()
+    return True
+
 
 def _disable_user_can_create_orgs(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
@@ -802,6 +1624,33 @@ def _disable_user_can_create_orgs(auth_hostname, integration_api_key, user_id) -
     elif not response.ok:
         raise RuntimeError("Unknown error when disabling can_create_orgs")
 
+    return True
+
+async def _disable_user_can_create_orgs_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id
+) -> bool:
+    if not _is_valid_id(user_id):
+        return False
+
+    url = f"{ENDPOINT_URL}/{user_id}/can_create_orgs/disable"
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.put(
+        url,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return False
+
+    response.raise_for_status()
     return True
 
 
@@ -831,6 +1680,33 @@ def _delete_user(auth_hostname, integration_api_key, user_id) -> bool:
 
     return True
 
+async def _delete_user_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id
+) -> bool:
+    if not _is_valid_id(user_id):
+        return False
+
+    url = f"{ENDPOINT_URL}/{user_id}"
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.delete(
+        url,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return False
+
+    response.raise_for_status()
+    return True
+
 
 ####################
 #       HELPERS    #
@@ -845,6 +1721,26 @@ def _validate_personal_api_key(
     )
     if not api_key_validation.user or api_key_validation.org:
         raise EndUserApiKeyException({"api_key_token": ["Not a personal API Key"]})
+    return PersonalApiKeyValidation(
+        user=api_key_validation.user,
+        metadata=api_key_validation.metadata,
+    )
+
+async def _validate_personal_api_key_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    api_key_token
+) -> PersonalApiKeyValidation:
+    api_key_validation = await _validate_api_key_async(
+        httpx_client=httpx_client,
+        auth_hostname=auth_hostname,
+        integration_api_key=integration_api_key,
+        api_key_token=api_key_token
+    )
+    if not api_key_validation.user or api_key_validation.org:
+        raise EndUserApiKeyException({"api_key_token": ["Not a personal API Key"]})
+
     return PersonalApiKeyValidation(
         user=api_key_validation.user,
         metadata=api_key_validation.metadata,

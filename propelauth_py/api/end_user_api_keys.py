@@ -1,9 +1,12 @@
+import json
+import httpx
 import requests
 from propelauth_py.api import (
     _ApiKeyAuth,
     _is_valid_hex,
     remove_bearer_if_exists,
     BACKEND_API_BASE_URL,
+    _get_async_headers
 )
 from propelauth_py.errors import (
     EndUserApiKeyException,
@@ -58,6 +61,57 @@ def _fetch_api_key(auth_hostname, integration_api_key, api_key_id) -> ApiKeyFull
         user_id=json_response.get("user_id"),
         org_id=json_response.get("org_id"),
     )
+    
+    
+async def _fetch_api_key_async(httpx_client: httpx.AsyncClient, auth_hostname, integration_api_key, api_key_id) -> ApiKeyFull:
+    if not _is_valid_hex(api_key_id):
+        raise EndUserApiKeyNotFoundException()
+
+    response = await httpx_client.get(
+        url=f"{ENDPOINT_URL}/{api_key_id}",
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif response.status_code == 404:
+        raise EndUserApiKeyNotFoundException()
+    
+    response.raise_for_status()
+    json_response = response.json()
+    return ApiKeyFull(
+        api_key_id=json_response.get("api_key_id"),
+        created_at=json_response.get("created_at"),
+        expires_at_seconds=json_response.get("expires_at_seconds"),
+        metadata=json_response.get("metadata"),
+        user_id=json_response.get("user_id"),
+        org_id=json_response.get("org_id"),
+    )
+    
+def _get_paged_api_keys(json_response) -> ApiKeyResultPage:
+    api_keys = [
+        ApiKeyFull(
+            api_key_id=key.get("api_key_id"),
+            created_at=key.get("created_at"),
+            expires_at_seconds=key.get("expires_at_seconds"),
+            metadata=key.get("metadata"),
+            user_id=key.get("user_id"),
+            org_id=key.get("org_id"),
+        )
+        for key in json_response.get("api_keys")
+    ]
+
+    return ApiKeyResultPage(
+        api_keys=api_keys,
+        total_api_keys=json_response.get("total_api_keys"),
+        current_page=json_response.get("current_page"),
+        page_size=json_response.get("page_size"),
+        has_more_results=json_response.get("has_more_results"),
+    )
 
 
 def _fetch_current_api_keys(
@@ -102,28 +156,52 @@ def _fetch_current_api_keys(
     elif not response.ok:
         raise RuntimeError("Unknown error when fetching current end user api keys")
 
-    json_response = response.json()
-
-    api_keys = [
-        ApiKeyFull(
-            api_key_id=key.get("api_key_id"),
-            created_at=key.get("created_at"),
-            expires_at_seconds=key.get("expires_at_seconds"),
-            metadata=key.get("metadata"),
-            user_id=key.get("user_id"),
-            org_id=key.get("org_id"),
-        )
-        for key in json_response.get("api_keys")
-    ]
-
-    return ApiKeyResultPage(
-        api_keys=api_keys,
-        total_api_keys=json_response.get("total_api_keys"),
-        current_page=json_response.get("current_page"),
-        page_size=json_response.get("page_size"),
-        has_more_results=json_response.get("has_more_results"),
+    return _get_paged_api_keys(response.json())
+    
+async def _fetch_current_api_keys_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id=None,
+    user_id=None,
+    user_email=None,
+    page_size=None,
+    page_number=None,
+    api_key_type=None,
+) -> ApiKeyResultPage:
+    query_params = {}
+    if org_id:
+        query_params["org_id"] = org_id
+    if user_id:
+        query_params["user_id"] = user_id
+    if user_email:
+        query_params["user_email"] = user_email
+    if page_size:
+        query_params["page_size"] = page_size
+    if page_number:
+        query_params["page_number"] = page_number
+    if api_key_type:
+        query_params["api_key_type"] = api_key_type
+    response = await httpx_client.get(
+        url=ENDPOINT_URL,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key),
+        params=query_params
     )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif response.status_code == 404:
+        raise EndUserApiKeyNotFoundException()
+    elif response.status_code == 429:
+        try:
+            end_user_rate_limit_response = response.json()
+            raise EndUserApiKeyRateLimitedException(end_user_rate_limit_response)
+        except json.JSONDecodeError:
+            raise RateLimitedException(response.text)
 
+    response.raise_for_status()
+    return _get_paged_api_keys(response.json())
 
 def _fetch_archived_api_keys(
     auth_hostname,
@@ -169,25 +247,52 @@ def _fetch_archived_api_keys(
 
     json_response = response.json()
 
-    api_keys = [
-        ApiKeyFull(
-            api_key_id=key.get("api_key_id"),
-            created_at=key.get("created_at"),
-            expires_at_seconds=key.get("expires_at_seconds"),
-            metadata=key.get("metadata"),
-            user_id=key.get("user_id"),
-            org_id=key.get("org_id"),
-        )
-        for key in json_response.get("api_keys")
-    ]
+    return _get_paged_api_keys(response.json())
 
-    return ApiKeyResultPage(
-        api_keys=api_keys,
-        total_api_keys=json_response.get("total_api_keys"),
-        current_page=json_response.get("current_page"),
-        page_size=json_response.get("page_size"),
-        has_more_results=json_response.get("has_more_results"),
+async def _fetch_archived_api_keys_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id=None,
+    user_id=None,
+    user_email=None,
+    page_size=None,
+    page_number=None,
+    api_key_type=None,
+) -> ApiKeyResultPage:
+    query_params = {}
+    if org_id:
+        query_params["org_id"] = org_id
+    if user_id:
+        query_params["user_id"] = user_id
+    if user_email:
+        query_params["user_email"] = user_email
+    if page_size:
+        query_params["page_size"] = page_size
+    if page_number:
+        query_params["page_number"] = page_number
+    if api_key_type:
+        query_params["api_key_type"] = api_key_type
+    response = await httpx_client.get(
+        url=f"{ENDPOINT_URL}/archived",
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key),
+        params=query_params
     )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif response.status_code == 404:
+        raise EndUserApiKeyNotFoundException()
+    elif response.status_code == 429:
+        try:
+            end_user_rate_limit_response = response.json()
+            raise EndUserApiKeyRateLimitedException(end_user_rate_limit_response)
+        except json.JSONDecodeError:
+            raise RateLimitedException(response.text)
+
+    response.raise_for_status()
+    return _get_paged_api_keys(response.json())
 
 
 ####################
@@ -229,6 +334,50 @@ def _create_api_key(
         api_key_id=json_response.get("api_key_id"),
         api_key_token=json_response.get("api_key_token"),
     )
+    
+async def _create_api_key_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id, 
+    user_id, 
+    expires_at_seconds, 
+    metadata
+) -> ApiKeyNew:
+    
+    json_body = {}
+    if org_id:
+        json_body["org_id"] = org_id
+    if user_id:
+        json_body["user_id"] = user_id
+    if expires_at_seconds:
+        json_body["expires_at_seconds"] = expires_at_seconds
+    if metadata:
+        json_body["metadata"] = metadata
+        
+    response = await httpx_client.post(
+        url=ENDPOINT_URL,
+        json=json_body,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key),
+    )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif response.status_code == 429:
+        try:
+            end_user_rate_limit_response = response.json()
+            raise EndUserApiKeyRateLimitedException(end_user_rate_limit_response)
+        except json.JSONDecodeError:
+            raise RateLimitedException(response.text)
+
+    response.raise_for_status()
+    json_response = response.json()
+    return ApiKeyNew(
+        api_key_id=json_response.get("api_key_id"),
+        api_key_token=json_response.get("api_key_token"),
+    )
+
 
 
 def _validate_api_key(
@@ -258,8 +407,36 @@ def _validate_api_key(
     elif not response.ok:
         raise RuntimeError("Unknown error when validating end user api key")
 
-    json_response = response.json()
+    return _get_api_key_validation(response.json())
+    
+async def _validate_api_key_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    api_key_token,
+) -> ApiKeyValidation:
+    response = await httpx_client.post(
+        url=f"{ENDPOINT_URL}/validate",
+        json={"api_key_token": remove_bearer_if_exists(api_key_token)},
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key),
+    )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif response.status_code == 404:
+        raise EndUserApiKeyNotFoundException()
+    elif response.status_code == 429:
+        try:
+            end_user_rate_limit_response = response.json()
+            raise EndUserApiKeyRateLimitedException(end_user_rate_limit_response)
+        except json.JSONDecodeError:
+            raise RateLimitedException(response.text)
 
+    response.raise_for_status()
+    return _get_api_key_validation(response.json())
+
+def _get_api_key_validation(json_response) -> ApiKeyValidation:
     user = None
     if json_response.get("user") is not None:
         user_data = json_response.get("user")
@@ -362,6 +539,44 @@ def _update_api_key(
 
     return True
 
+async def _update_api_key_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    api_key_id, 
+    expires_at_seconds, 
+    metadata
+) -> bool:
+    if not _is_valid_hex(api_key_id):
+        return False
+    
+    json_body = {}
+    if expires_at_seconds:
+        json_body["expires_at_seconds"] = expires_at_seconds
+    if metadata:
+        json_body["metadata"] = metadata
+        
+    response = await httpx_client.patch(
+        url=f"{ENDPOINT_URL}/{api_key_id}",
+        json=json_body,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key),
+    )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif response.status_code == 404:
+        raise EndUserApiKeyNotFoundException()
+    elif response.status_code == 429:
+        try:
+            end_user_rate_limit_response = response.json()
+            raise EndUserApiKeyRateLimitedException(end_user_rate_limit_response)
+        except json.JSONDecodeError:
+            raise RateLimitedException(response.text)
+
+    response.raise_for_status()
+    return True
+
 
 ####################
 #      DELETE      #
@@ -388,4 +603,33 @@ def _delete_api_key(auth_hostname, integration_api_key, api_key_id) -> bool:
     elif not response.ok:
         raise RuntimeError("Unknown error when deleting end user api key")
 
+    return True
+
+async def _delete_api_key_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    api_key_id
+) -> bool:
+    if not _is_valid_hex(api_key_id):
+        return False
+        
+    response = await httpx_client.delete(
+        url=f"{ENDPOINT_URL}/{api_key_id}",
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key),
+    )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 400:
+        raise EndUserApiKeyException(response.json())
+    elif response.status_code == 404:
+        raise EndUserApiKeyNotFoundException()
+    elif response.status_code == 429:
+        try:
+            end_user_rate_limit_response = response.json()
+            raise EndUserApiKeyRateLimitedException(end_user_rate_limit_response)
+        except json.JSONDecodeError:
+            raise RateLimitedException(response.text)
+
+    response.raise_for_status()
     return True
