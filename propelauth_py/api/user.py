@@ -236,7 +236,7 @@ async def _fetch_user_metadata_by_query_async(
     elif response.status_code == 429:
         raise RateLimitedException(response.text)
     elif response.status_code == 400:
-        raise BadRequestException(response.json())
+        raise BadRequestException(response.text)
     elif response.status_code == 404:
         return None
 
@@ -424,7 +424,7 @@ async def _fetch_batch_user_metadata_by_query_async(
     elif response.status_code == 429:
         raise RateLimitedException(response.text)
     elif response.status_code == 400:
-        raise BadRequestException(response.json())
+        raise BadRequestException(response.text)
 
     response.raise_for_status()
 
@@ -522,10 +522,11 @@ async def _fetch_users_by_query_async(
     legacy_user_id,
 ) -> UsersPagedResponse:
     url = f"{ENDPOINT_URL}/query"
+    order_by_value = order_by.value if hasattr(order_by, 'value') else order_by
     params = {
         "page_size": page_size,
         "page_number": page_number,
-        "order_by": order_by,
+        "order_by": order_by_value,
         "email_or_username": email_or_username,
         "include_orgs": include_orgs,
         "legacy_user_id": legacy_user_id,
@@ -544,7 +545,7 @@ async def _fetch_users_by_query_async(
     elif response.status_code == 429:
         raise RateLimitedException(response.text)
     elif response.status_code == 400:
-        raise BadRequestException(response.json())
+        raise BadRequestException(response.text)
     elif response.status_code == 426:
         raise RuntimeError(
             "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
@@ -709,7 +710,7 @@ async def _fetch_users_in_org_async(
     elif response.status_code == 429:
         raise RateLimitedException(response.text)
     elif response.status_code == 400:
-        raise BadRequestException(response.json())
+        raise BadRequestException(response.text)
     elif response.status_code == 426:
         raise RuntimeError(
             "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
@@ -1175,7 +1176,7 @@ async def _resend_email_confirmation_async(
             if error_message:
                 raise ValueError(error_message)
             else:
-                raise BadRequestException(response.json())
+                raise BadRequestException(response.text)
         except httpx.ResponseNotRead:
              raise BadRequestException(response.text)
         except Exception:

@@ -921,28 +921,29 @@ class AsyncAuth(Auth):
         integration_api_key: str,
         token_verification_metadata: Optional[TokenVerificationMetadata],
         httpx_client: Optional[httpx.AsyncClient] = None,
+        is_httpx_client_provided: Optional[bool] = True,
     ):
         super().__init__(
             auth_hostname = auth_hostname, 
             integration_api_key = integration_api_key,
             token_verification_metadata = token_verification_metadata
         )
-        self.httpx_client = httpx_client or httpx.AsyncClient()
 
-    async def cleanup(self):
-        try:
+        self.is_httpx_client_provided = is_httpx_client_provided
+        if httpx_client is None:
+            self.httpx_client = httpx.AsyncClient()
+            self.is_httpx_client_provided = False
+        else:
+            self.httpx_client = httpx_client
+    
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type=None, exc_val=None, exc_tb=None):
+        if not self.is_httpx_client_provided:
             await self.httpx_client.aclose()
-        except Exception:
-            pass
 
-    def __del__(self):
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                loop.create_task(self.cleanup())
-        except Exception:
-            pass
-        
+
     ####################
     #     API KEYS     #
     ####################
@@ -1835,9 +1836,10 @@ def init_base_async_auth(
     auth_url: str,
     integration_api_key: str,
     token_verification_metadata: Optional[TokenVerificationMetadata] = None,
+    httpx_client: Optional[httpx.AsyncClient] = None,
 ) -> AsyncAuth:
     auth_hostname = _validate_and_extract_auth_hostname(auth_url)
     token_verification_metadata = _fetch_token_verification_metadata(
         auth_hostname, integration_api_key, token_verification_metadata
     )
-    return AsyncAuth(auth_hostname, integration_api_key, token_verification_metadata)
+    return AsyncAuth(auth_hostname, integration_api_key, token_verification_metadata, httpx_client)
