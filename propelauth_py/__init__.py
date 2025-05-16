@@ -921,7 +921,6 @@ class AsyncAuth(Auth):
         integration_api_key: str,
         token_verification_metadata: Optional[TokenVerificationMetadata],
         httpx_client: Optional[httpx.AsyncClient] = None,
-        is_httpx_client_provided: Optional[bool] = True,
     ):
         super().__init__(
             auth_hostname = auth_hostname, 
@@ -929,12 +928,12 @@ class AsyncAuth(Auth):
             token_verification_metadata = token_verification_metadata
         )
 
-        self.is_httpx_client_provided = is_httpx_client_provided
-        if httpx_client is None:
+        self.is_httpx_client_provided = httpx_client is not None
+        if httpx_client:
+            self.httpx_client = httpx_client
+        else:
             self.httpx_client = httpx.AsyncClient()
             self.is_httpx_client_provided = False
-        else:
-            self.httpx_client = httpx_client
     
     async def __aenter__(self):
         return self
