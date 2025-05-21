@@ -180,10 +180,11 @@ async def _fetch_org_by_query_async(
     domain
 ) -> OrgQueryResponse:
     url = f"{ORG_ENDPOINT_URL}/query"
+    order_by_value = order_by.value if hasattr(order_by, 'value') else order_by
     params = {
         "page_size": page_size,
         "page_number": page_number,
-        "order_by": order_by,
+        "order_by": order_by_value,
         "name": name,
         "legacy_org_id": legacy_org_id,
         "domain": domain,
