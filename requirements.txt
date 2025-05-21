@@ -2,3 +2,5 @@ pyjwt[crypto]>=2,<3
 requests
 pytest
 requests-mock
+httpx
+asyncio

@@ -81,3 +81,10 @@ def _is_valid_hex(identifier):
 
 def _auth_hostname_header(auth_hostname: str) -> Dict[str, str]:
     return {"X-Propelauth-url": auth_hostname}
+
+def _get_async_headers(auth_hostname: str, integration_api_key: str) -> Dict[str, str]:
+    """Creates standard headers for async API calls."""
+    return {
+        "X-Propelauth-url": auth_hostname,
+        "Authorization": f"Bearer {integration_api_key}",
+    }
