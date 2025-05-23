@@ -6,7 +6,7 @@
 
 # PropelAuth Python SDK
 
-A python library for managing authentication, backed by [PropelAuth](https://www.propelauth.com/?utm_campaign=github-python). 
+A python library for managing authentication, backed by [PropelAuth](https://www.propelauth.com/?utm_campaign=github-python).
 
 [PropelAuth](https://www.propelauth.com?ref=github) makes it easy to add authentication and authorization to your B2B/multi-tenant application.
 
@@ -23,10 +23,9 @@ Your frontend gets a beautiful, safe, and customizable login screen. Your backen
 pip install propelauth_py
 ```
 
-
 ## Initialize
 
-`init_base_auth` performs a one-time initialization of the library. 
+`init_base_auth` performs a one-time initialization of the library.
 It will verify your `api_key` is correct and fetch the metadata needed to verify access tokens with [validate_access_token_and_get_user](#protect-api-routes).
 
 ```py
@@ -95,7 +94,7 @@ except UnauthorizedException:
 
 Similar to checking org membership, but will also verify that the user has the specified permission in the organization. This can be done using either the [User](https://docs.propelauth.com/reference/backend-apis/python#user) or [OrgMemberInfo](https://docs.propelauth.com/reference/backend-apis/python#org-member-info) objects.
 
-Permissions are arbitrary strings associated with a role. For example, `can_view_billing`, `ProductA::CanCreate`, and `ReadOnly` are all valid permissions. 
+Permissions are arbitrary strings associated with a role. For example, `can_view_billing`, `ProductA::CanCreate`, and `ReadOnly` are all valid permissions.
 You can create these permissions in the PropelAuth dashboard.
 
 ```py
@@ -113,7 +112,7 @@ except UnauthorizedException:
 
 ## Calling Backend APIs
 
-You can also use the library to call the PropelAuth APIs directly, allowing you to fetch users, create orgs, and a lot more. 
+You can also use the library to call the PropelAuth APIs directly, allowing you to fetch users, create orgs, and a lot more.
 See the [API Reference](https://docs.propelauth.com/reference) for more information.
 
 ```py
@@ -123,6 +122,24 @@ auth = init_base_auth("YOUR_AUTH_URL", "YOUR_API_KEY")
 
 magic_link = auth.create_magic_link(email="test@example.com")
 ```
+
+## Logging Configuration
+
+You can configure the logging behavior of the PropelAuth library to control whether exceptions are logged:
+
+```py
+# When initializing the library:
+auth = init_base_auth("YOUR_AUTH_URL", "YOUR_API_KEY", log_exceptions=False)
+
+# Or after initialization:
+auth.configure_logging(log_exceptions=False)
+
+# Or without an Auth instance:
+from propelauth_py import configure_logging
+configure_logging(log_exceptions=False)
+```
+
+By default, exceptions are logged using Python's standard logging module. Setting `log_exceptions=False` will disable this behavior.
 
 ## Questions?
 

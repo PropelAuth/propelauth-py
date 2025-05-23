@@ -3,6 +3,7 @@ import httpx
 from typing import Optional, Any, Dict, List
 from propelauth_py.user import UserAndOrgMemberInfo, User
 from propelauth_py.jwt import _validate_access_token_and_get_user
+from propelauth_py.logging_config import configure_logging as _configure_logging
 from propelauth_py.api import (
     token_verification_metadata,
     TokenVerificationMetadata,
@@ -176,6 +177,17 @@ from propelauth_py.types.saml_types import SamlIdpMetadata
 from propelauth_py.validation import _validate_and_extract_auth_hostname
 
 
+def configure_logging(log_exceptions=None):
+    """
+    Configure logging options for the PropelAuth library without initializing an Auth instance.
+
+    Args:
+        log_exceptions: Whether to log exceptions with logger.exception
+                        Set to True to enable, False to disable, or None to keep current setting
+    """
+    _configure_logging(log_exceptions=log_exceptions)
+
+
 class Auth:
     def __init__(
         self,
@@ -186,6 +198,16 @@ class Auth:
         self.auth_hostname = auth_hostname
         self.integration_api_key = integration_api_key
         self.token_verification_metadata = token_verification_metadata
+
+    def configure_logging(self, log_exceptions=None):
+        """
+        Configure logging options for the PropelAuth library.
+
+        Args:
+            log_exceptions: Whether to log exceptions with logger.exception
+                            Set to True to enable, False to disable, or None to keep current setting
+        """
+        configure_logging(log_exceptions=log_exceptions)
 
     def fetch_user_metadata_by_user_id(self, user_id: str, include_orgs: bool = False):
         return _fetch_user_metadata_by_user_id(
@@ -1823,7 +1845,10 @@ def init_base_auth(
     auth_url: str,
     integration_api_key: str,
     token_verification_metadata: Optional[TokenVerificationMetadata] = None,
+    log_exceptions: bool = True,
 ) -> Auth:
+    configure_logging(log_exceptions=log_exceptions)
+
     auth_hostname = _validate_and_extract_auth_hostname(auth_url)
     token_verification_metadata = _fetch_token_verification_metadata(
         auth_hostname, integration_api_key, token_verification_metadata
