@@ -936,7 +936,7 @@ class Auth:
         return validate_all_permissions_and_get_org(user, required_org_id, permissions)
 
 
-class AsyncAuth(Auth):
+class AsyncAuth:
     def __init__(
         self,
         auth_hostname: str,
@@ -944,18 +944,14 @@ class AsyncAuth(Auth):
         token_verification_metadata: Optional[TokenVerificationMetadata],
         httpx_client: Optional[httpx.AsyncClient] = None,
     ):
-        super().__init__(
-            auth_hostname = auth_hostname, 
-            integration_api_key = integration_api_key,
-            token_verification_metadata = token_verification_metadata
-        )
-
+        self.auth_hostname = auth_hostname
+        self.integration_api_key = integration_api_key
+        self.token_verification_metadata = token_verification_metadata
         self.is_httpx_client_provided = httpx_client is not None
         if httpx_client:
             self.httpx_client = httpx_client
         else:
             self.httpx_client = httpx.AsyncClient()
-            self.is_httpx_client_provided = False
     
     async def __aenter__(self):
         return self
@@ -963,6 +959,17 @@ class AsyncAuth(Auth):
     async def __aexit__(self, exc_type=None, exc_val=None, exc_tb=None):
         if not self.is_httpx_client_provided:
             await self.httpx_client.aclose()
+
+    def configure_logging(self, log_exceptions=None):
+        """
+        Configure logging options for the PropelAuth library.
+
+        Args:
+            log_exceptions: Whether to log exceptions with logger.exception
+                            Set to True to enable, False to disable, or None to keep current setting
+        """
+        configure_logging(log_exceptions=log_exceptions)
+
 
 
     ####################
@@ -1861,7 +1868,10 @@ def init_base_async_auth(
     integration_api_key: str,
     token_verification_metadata: Optional[TokenVerificationMetadata] = None,
     httpx_client: Optional[httpx.AsyncClient] = None,
+    log_exceptions: bool = True,
 ) -> AsyncAuth:
+    configure_logging(log_exceptions=log_exceptions)
+
     auth_hostname = _validate_and_extract_auth_hostname(auth_url)
     token_verification_metadata = _fetch_token_verification_metadata(
         auth_hostname, integration_api_key, token_verification_metadata
