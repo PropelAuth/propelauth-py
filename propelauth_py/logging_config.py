@@ -11,7 +11,7 @@ logger = logging.getLogger("propelauth")
 
 # Default configuration
 _config = {
-    "log_exceptions": True,  # Whether to log exceptions with logger.exception
+    "log_exceptions": False,  # Whether to log exceptions with logger.exception
 }
 
 
