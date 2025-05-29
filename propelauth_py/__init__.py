@@ -936,7 +936,7 @@ class Auth:
         return validate_all_permissions_and_get_org(user, required_org_id, permissions)
 
 
-class AsyncAuth:
+class AsyncAuth(Auth):
     def __init__(
         self,
         auth_hostname: str,
@@ -944,9 +944,12 @@ class AsyncAuth:
         token_verification_metadata: Optional[TokenVerificationMetadata],
         httpx_client: Optional[httpx.AsyncClient] = None,
     ):
-        self.auth_hostname = auth_hostname
-        self.integration_api_key = integration_api_key
-        self.token_verification_metadata = token_verification_metadata
+        super().__init__(
+            auth_hostname = auth_hostname, 
+            integration_api_key = integration_api_key,
+            token_verification_metadata = token_verification_metadata
+        )
+
         self.is_httpx_client_provided = httpx_client is not None
         if httpx_client:
             self.httpx_client = httpx_client
