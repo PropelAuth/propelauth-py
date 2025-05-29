@@ -1852,7 +1852,7 @@ def init_base_auth(
     auth_url: str,
     integration_api_key: str,
     token_verification_metadata: Optional[TokenVerificationMetadata] = None,
-    log_exceptions: bool = True,
+    log_exceptions: bool = False,
 ) -> Auth:
     configure_logging(log_exceptions=log_exceptions)
 
@@ -1868,7 +1868,7 @@ def init_base_async_auth(
     integration_api_key: str,
     token_verification_metadata: Optional[TokenVerificationMetadata] = None,
     httpx_client: Optional[httpx.AsyncClient] = None,
-    log_exceptions: bool = True,
+    log_exceptions: bool = False,
 ) -> AsyncAuth:
     configure_logging(log_exceptions=log_exceptions)
 
