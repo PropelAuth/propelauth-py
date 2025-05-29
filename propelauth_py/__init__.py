@@ -955,7 +955,6 @@ class AsyncAuth(Auth):
             self.httpx_client = httpx_client
         else:
             self.httpx_client = httpx.AsyncClient()
-            self.is_httpx_client_provided = False
     
     async def __aenter__(self):
         return self
@@ -963,6 +962,17 @@ class AsyncAuth(Auth):
     async def __aexit__(self, exc_type=None, exc_val=None, exc_tb=None):
         if not self.is_httpx_client_provided:
             await self.httpx_client.aclose()
+
+    def configure_logging(self, log_exceptions=None):
+        """
+        Configure logging options for the PropelAuth library.
+
+        Args:
+            log_exceptions: Whether to log exceptions with logger.exception
+                            Set to True to enable, False to disable, or None to keep current setting
+        """
+        configure_logging(log_exceptions=log_exceptions)
+
 
 
     ####################
@@ -1845,7 +1855,7 @@ def init_base_auth(
     auth_url: str,
     integration_api_key: str,
     token_verification_metadata: Optional[TokenVerificationMetadata] = None,
-    log_exceptions: bool = True,
+    log_exceptions: bool = False,
 ) -> Auth:
     configure_logging(log_exceptions=log_exceptions)
 
@@ -1861,7 +1871,10 @@ def init_base_async_auth(
     integration_api_key: str,
     token_verification_metadata: Optional[TokenVerificationMetadata] = None,
     httpx_client: Optional[httpx.AsyncClient] = None,
+    log_exceptions: bool = False,
 ) -> AsyncAuth:
+    configure_logging(log_exceptions=log_exceptions)
+
     auth_hostname = _validate_and_extract_auth_hostname(auth_url)
     token_verification_metadata = _fetch_token_verification_metadata(
         auth_hostname, integration_api_key, token_verification_metadata
