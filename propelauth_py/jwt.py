@@ -4,7 +4,7 @@ import jwt
 
 from propelauth_py.errors import UnauthorizedException
 from propelauth_py.user import _to_user
-import logging
+from propelauth_py.logging_config import get_logger, should_log_exceptions
 
 OPTIONS = {
     "verify_signature": True,
@@ -30,5 +30,8 @@ def _validate_access_token_and_get_user(access_token, token_verification_metadat
     except UnauthorizedException as e:
         raise e
     except Exception:
-        logging.exception("An error occurred while validating the access token")
+        if should_log_exceptions():
+            get_logger().exception(
+                "An error occurred while validating the access token"
+            )
         raise UnauthorizedException.invalid_access_token()
