@@ -1,4 +1,5 @@
-from typing import Any, Dict, Optional, List
+from enum import Enum
+from typing import Any, Dict, Literal, Optional, List
 from propelauth_py.user import OrgMemberInfo
 from dataclasses import dataclass
 
@@ -175,3 +176,45 @@ class UserSignupQueryParams:
 
     def __getitem__(self, key):
         return getattr(self, key)
+    
+class MfaType(str, Enum):
+    TOTP = "Totp"
+    PHONE = "Phone"
+    
+@dataclass
+class MfaTotpType:
+    type: Literal[MfaType.TOTP] = MfaType.TOTP
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+@dataclass
+class MfaPhones:
+    mfa_phone_number_suffix: str
+    mfa_phone_id: str
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+    
+@dataclass
+class MfaPhoneType:
+    phone_numbers: List[MfaPhones]
+    type: Literal[MfaType.PHONE] = MfaType.PHONE
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+    
+@dataclass
+class FetchUserMfaMethodsResponse:
+    mfa_setup: Optional[MfaTotpType | MfaPhoneType]
+   
+    def __getitem__(self, key):
+        return getattr(self, key)
+    
+    def is_totp(self) -> bool:
+        return isinstance(self.mfa_setup, MfaTotpType)
+    
+    def is_phone(self) -> bool:
+        return isinstance(self.mfa_setup, MfaPhoneType)
+    
+

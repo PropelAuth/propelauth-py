@@ -13,3 +13,18 @@ class StepUpMfaVerifyTotpResponse:
 
     def __getitem__(self, key):
         return getattr(self, key)
+    
+@dataclass
+class SendSmsMfaCodeResponse:
+    challenge_id: str
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+    
+@dataclass
+class VerifySmsChallengeResponse:
+    step_up_grant: str
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
