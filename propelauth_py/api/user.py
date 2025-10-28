@@ -1,4 +1,4 @@
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, Union
 import requests
 import httpx
 
@@ -759,7 +759,7 @@ async def _fetch_users_in_org_async(
     )
     
     
-def _deserialize_mfa_setup(mfa_data: Optional[Dict[str, Any]]) -> Optional[MfaTotpType | MfaPhoneType]:
+def _deserialize_mfa_setup(mfa_data: Optional[Dict[str, Any]]) -> Optional[Union[MfaTotpType, MfaPhoneType]]:
     if mfa_data is None:
         return None
     

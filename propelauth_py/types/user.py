@@ -206,7 +206,7 @@ class MfaPhoneType:
     
 @dataclass
 class FetchUserMfaMethodsResponse:
-    mfa_setup: Union[MfaTotpType, MfaPhoneType]
+    mfa_setup: Optional[Union[MfaTotpType, MfaPhoneType]]
    
     def __getitem__(self, key):
         return getattr(self, key)
