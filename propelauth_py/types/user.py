@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, Literal, Optional, List
+from typing import Any, Dict, Literal, Optional, List, Union
 from propelauth_py.user import OrgMemberInfo
 from dataclasses import dataclass
 
@@ -206,7 +206,7 @@ class MfaPhoneType:
     
 @dataclass
 class FetchUserMfaMethodsResponse:
-    mfa_setup: Optional[MfaTotpType | MfaPhoneType]
+    mfa_setup: Union[MfaTotpType, MfaPhoneType]
    
     def __getitem__(self, key):
         return getattr(self, key)
