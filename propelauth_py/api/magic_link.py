@@ -31,6 +31,7 @@ def _create_magic_link(
     expires_in_hours=None,
     create_new_user_if_one_doesnt_exist=None,
     user_signup_query_parameters=None,
+    expire_after_first_use=None
 ) -> CreateMagicLinkResponse:
     url = ENDPOINT_URL
     json = {"email": email}
@@ -44,6 +45,9 @@ def _create_magic_link(
         json[
             "create_new_user_if_one_doesnt_exist"
         ] = create_new_user_if_one_doesnt_exist
+    if expire_after_first_use is not None:
+        json["expire_after_first_use"] = expire_after_first_use    
+    
 
     response = requests.post(
         url,
@@ -75,6 +79,7 @@ async def _create_magic_link_async(
     expires_in_hours=None,
     create_new_user_if_one_doesnt_exist=None,
     user_signup_query_parameters=None,
+    expire_after_first_use=None
 ) -> CreateMagicLinkResponse:
     json_body = {"email": email}
     if redirect_to_url is not None:
@@ -85,6 +90,8 @@ async def _create_magic_link_async(
         json_body["user_signup_query_parameters"] = user_signup_query_parameters
     if create_new_user_if_one_doesnt_exist is not None:
         json_body["create_new_user_if_one_doesnt_exist"] = create_new_user_if_one_doesnt_exist
+    if expire_after_first_use is not None:
+        json_body["expire_after_first_use"] = expire_after_first_use   
 
     response = await httpx_client.post(
         url=ENDPOINT_URL,

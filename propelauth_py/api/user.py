@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Any, Optional, Dict, Union
 import requests
 import httpx
 
@@ -12,11 +12,15 @@ from propelauth_py.api import (
 )
 from propelauth_py.api.end_user_api_keys import _validate_api_key, _validate_api_key_async
 from propelauth_py.types.user import (
+    MfaPhoneType,
+    MfaPhones,
+    MfaTotpType,
     UserMetadata,
     UsersPagedResponse,
     CreatedUser,
     PersonalApiKeyValidation,
     UserSignupQueryParams,
+    FetchUserMfaMethodsResponse
 )
 from propelauth_py.errors import (
     BadRequestException,
@@ -753,6 +757,80 @@ async def _fetch_users_in_org_async(
         page_size=json_response.get("page_size"),
         has_more_results=json_response.get("has_more_results"),
     )
+    
+    
+def _deserialize_mfa_setup(mfa_data: Optional[Dict[str, Any]]) -> Optional[Union[MfaTotpType, MfaPhoneType]]:
+    if mfa_data is None:
+        return None
+    
+    mfa_type = mfa_data.get("type")
+    
+    if mfa_type == MfaTotpType.type:
+        return MfaTotpType(type=mfa_type)
+    elif mfa_type == MfaPhoneType.type:
+        phone_numbers = [
+            MfaPhones(
+                mfa_phone_number_suffix=phone["mfa_phone_number_suffix"],
+                mfa_phone_id=phone["mfa_phone_id"]
+            )
+            for phone in mfa_data.get("phone_numbers", [])
+        ]
+        return MfaPhoneType(type=mfa_type, phone_numbers=phone_numbers)
+    else:
+        raise ValueError(f"Unknown MFA type: {mfa_type}")
+    
+def _fetch_user_mfa_methods(
+    auth_hostname, integration_api_key, user_id
+) -> Optional[FetchUserMfaMethodsResponse]:
+    response = requests.get(
+        url=f"{ENDPOINT_URL}/{user_id}/mfa",
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise ValueError("Bad request: " + response.text)
+    elif response.status_code == 404:
+        return None
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching user mfa methods")
+
+    json_response = response.json()
+    mfa_setup = _deserialize_mfa_setup(json_response.get("mfa_setup"))
+
+    return FetchUserMfaMethodsResponse(mfa_setup=mfa_setup)
+    
+async def _fetch_user_mfa_methods_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id,
+) -> Optional[FetchUserMfaMethodsResponse]:
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.get(
+        url=f"{ENDPOINT_URL}/{user_id}/mfa",
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.text)
+    elif response.status_code == 404:
+        return None
+
+    response.raise_for_status()
+
+    json_response = response.json()
+    mfa_setup = _deserialize_mfa_setup(json_response.get("mfa_setup"))
+
+    return FetchUserMfaMethodsResponse(mfa_setup=mfa_setup)
 
 
 ####################
@@ -1073,6 +1151,85 @@ async def _invite_user_to_org_async(
     url = BACKEND_API_BASE_URL + "/api/backend/v1/invite_user"
     json_body = {
         "email": email,
+        "org_id": org_id,
+        "role": role,
+        "additional_roles": additional_roles if additional_roles else [], # Ensure it's a list
+    }
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.post(
+        url,
+        json=json_body,
+        headers=headers,
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        try:
+            raise InviteUserToOrgException(response.json())
+        except Exception:
+             raise BadRequestException(response.text)
+    elif response.status_code == 404:
+        return False 
+
+    response.raise_for_status()
+    return True
+
+def _invite_user_to_org_by_user_id(
+    auth_hostname, integration_api_key, user_id, org_id, role, additional_roles=[]
+) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = BACKEND_API_BASE_URL + "/api/backend/v1/invite_user_by_id"
+    json = {
+        "user_id": user_id,
+        "org_id": org_id,
+        "role": role,
+        "additional_roles": additional_roles,
+    }
+    response = requests.post(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        try:
+            response_json = response.json()
+            raise InviteUserToOrgException(response_json)
+        except requests.exceptions.JSONDecodeError:
+            raise ValueError("Bad request: " + response.text)
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when updating metadata")
+
+    return True
+
+async def _invite_user_to_org_by_user_id_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    user_id,
+    org_id,
+    role,
+    additional_roles=[],
+) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = BACKEND_API_BASE_URL + "/api/backend/v1/invite_user_by_id"
+    json_body = {
+        "user_id": user_id,
         "org_id": org_id,
         "role": role,
         "additional_roles": additional_roles if additional_roles else [], # Ensure it's a list

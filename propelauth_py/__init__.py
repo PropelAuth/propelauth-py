@@ -57,8 +57,12 @@ from propelauth_py.api.user import (
     _validate_personal_api_key_async,
     _invite_user_to_org,
     _invite_user_to_org_async,
+    _invite_user_to_org_by_user_id,
+    _invite_user_to_org_by_user_id_async,
     _resend_email_confirmation,
-    _resend_email_confirmation_async
+    _resend_email_confirmation_async,
+    _fetch_user_mfa_methods,
+    _fetch_user_mfa_methods_async
 )
 from propelauth_py.api.access_token import _create_access_token, _create_access_token_async
 from propelauth_py.api.end_user_api_keys import (
@@ -76,6 +80,12 @@ from propelauth_py.api.end_user_api_keys import (
     _update_api_key_async,
     _validate_api_key,
     _validate_api_key_async,
+    _fetch_api_key_usage,
+    _fetch_api_key_usage_async,
+    _import_api_key,
+    _import_api_key_async,
+    _validate_imported_api_key,
+    _validate_imported_api_key_async,
 )
 from propelauth_py.api.magic_link import _create_magic_link, _create_magic_link_async
 from propelauth_py.api.migrate_user import (
@@ -89,9 +99,13 @@ from propelauth_py.api.step_up_mfa.verify_totp_challenge import (
     _verify_step_up_totp_challenge_async
 )
 from propelauth_py.api.step_up_mfa.verify_grant import _verify_step_up_grant, _verify_step_up_grant_async
+from propelauth_py.api.step_up_mfa.send_sms_mfa_code import _send_sms_mfa_code, _send_sms_mfa_code_async
+from propelauth_py.api.step_up_mfa.verify_sms_challenge import _verify_sms_challenge, _verify_sms_challenge_async
 from propelauth_py.types.step_up_mfa import (
     StepUpMfaGrantType,
     StepUpMfaVerifyTotpResponse,
+    SendSmsMfaCodeResponse,
+    VerifySmsChallengeResponse
 )
 from propelauth_py.api.org import (
     _add_user_to_org,
@@ -135,6 +149,11 @@ from propelauth_py.api.org import (
     _delete_saml_connection,
     _delete_saml_connection_async,
 )
+from propelauth_py.api.employee import (
+    _fetch_employee_by_id,
+    _fetch_employee_by_id_async,
+    FetchEmployeeResponse
+)
 from propelauth_py.api.token_verification_metadata import (
     _fetch_token_verification_metadata,
 )
@@ -171,6 +190,33 @@ from propelauth_py.types.login_method import (
     SocialLoginProvider,
     SocialSsoLoginMethod,
     UnknownLoginMethod,
+)
+from propelauth_py.types.end_user_api_keys import (
+    ApiKeyFull,
+    ApiKeyResultPage,
+    ApiKeyNew,
+    ApiKeyValidation,
+    ApiKeyUsage,
+    ImportedApiKeyNew,
+)
+from propelauth_py.types.user import (
+    Org,
+    OrgFromApiKey,
+    Organization,
+    OrgQueryResponse,
+    PendingInvite,
+    PendingInvitesPage,
+    CreatedOrg,
+    UserMetadata,
+    OrgApiKeyValidation,
+    CreatedUser,
+    UsersPagedResponse,
+    PersonalApiKeyValidation,
+    UserSignupQueryParams,
+    MfaTotpType,
+    MfaPhones,
+    MfaPhoneType,
+    FetchUserMfaMethodsResponse
 )
 from propelauth_py.types.saml_types import SamlIdpMetadata
 
@@ -357,6 +403,13 @@ class Auth:
             properties,
             ignore_domain_restrictions,
         )
+        
+    def fetch_user_mfa_methods(self, user_id: str):
+        return _fetch_user_mfa_methods(
+            self.auth_hostname,
+            self.integration_api_key,
+            user_id,
+        )
 
     def invite_user_to_org(
         self, email: str, org_id: str, role: str, additional_roles: List[str] = []
@@ -365,6 +418,18 @@ class Auth:
             self.auth_hostname,
             self.integration_api_key,
             email,
+            org_id,
+            role,
+            additional_roles,
+        )
+        
+    def invite_user_to_org_by_user_id(
+        self, user_id: str, org_id: str, role: str, additional_roles: List[str] = []
+    ):
+        return _invite_user_to_org_by_user_id(
+            self.auth_hostname,
+            self.integration_api_key,
+            user_id,
             org_id,
             role,
             additional_roles,
@@ -444,9 +509,10 @@ class Auth:
         self,
         email: str,
         redirect_to_url: Optional[str] = None,
-        expires_in_hours: Optional[str] = None,
+        expires_in_hours: Optional[int] = None,
         create_new_user_if_one_doesnt_exist: Optional[bool] = None,
         user_signup_query_parameters: Optional[Dict[str, str]] = None,
+        expire_after_first_use: Optional[bool] = None
     ):
         return _create_magic_link(
             self.auth_hostname,
@@ -456,6 +522,7 @@ class Auth:
             expires_in_hours,
             create_new_user_if_one_doesnt_exist,
             user_signup_query_parameters,
+            expire_after_first_use
         )
 
     def create_access_token(
@@ -740,6 +807,7 @@ class Auth:
         api_key_id: str,
         expires_at_seconds: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        set_to_never_expire: Optional[bool] = None
     ):
         return _update_api_key(
             self.auth_hostname,
@@ -747,6 +815,7 @@ class Auth:
             api_key_id,
             expires_at_seconds,
             metadata,
+            set_to_never_expire
         )
 
     def delete_api_key(self, api_key_id: str):
@@ -765,6 +834,40 @@ class Auth:
     def validate_api_key(self, api_key_token: str):
         return _validate_api_key(
             self.auth_hostname, self.integration_api_key, api_key_token
+        )
+
+    def validate_imported_api_key(self, api_key_token: str):
+        return _validate_imported_api_key(
+            self.auth_hostname, self.integration_api_key, api_key_token
+        )
+
+    def fetch_api_key_usage(
+        self, 
+        date: str, 
+        org_id: Optional[str] = None, 
+        user_id: Optional[str] = None, 
+        api_key_id: Optional[str] = None
+    ):
+        return _fetch_api_key_usage(
+            self.auth_hostname, self.integration_api_key, date, org_id, user_id, api_key_id
+        )
+        
+    def import_api_key(
+        self,
+        api_key_token: str,
+        org_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        expires_at_seconds: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
+        return _import_api_key(
+            self.auth_hostname,
+            self.integration_api_key,
+            api_key_token,
+            org_id,
+            user_id,
+            expires_at_seconds,
+            metadata,
         )
 
     def verify_step_up_totp_challenge(
@@ -832,6 +935,46 @@ class Auth:
         """
         return _verify_step_up_grant(
             self.auth_hostname, self.integration_api_key, action_type, user_id, grant
+        )
+        
+    def send_sms_mfa_code(
+        self, 
+        action_type: str,
+        user_id: str,
+        mfa_phone_id: str,
+        grant_type: StepUpMfaGrantType,
+        valid_for_seconds: int,
+    ):
+        return _send_sms_mfa_code(
+            self.auth_hostname,
+            self.integration_api_key,
+            action_type,
+            user_id,
+            mfa_phone_id,
+            grant_type,
+            valid_for_seconds
+        )
+        
+    def verify_sms_challenge(
+        self, 
+        challenge_id: str,
+        user_id: str,
+        code: str,
+    ):
+        return _verify_sms_challenge(
+            self.auth_hostname,
+            self.integration_api_key,
+            challenge_id,
+            user_id,
+            code
+        )
+        
+    # Employee APIs
+    def fetch_employee_by_id(self, employee_id: str):
+        return _fetch_employee_by_id(
+            self.auth_hostname,
+            self.integration_api_key,
+            employee_id
         )
 
     def validate_access_token_and_get_user(self, authorization_header: Optional[str]):
@@ -934,6 +1077,7 @@ class Auth:
         self, user: User, required_org_id: str, permissions: List[str]
     ):
         return validate_all_permissions_and_get_org(user, required_org_id, permissions)
+    
 
 
 class AsyncAuth(Auth):
@@ -981,6 +1125,14 @@ class AsyncAuth(Auth):
 
     async def validate_api_key(self, api_key_token: str):
         return await _validate_api_key_async(
+            auth_hostname=self.auth_hostname,
+            integration_api_key=self.integration_api_key,
+            api_key_token=api_key_token,
+            httpx_client=self.httpx_client,
+        )
+
+    async def validate_imported_api_key(self, api_key_token: str):
+        return await _validate_imported_api_key_async(
             auth_hostname=self.auth_hostname,
             integration_api_key=self.integration_api_key,
             api_key_token=api_key_token,
@@ -1062,6 +1214,7 @@ class AsyncAuth(Auth):
         api_key_id: str,
         expires_at_seconds: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        set_to_never_expire: Optional[bool] = None
     ):
         return await _update_api_key_async(
             self.httpx_client,
@@ -1070,6 +1223,7 @@ class AsyncAuth(Auth):
             api_key_id,
             expires_at_seconds,
             metadata,
+            set_to_never_expire
         )
         
     async def delete_api_key(
@@ -1081,6 +1235,42 @@ class AsyncAuth(Auth):
             self.auth_hostname, 
             self.integration_api_key, 
             api_key_id
+        )
+        
+    async def fetch_api_key_usage(
+        self, 
+        date: str, 
+        org_id: Optional[str] = None, 
+        user_id: Optional[str] = None, 
+        api_key_id: Optional[str] = None
+    ):
+        return await _fetch_api_key_usage_async(
+            self.httpx_client, 
+            self.auth_hostname, 
+            self.integration_api_key, 
+            date, 
+            org_id, 
+            user_id, 
+            api_key_id
+        )
+        
+    async def import_api_key(
+        self,
+        api_key_token: str,
+        org_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        expires_at_seconds: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
+        return await _import_api_key_async(
+            self.httpx_client,
+            self.auth_hostname,
+            self.integration_api_key,
+            api_key_token,
+            org_id,
+            user_id,
+            expires_at_seconds,
+            metadata,
         )
     
     
@@ -1111,9 +1301,10 @@ class AsyncAuth(Auth):
         self,
         email: str,
         redirect_to_url: Optional[str] = None,
-        expires_in_hours: Optional[str] = None,
+        expires_in_hours: Optional[int] = None,
         create_new_user_if_one_doesnt_exist: Optional[bool] = None,
         user_signup_query_parameters: Optional[Dict[str, str]] = None,
+        expire_after_first_use: Optional[bool] = None
     ):
         return await _create_magic_link_async(
             self.httpx_client,
@@ -1124,6 +1315,7 @@ class AsyncAuth(Auth):
             expires_in_hours,
             create_new_user_if_one_doesnt_exist,
             user_signup_query_parameters,
+            expire_after_first_use
         )
         
     ####################
@@ -1765,9 +1957,34 @@ class AsyncAuth(Auth):
             role,
             additional_roles,
         )
+        
+    async def invite_user_to_org_by_user_id(
+        self, 
+        user_id: str, 
+        org_id: str, 
+        role: str, 
+        additional_roles: List[str] = []
+    ):
+        return await _invite_user_to_org_by_user_id_async(
+            self.httpx_client,
+            self.auth_hostname,
+            self.integration_api_key,
+            user_id,
+            org_id,
+            role,
+            additional_roles,
+        )
 
     async def resend_email_confirmation(self, user_id: str):
         return await _resend_email_confirmation_async(
+            self.httpx_client,
+            self.auth_hostname,
+            self.integration_api_key,
+            user_id,
+        )
+        
+    async def fetch_user_mfa_methods(self, user_id: str):
+        return await _fetch_user_mfa_methods_async(
             self.httpx_client,
             self.auth_hostname,
             self.integration_api_key,
@@ -1849,6 +2066,49 @@ class AsyncAuth(Auth):
             code,
             grant_type,
             valid_for_seconds,
+        )
+        
+    async def send_sms_mfa_code(
+        self, 
+        action_type: str,
+        user_id: str,
+        mfa_phone_id: str,
+        grant_type: StepUpMfaGrantType,
+        valid_for_seconds: int,
+    ):
+        return await _send_sms_mfa_code_async(
+            self.httpx_client,
+            self.auth_hostname,
+            self.integration_api_key,
+            action_type,
+            user_id,
+            mfa_phone_id,
+            grant_type,
+            valid_for_seconds
+        )
+        
+    async def verify_sms_challenge(
+        self, 
+        challenge_id: str,
+        user_id: str,
+        code: str,
+    ):
+        return await _verify_sms_challenge_async(
+            self.httpx_client,
+            self.auth_hostname,
+            self.integration_api_key,
+            challenge_id,
+            user_id,
+            code
+        )
+        
+    # Employee APIs
+    async def fetch_employee_by_id(self, employee_id: str):
+        return await _fetch_employee_by_id_async(
+            self.httpx_client,
+            self.auth_hostname,
+            self.integration_api_key,
+            employee_id
         )
 
 def init_base_auth(

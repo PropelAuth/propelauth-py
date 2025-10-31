@@ -43,3 +43,17 @@ class ApiKeyValidation:
 
     def __getitem__(self, key):
         return getattr(self, key)
+    
+@dataclass
+class ApiKeyUsage:
+    count: int
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+    
+@dataclass
+class ImportedApiKeyNew:
+    api_key_id: str
+
+    def __getitem__(self, key):
+        return getattr(self, key)
