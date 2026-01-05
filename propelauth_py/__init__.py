@@ -349,6 +349,7 @@ class Auth:
         email_or_username: Optional[str] = None,
         include_orgs: bool = False,
         legacy_user_id: Optional[str] = None,
+        isolated_org_id: Optional[str] = None
     ):
         return _fetch_users_by_query(
             self.auth_hostname,
@@ -359,6 +360,7 @@ class Auth:
             email_or_username,
             include_orgs,
             legacy_user_id,
+            isolated_org_id
         )
 
     def fetch_users_in_org(
@@ -1780,6 +1782,7 @@ class AsyncAuth(Auth):
         email_or_username: Optional[str] = None,
         include_orgs: bool = False,
         legacy_user_id: Optional[str] = None,
+        isolated_org_id: Optional[str] = None
     ):
         return await _fetch_users_by_query_async(
             self.httpx_client,
@@ -1791,6 +1794,7 @@ class AsyncAuth(Auth):
             email_or_username,
             include_orgs,
             legacy_user_id,
+            isolated_org_id
         )
         
     async def fetch_users_in_org(
