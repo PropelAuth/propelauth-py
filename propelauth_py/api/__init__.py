@@ -25,6 +25,11 @@ class UserQueryOrderBy(str, Enum):
     LAST_ACTIVE_AT_DESC = "LAST_ACTIVE_AT_DESC"
     EMAIL = "EMAIL"
     USERNAME = "USERNAME"
+    
+class SsoTrustLevel(str, Enum):
+    ALWAYS_TRUST = "AlwaysTrust"
+    NEVER_TRUST = "NeverTrust"
+    TRUST_FOR_DOMAIN = "TrustForDomain"
 
 
 class _ApiKeyAuth(AuthBase):
