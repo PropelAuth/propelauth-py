@@ -1,4 +1,5 @@
 from typing import Any, Optional, Dict, Union
+from propelauth_py.user import _to_org_member_info
 import requests
 import httpx
 
@@ -212,7 +213,7 @@ def _fetch_user_metadata_by_query(
         can_create_orgs=json_response.get("can_create_orgs"),
         created_at=json_response.get("created_at"),
         last_active_at=json_response.get("last_active_at"),
-        org_id_to_org_info=json_response.get("org_id_to_org_info"),
+        org_id_to_org_info=_to_org_member_info(json_response.get("org_id_to_org_info")),
         legacy_user_id=json_response.get("legacy_user_id"),
         impersonator_user_id=json_response.get("impersonator_user_id"),
         metadata=json_response.get("metadata"),
@@ -247,6 +248,7 @@ async def _fetch_user_metadata_by_query_async(
     response.raise_for_status()
 
     json_response = response.json()
+        
     return UserMetadata(
         user_id=json_response.get("user_id"),
         email=json_response.get("email"),
@@ -262,7 +264,7 @@ async def _fetch_user_metadata_by_query_async(
         can_create_orgs=json_response.get("can_create_orgs"),
         created_at=json_response.get("created_at"),
         last_active_at=json_response.get("last_active_at"),
-        org_id_to_org_info=json_response.get("org_id_to_org_info"),
+        org_id_to_org_info=_to_org_member_info(json_response.get("org_id_to_org_info")),
         legacy_user_id=json_response.get("legacy_user_id"),
         impersonator_user_id=json_response.get("impersonator_user_id"),
         metadata=json_response.get("metadata"),
@@ -497,7 +499,7 @@ def _fetch_users_by_query(
             can_create_orgs=key.get("can_create_orgs"),
             created_at=key.get("created_at"),
             last_active_at=key.get("last_active_at"),
-            org_id_to_org_info=key.get("org_id_to_org_info"),
+            org_id_to_org_info=_to_org_member_info(key.get("org_id_to_org_info")),
             legacy_user_id=key.get("legacy_user_id"),
             impersonator_user_id=key.get("impersonator_user_id"),
             metadata=key.get("metadata"),
@@ -576,7 +578,7 @@ async def _fetch_users_by_query_async(
             can_create_orgs=key.get("can_create_orgs"),
             created_at=key.get("created_at"),
             last_active_at=key.get("last_active_at"),
-            org_id_to_org_info=key.get("org_id_to_org_info"),
+            org_id_to_org_info=_to_org_member_info(key.get("org_id_to_org_info")),
             legacy_user_id=key.get("legacy_user_id"),
             impersonator_user_id=key.get("impersonator_user_id"),
             metadata=key.get("metadata"),
@@ -657,7 +659,7 @@ def _fetch_users_in_org(
             can_create_orgs=key.get("can_create_orgs"),
             created_at=key.get("created_at"),
             last_active_at=key.get("last_active_at"),
-            org_id_to_org_info=key.get("org_id_to_org_info"),
+            org_id_to_org_info=_to_org_member_info(key.get("org_id_to_org_info")),
             legacy_user_id=key.get("legacy_user_id"),
             impersonator_user_id=key.get("impersonator_user_id"),
             metadata=key.get("metadata"),
@@ -741,7 +743,7 @@ async def _fetch_users_in_org_async(
             can_create_orgs=key.get("can_create_orgs"),
             created_at=key.get("created_at"),
             last_active_at=key.get("last_active_at"),
-            org_id_to_org_info=key.get("org_id_to_org_info"),
+            org_id_to_org_info=_to_org_member_info(key.get("org_id_to_org_info")),
             legacy_user_id=key.get("legacy_user_id"),
             impersonator_user_id=key.get("impersonator_user_id"),
             metadata=key.get("metadata"),
