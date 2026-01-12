@@ -32,6 +32,9 @@ class OrgMemberInfo:
 
     def __getitem__(self, key):
         return getattr(self, key)
+        
+    def get(self, key, default=None):
+        return getattr(self, key, default)
 
     def user_is_role(self, role: str) -> bool:
         """returns true if the user is the role"""
@@ -88,6 +91,9 @@ class User:
 
     def __getitem__(self, key):
         return getattr(self, key)
+        
+    def get(self, key, default=None):
+        return getattr(self, key, default)
 
     def is_impersonated(self) -> bool:
         """Returns true if the user is impersonated"""
@@ -169,6 +175,9 @@ class UserAndOrgMemberInfo:
 
     def __getitem__(self, key):
         return getattr(self, key)
+        
+    def get(self, key, default=None):
+        return getattr(self, key, default)
 
 
 def _to_org_member_info(
