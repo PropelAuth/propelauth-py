@@ -29,12 +29,21 @@ class OrgMemberInfo:
     assigned_additional_roles: List[str] = field(default_factory=list)
     url_safe_org_name: str = ""
     legacy_org_id: Optional[str] = None
-
-    def __getitem__(self, key):
-        return getattr(self, key)
         
+    def _resolve_key(self, key: str) -> str:
+        """Resolve key aliases to actual attribute names"""
+        key_aliases = {
+            'inherited_user_roles_plus_current_role': 'user_inherited_roles_plus_current_role',
+            'additional_roles': 'assigned_additional_roles',
+            'user_role': 'user_assigned_role'
+        }
+        return key_aliases.get(key, key)
+        
+    def __getitem__(self, key):
+        return getattr(self, self._resolve_key(key))
+    
     def get(self, key, default=None):
-        return getattr(self, key, default)
+        return getattr(self, self._resolve_key(key), default)
 
     def user_is_role(self, role: str) -> bool:
         """returns true if the user is the role"""
