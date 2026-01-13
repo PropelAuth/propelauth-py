@@ -11,6 +11,7 @@ from propelauth_py.errors import (
     EndUserApiKeyException,
     UpdateUserMetadataException,
     RateLimitedException,
+    MigrateOrgToIsolatedException
 )
 
 BASE_ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1"
@@ -61,7 +62,8 @@ def _fetch_org(auth_hostname, integration_api_key, org_id) -> Optional[Organizat
         domain_autojoin=json_response.get('domain_autojoin'),
         domain_restrict=json_response.get('domain_restrict'),
         custom_role_mapping_name=json_response.get('custom_role_mapping_name'),
-        legacy_org_id=json_response.get('legacy_org_id')
+        legacy_org_id=json_response.get('legacy_org_id'),
+        isolated=json_response.get('isolated')
     )
     
 async def _fetch_org_async(
@@ -108,7 +110,8 @@ async def _fetch_org_async(
         domain_autojoin=json_response.get('domain_autojoin'),
         domain_restrict=json_response.get('domain_restrict'),
         custom_role_mapping_name=json_response.get('custom_role_mapping_name'),
-        legacy_org_id=json_response.get('legacy_org_id')
+        legacy_org_id=json_response.get('legacy_org_id'),
+        isolated=json_response.get('isolated')
     )
 
 
@@ -155,7 +158,8 @@ def _fetch_org_by_query(
             is_saml_configured=key.get('is_saml_configured'),
             legacy_org_id=key.get('legacy_org_id'),
             metadata=key.get('metadata'),
-            custom_role_mapping_name=key.get('custom_role_mapping_name')
+            custom_role_mapping_name=key.get('custom_role_mapping_name'),
+            isolated=key.get('isolated')
         )
         for key in json_response.get('orgs')
     ]
@@ -220,7 +224,8 @@ async def _fetch_org_by_query_async(
             is_saml_configured=key.get('is_saml_configured'),
             legacy_org_id=key.get('legacy_org_id'),
             metadata=key.get('metadata'),
-            custom_role_mapping_name=key.get('custom_role_mapping_name')
+            custom_role_mapping_name=key.get('custom_role_mapping_name'),
+            isolated=key.get('isolated')
         )
         for key in json_response.get('orgs')
     ]
@@ -1091,6 +1096,7 @@ def _update_org_metadata(
     legacy_org_id=None,
     require_2fa_by=None,
     extra_domains=None,
+    sso_trust_level=None
 ) -> bool:
     if not _is_valid_id(org_id):
         return False
@@ -1117,7 +1123,9 @@ def _update_org_metadata(
         json["require_2fa_by"] = require_2fa_by
     if extra_domains is not None:
         json["extra_domains"] = extra_domains
-
+    if sso_trust_level is not None:
+        json["sso_trust_level"] = sso_trust_level
+    
     response = requests.put(
         url,
         json=json,
@@ -1153,6 +1161,7 @@ async def _update_org_metadata_async(
     legacy_org_id=None,
     require_2fa_by=None,
     extra_domains=None,
+    sso_trust_level=None
 ) -> bool:
     if not _is_valid_id(org_id):
         return False
@@ -1179,6 +1188,8 @@ async def _update_org_metadata_async(
         json_body["require_2fa_by"] = require_2fa_by
     if extra_domains is not None:
         json_body["extra_domains"] = extra_domains
+    if sso_trust_level is not None:
+        json_body["sso_trust_level"] = sso_trust_level
 
     response = await httpx_client.put(
         url=url,
@@ -1423,6 +1434,65 @@ async def _delete_saml_connection_async(
         raise BadRequestException(response.json())
     elif response.status_code == 404:
         return False
+        
+    response.raise_for_status()
+    return True
+
+def _migrate_org_to_isolated(auth_hostname, integration_api_key, org_id) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = f"{BASE_ENDPOINT_URL}/isolate_org"
+    
+    json = {"org_id": org_id}
+
+    response = requests.post(
+        url,
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return False
+    elif response.status_code == 400:
+        raise MigrateOrgToIsolatedException(response.json())
+    elif not response.ok:
+        raise RuntimeError("Unknown error when allowing org to setup SAML connection")
+
+    return True
+
+async def _migrate_org_to_isolated_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    org_id
+) -> bool:
+    if not _is_valid_id(org_id):
+        return False
+
+    url = f"{BASE_ENDPOINT_URL}/isolate_org"
+    
+    json = {"org_id": org_id}
+
+    response = await httpx_client.post(
+        url=url,
+        json=json,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 404:
+        return False
+    elif response.status_code == 400:
+        raise MigrateOrgToIsolatedException(response.json())
         
     response.raise_for_status()
     return True

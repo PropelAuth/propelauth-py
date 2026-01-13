@@ -15,6 +15,7 @@ class Org:
     legacy_org_id: Optional[str]
     metadata: Dict[str, Any]
     custom_role_mapping_name: Optional[str]
+    isolated: bool
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -50,6 +51,7 @@ class Organization:
     domain_restrict: bool
     custom_role_mapping_name: Optional[str]
     legacy_org_id: Optional[str]
+    isolated: bool
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -125,6 +127,7 @@ class UserMetadata:
     impersonator_user_id: Optional[str]
     metadata: Optional[Dict[str, Any]]
     properties: Optional[Dict[str, Any]]
+    isolated_org_id: Optional[str]
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -216,5 +219,3 @@ class FetchUserMfaMethodsResponse:
     
     def is_phone(self) -> bool:
         return isinstance(self.mfa_setup, MfaPhoneType)
-    
-

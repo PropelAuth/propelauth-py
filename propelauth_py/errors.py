@@ -35,7 +35,10 @@ class UserNotFoundException(Exception):
 class EndUserApiKeyException(Exception):
     def __init__(self, field_to_errors):
         self.field_to_errors = field_to_errors
-
+        
+class MigrateOrgToIsolatedException(Exception):
+    def __init__(self, field_to_errors):
+        self.field_to_errors = field_to_errors
 
 class EndUserApiKeyNotFoundException(Exception):
     pass

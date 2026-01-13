@@ -131,10 +131,12 @@ async def _fetch_user_signup_query_params_by_user_id_async(
 
 
 def _fetch_user_metadata_by_email(
-    auth_hostname, integration_api_key, email, include_orgs=False
+    auth_hostname, integration_api_key, email, include_orgs=False, isolated_org_id=None
 ) -> Optional[UserMetadata]:
     user_info_url = f"{ENDPOINT_URL}/email"
     query = {"include_orgs": include_orgs, "email": email}
+    if isolated_org_id is not None:
+        query["isolated_org_id"] = isolated_org_id
     return _fetch_user_metadata_by_query(
         integration_api_key, user_info_url, query, auth_hostname
     )
@@ -144,20 +146,25 @@ async def _fetch_user_metadata_by_email_async(
     auth_hostname,
     integration_api_key,
     email,
-    include_orgs=False
+    include_orgs=False,
+    isolated_org_id=None
 ) -> Optional[UserMetadata]:
     user_info_url = f"{ENDPOINT_URL}/email"
     query = {"include_orgs": include_orgs, "email": email}
+    if isolated_org_id is not None:
+        query["isolated_org_id"] = isolated_org_id
     return await _fetch_user_metadata_by_query_async(
         httpx_client, integration_api_key, user_info_url, query, auth_hostname
     )
 
 
 def _fetch_user_metadata_by_username(
-    auth_hostname, integration_api_key, username, include_orgs=False
+    auth_hostname, integration_api_key, username, include_orgs=False, isolated_org_id=None
 ) -> Optional[UserMetadata]:
     user_info_url = f"{ENDPOINT_URL}/username"
     query = {"include_orgs": include_orgs, "username": username}
+    if isolated_org_id is not None:
+        query["isolated_org_id"] = isolated_org_id
     return _fetch_user_metadata_by_query(
         integration_api_key, user_info_url, query, auth_hostname
     )
@@ -167,10 +174,13 @@ async def _fetch_user_metadata_by_username_async(
     auth_hostname,
     integration_api_key,
     username,
-    include_orgs=False
+    include_orgs=False,
+    isolated_org_id=None
 ) -> Optional[UserMetadata]:
     user_info_url = f"{ENDPOINT_URL}/username"
     query = {"include_orgs": include_orgs, "username": username}
+    if isolated_org_id is not None:
+        query["isolated_org_id"] = isolated_org_id
     return await _fetch_user_metadata_by_query_async(
         httpx_client, integration_api_key, user_info_url, query, auth_hostname
     )
@@ -218,6 +228,7 @@ def _fetch_user_metadata_by_query(
         impersonator_user_id=json_response.get("impersonator_user_id"),
         metadata=json_response.get("metadata"),
         properties=json_response.get("properties"),
+        isolated_org_id=json_response.get("isolated_org_id")
     )
     
 async def _fetch_user_metadata_by_query_async(
@@ -269,6 +280,7 @@ async def _fetch_user_metadata_by_query_async(
         impersonator_user_id=json_response.get("impersonator_user_id"),
         metadata=json_response.get("metadata"),
         properties=json_response.get("properties"),
+        isolated_org_id=json_response.get("isolated_org_id")
     )
 
 
@@ -451,6 +463,7 @@ def _fetch_users_by_query(
     email_or_username,
     include_orgs,
     legacy_user_id,
+    isolated_org_id
 ) -> UsersPagedResponse:
     url = f"{ENDPOINT_URL}/query"
     params = {
@@ -460,6 +473,7 @@ def _fetch_users_by_query(
         "email_or_username": email_or_username,
         "include_orgs": include_orgs,
         "legacy_user_id": legacy_user_id,
+        "isolated_org_id": isolated_org_id
     }
     response = requests.get(
         url,
@@ -504,6 +518,7 @@ def _fetch_users_by_query(
             impersonator_user_id=key.get("impersonator_user_id"),
             metadata=key.get("metadata"),
             properties=key.get("properties"),
+            isolated_org_id=key.get("isolated_org_id")
         )
         for key in json_response.get("users")
     ]
@@ -526,6 +541,7 @@ async def _fetch_users_by_query_async(
     email_or_username,
     include_orgs,
     legacy_user_id,
+    isolated_org_id
 ) -> UsersPagedResponse:
     url = f"{ENDPOINT_URL}/query"
     order_by_value = order_by.value if hasattr(order_by, 'value') else order_by
@@ -536,6 +552,7 @@ async def _fetch_users_by_query_async(
         "email_or_username": email_or_username,
         "include_orgs": include_orgs,
         "legacy_user_id": legacy_user_id,
+        "isolated_org_id": isolated_org_id
     }
     headers = _get_async_headers(auth_hostname, integration_api_key)
     formatted_params = _format_params(params)
@@ -583,6 +600,7 @@ async def _fetch_users_by_query_async(
             impersonator_user_id=key.get("impersonator_user_id"),
             metadata=key.get("metadata"),
             properties=key.get("properties"),
+            isolated_org_id=key.get("isolated_org_id")
         )
         for key in json_response.get("users")
     ]
@@ -664,6 +682,7 @@ def _fetch_users_in_org(
             impersonator_user_id=key.get("impersonator_user_id"),
             metadata=key.get("metadata"),
             properties=key.get("properties"),
+            isolated_org_id=key.get("isolated_org_id")
         )
         for key in json_response.get("users")
     ]
@@ -748,6 +767,7 @@ async def _fetch_users_in_org_async(
             impersonator_user_id=key.get("impersonator_user_id"),
             metadata=key.get("metadata"),
             properties=key.get("properties"),
+            isolated_org_id=key.get("isolated_org_id")
         )
         for key in json_response.get("users")
     ]
