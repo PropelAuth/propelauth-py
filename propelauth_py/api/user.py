@@ -1,4 +1,5 @@
 from typing import Any, Optional, Dict, Union
+from propelauth_py.types.reports import UserReportType, UserReportRecord, UserReport
 from propelauth_py.user import _to_org_member_info
 import requests
 import httpx
@@ -34,7 +35,8 @@ from propelauth_py.errors import (
     RateLimitedException,
 )
 
-ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1/user"
+BASE_ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1"
+USER_ENDPOINT_URL = f"{BACKEND_API_BASE_URL}/api/backend/v1/user"
 
 
 ####################
@@ -46,7 +48,7 @@ def _fetch_user_metadata_by_user_id(
     if not _is_valid_id(user_id):
         return None
 
-    user_info_url = f"{ENDPOINT_URL}/{user_id}"
+    user_info_url = f"{USER_ENDPOINT_URL}/{user_id}"
     query = {"include_orgs": include_orgs}
     return _fetch_user_metadata_by_query(
         integration_api_key, user_info_url, query, auth_hostname
@@ -62,7 +64,7 @@ async def _fetch_user_metadata_by_user_id_async(
     if not _is_valid_id(user_id):
         return None
 
-    user_info_url = f"{ENDPOINT_URL}/{user_id}"
+    user_info_url = f"{USER_ENDPOINT_URL}/{user_id}"
     query = {"include_orgs": include_orgs}
     return await _fetch_user_metadata_by_query_async(
         httpx_client, integration_api_key, user_info_url, query, auth_hostname
@@ -77,7 +79,7 @@ def _fetch_user_signup_query_params_by_user_id(
     if not _is_valid_id(user_id):
         return None
 
-    user_signup_query_params_url = f"{ENDPOINT_URL}/{user_id}/signup_query_parameters"
+    user_signup_query_params_url = f"{USER_ENDPOINT_URL}/{user_id}/signup_query_parameters"
     response = requests.get(
         url=user_signup_query_params_url,
         auth=_ApiKeyAuth(integration_api_key),
@@ -107,7 +109,7 @@ async def _fetch_user_signup_query_params_by_user_id_async(
     if not _is_valid_id(user_id):
         return None
 
-    url = f"{ENDPOINT_URL}/{user_id}/signup_query_parameters"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/signup_query_parameters"
     headers = _get_async_headers(auth_hostname, integration_api_key)
 
     response = await httpx_client.get(
@@ -133,7 +135,7 @@ async def _fetch_user_signup_query_params_by_user_id_async(
 def _fetch_user_metadata_by_email(
     auth_hostname, integration_api_key, email, include_orgs=False
 ) -> Optional[UserMetadata]:
-    user_info_url = f"{ENDPOINT_URL}/email"
+    user_info_url = f"{USER_ENDPOINT_URL}/email"
     query = {"include_orgs": include_orgs, "email": email}
     return _fetch_user_metadata_by_query(
         integration_api_key, user_info_url, query, auth_hostname
@@ -146,7 +148,7 @@ async def _fetch_user_metadata_by_email_async(
     email,
     include_orgs=False
 ) -> Optional[UserMetadata]:
-    user_info_url = f"{ENDPOINT_URL}/email"
+    user_info_url = f"{USER_ENDPOINT_URL}/email"
     query = {"include_orgs": include_orgs, "email": email}
     return await _fetch_user_metadata_by_query_async(
         httpx_client, integration_api_key, user_info_url, query, auth_hostname
@@ -156,7 +158,7 @@ async def _fetch_user_metadata_by_email_async(
 def _fetch_user_metadata_by_username(
     auth_hostname, integration_api_key, username, include_orgs=False
 ) -> Optional[UserMetadata]:
-    user_info_url = f"{ENDPOINT_URL}/username"
+    user_info_url = f"{USER_ENDPOINT_URL}/username"
     query = {"include_orgs": include_orgs, "username": username}
     return _fetch_user_metadata_by_query(
         integration_api_key, user_info_url, query, auth_hostname
@@ -169,7 +171,7 @@ async def _fetch_user_metadata_by_username_async(
     username,
     include_orgs=False
 ) -> Optional[UserMetadata]:
-    user_info_url = f"{ENDPOINT_URL}/username"
+    user_info_url = f"{USER_ENDPOINT_URL}/username"
     query = {"include_orgs": include_orgs, "username": username}
     return await _fetch_user_metadata_by_query_async(
         httpx_client, integration_api_key, user_info_url, query, auth_hostname
@@ -275,7 +277,7 @@ async def _fetch_user_metadata_by_query_async(
 def _fetch_batch_user_metadata_by_user_ids(
     auth_hostname, integration_api_key, user_ids, include_orgs
 ) -> Dict[str, UserMetadata]:
-    user_info_url = f"{ENDPOINT_URL}/user_ids"
+    user_info_url = f"{USER_ENDPOINT_URL}/user_ids"
     params = {"include_orgs": include_orgs}
     body = {"user_ids": user_ids}
     return _fetch_batch_user_metadata_by_query(
@@ -294,7 +296,7 @@ async def _fetch_batch_user_metadata_by_user_ids_async(
     user_ids,
     include_orgs,
 ) -> Dict[str, UserMetadata]:
-    user_info_url = f"{ENDPOINT_URL}/user_ids"
+    user_info_url = f"{USER_ENDPOINT_URL}/user_ids"
     params = {"include_orgs": include_orgs}
     body = {"user_ids": user_ids}
     return await _fetch_batch_user_metadata_by_query_async(
@@ -311,7 +313,7 @@ async def _fetch_batch_user_metadata_by_user_ids_async(
 def _fetch_batch_user_metadata_by_emails(
     auth_hostname, integration_api_key, emails, include_orgs
 ) -> Dict[str, UserMetadata]:
-    user_info_url = f"{ENDPOINT_URL}/emails"
+    user_info_url = f"{USER_ENDPOINT_URL}/emails"
     params = {"include_orgs": include_orgs}
     body = {"emails": emails}
     return _fetch_batch_user_metadata_by_query(
@@ -330,7 +332,7 @@ async def _fetch_batch_user_metadata_by_emails_async(
     emails,
     include_orgs,
 ) -> Dict[str, UserMetadata]:
-    user_info_url = f"{ENDPOINT_URL}/emails"
+    user_info_url = f"{USER_ENDPOINT_URL}/emails"
     params = {"include_orgs": include_orgs}
     body = {"emails": emails}
     return await _fetch_batch_user_metadata_by_query_async(
@@ -347,7 +349,7 @@ async def _fetch_batch_user_metadata_by_emails_async(
 def _fetch_batch_user_metadata_by_usernames(
     auth_hostname, integration_api_key, usernames, include_orgs
 ) -> Dict[str, UserMetadata]:
-    user_info_url = f"{ENDPOINT_URL}/usernames"
+    user_info_url = f"{USER_ENDPOINT_URL}/usernames"
     params = {"include_orgs": include_orgs}
     body = {"usernames": usernames}
     return _fetch_batch_user_metadata_by_query(
@@ -366,7 +368,7 @@ async def _fetch_batch_user_metadata_by_usernames_async(
     usernames,
     include_orgs,
 ) -> Dict[str, UserMetadata]:
-    user_info_url = f"{ENDPOINT_URL}/usernames"
+    user_info_url = f"{USER_ENDPOINT_URL}/usernames"
     params = {"include_orgs": include_orgs}
     body = {"usernames": usernames}
     return await _fetch_batch_user_metadata_by_query_async(
@@ -452,7 +454,7 @@ def _fetch_users_by_query(
     include_orgs,
     legacy_user_id,
 ) -> UsersPagedResponse:
-    url = f"{ENDPOINT_URL}/query"
+    url = f"{USER_ENDPOINT_URL}/query"
     params = {
         "page_size": page_size,
         "page_number": page_number,
@@ -527,7 +529,7 @@ async def _fetch_users_by_query_async(
     include_orgs,
     legacy_user_id,
 ) -> UsersPagedResponse:
-    url = f"{ENDPOINT_URL}/query"
+    url = f"{USER_ENDPOINT_URL}/query"
     order_by_value = order_by.value if hasattr(order_by, 'value') else order_by
     params = {
         "page_size": page_size,
@@ -614,7 +616,7 @@ def _fetch_users_in_org(
             has_more_results=False,
         )
 
-    url = f"{ENDPOINT_URL}/org/{org_id}"
+    url = f"{USER_ENDPOINT_URL}/org/{org_id}"
     params = {
         "page_size": page_size,
         "page_number": page_number,
@@ -695,7 +697,7 @@ async def _fetch_users_in_org_async(
             has_more_results=False,
         )
 
-    url = f"{ENDPOINT_URL}/org/{org_id}"
+    url = f"{USER_ENDPOINT_URL}/org/{org_id}"
     params = {
         "page_size": page_size,
         "page_number": page_number,
@@ -785,7 +787,7 @@ def _fetch_user_mfa_methods(
     auth_hostname, integration_api_key, user_id
 ) -> Optional[FetchUserMfaMethodsResponse]:
     response = requests.get(
-        url=f"{ENDPOINT_URL}/{user_id}/mfa",
+        url=f"{USER_ENDPOINT_URL}/{user_id}/mfa",
         auth=_ApiKeyAuth(integration_api_key),
         headers=_auth_hostname_header(auth_hostname),
     )
@@ -814,7 +816,7 @@ async def _fetch_user_mfa_methods_async(
     headers = _get_async_headers(auth_hostname, integration_api_key)
 
     response = await httpx_client.get(
-        url=f"{ENDPOINT_URL}/{user_id}/mfa",
+        url=f"{USER_ENDPOINT_URL}/{user_id}/mfa",
         headers=headers,
     )
 
@@ -835,6 +837,125 @@ async def _fetch_user_mfa_methods_async(
     return FetchUserMfaMethodsResponse(mfa_setup=mfa_setup)
 
 
+def _fetch_user_report(
+        auth_hostname,
+        integration_api_key,
+        report_key: UserReportType,
+        report_interval: Optional[str],
+        page_size: Optional[int],
+        page_number: Optional[int],
+    ) -> UserReport:
+    url = BASE_ENDPOINT_URL + "/user_report/" + report_key.value
+    params = {
+        "page_size": page_size,
+        "page_number": page_number,
+        "report_interval": report_interval,
+    }
+    response = requests.get(
+        url,
+        params=_format_params(params),
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching user reports")
+
+    json_response = response.json()
+    
+    user_report_records = [
+        UserReportRecord(
+            record_id=report_record.get("record_id"),
+            report_id=report_record.get("report_id"),
+            user_id=report_record.get("user_id"),
+            email=report_record.get("email"),
+            username=report_record.get("username"),
+            first_name=report_record.get("first_name"),
+            last_name=report_record.get("last_name"),
+            last_active_at=report_record.get("last_active_at"),
+            user_created_at=report_record.get("user_created_at"),
+            org_data=report_record.get("org_data"),
+            extra_properties=report_record.get("extra_properties"),
+        )
+        for report_record in json_response.get("user_reports")
+    ]
+    
+    return UserReport(
+        user_reports=user_report_records,
+        current_page=json_response.get("current_page"),
+        page_size=json_response.get("page_size"),
+        has_more_results=json_response.get("has_more_results"),
+        total_count=json_response.get("total_count"),
+        report_time=json_response.get("report_time"),
+    )
+
+async def _fetch_user_report_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    report_key: UserReportType,
+    report_interval: Optional[str],
+    page_size: Optional[int],
+    page_number: Optional[int],
+) -> UserReport:
+    url = BASE_ENDPOINT_URL + "/user_report/" + report_key.value
+    params = {
+        "page_size": page_size,
+        "page_number": page_number,
+        "report_interval": report_interval,
+    }
+    response = await httpx_client.get(
+        url,
+        params=_format_params(params),
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching user reports")
+
+    response.raise_for_status()
+    json_response = response.json()
+    
+    user_report_records = [
+        UserReportRecord(
+            record_id=report_record.get("record_id"),
+            report_id=report_record.get("report_id"),
+            user_id=report_record.get("user_id"),
+            email=report_record.get("email"),
+            username=report_record.get("username"),
+            first_name=report_record.get("first_name"),
+            last_name=report_record.get("last_name"),
+            last_active_at=report_record.get("last_active_at"),
+            user_created_at=report_record.get("user_created_at"),
+            org_data=report_record.get("org_data"),
+            extra_properties=report_record.get("extra_properties"),
+        )
+        for report_record in json_response.get("user_reports")
+    ]
+    
+    return UserReport(
+        user_reports=user_report_records,
+        current_page=json_response.get("current_page"),
+        page_size=json_response.get("page_size"),
+        has_more_results=json_response.get("has_more_results"),
+        total_count=json_response.get("total_count"),
+        report_time=json_response.get("report_time"),
+    )
+
+
 ####################
 #       POST     #
 ####################
@@ -852,7 +973,7 @@ def _create_user(
     properties,
     ignore_domain_restrictions,
 ) -> CreatedUser:
-    url = f"{ENDPOINT_URL}/"
+    url = f"{USER_ENDPOINT_URL}/"
     json = {
         "email": email,
         "email_confirmed": email_confirmed,
@@ -906,7 +1027,7 @@ async def _create_user_async(
     properties,
     ignore_domain_restrictions,
 ) -> CreatedUser:
-    url = f"{ENDPOINT_URL}/"
+    url = f"{USER_ENDPOINT_URL}/"
     json_body = {
         "email": email,
         "email_confirmed": email_confirmed,
@@ -952,7 +1073,7 @@ def _disable_user(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/disable"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/disable"
 
     response = requests.post(
         url,
@@ -980,7 +1101,7 @@ async def _disable_user_async(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/disable"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/disable"
     headers = _get_async_headers(auth_hostname, integration_api_key)
 
     response = await httpx_client.post(
@@ -1003,7 +1124,7 @@ def _enable_user(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/enable"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/enable"
 
     response = requests.post(
         url,
@@ -1031,7 +1152,7 @@ async def _enable_user_async(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/enable"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/enable"
     headers = _get_async_headers(auth_hostname, integration_api_key)
 
     response = await httpx_client.post(
@@ -1054,7 +1175,7 @@ def _disable_user_2fa(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/disable_2fa"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/disable_2fa"
 
     response = requests.post(
         url,
@@ -1082,7 +1203,7 @@ async def _disable_user_2fa_async(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/disable_2fa"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/disable_2fa"
     headers = _get_async_headers(auth_hostname, integration_api_key)
 
     response = await httpx_client.post(
@@ -1350,7 +1471,7 @@ def _logout_all_user_sessions(auth_hostname, integration_api_key, user_id) -> bo
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/logout_all_sessions"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/logout_all_sessions"
 
     response = requests.post(
         url,
@@ -1378,7 +1499,7 @@ async def _logout_all_user_sessions_async(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/logout_all_sessions"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/logout_all_sessions"
     headers = _get_async_headers(auth_hostname, integration_api_key)
 
     response = await httpx_client.post(
@@ -1416,7 +1537,7 @@ def _update_user_metadata(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}"
+    url = f"{USER_ENDPOINT_URL}/{user_id}"
     json = {}
     if username is not None:
         json["username"] = username
@@ -1472,7 +1593,7 @@ async def _update_user_metadata_async(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}"
+    url = f"{USER_ENDPOINT_URL}/{user_id}"
     json_body = {}
     if username is not None:
         json_body["username"] = username
@@ -1522,7 +1643,7 @@ def _update_user_password(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/password"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/password"
     json = {"password": password}
     if ask_user_to_update_password_on_login is not None:
         json["ask_user_to_update_password_on_login"] = (
@@ -1560,7 +1681,7 @@ async def _update_user_password_async(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/password"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/password"
     json_body = {"password": password}
     if ask_user_to_update_password_on_login is not None:
         json_body["ask_user_to_update_password_on_login"] = (
@@ -1592,7 +1713,7 @@ def _clear_user_password(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/clear_password"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/clear_password"
 
     response = requests.put(
         url,
@@ -1622,7 +1743,7 @@ async def _clear_user_password_async(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/clear_password"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/clear_password"
     headers = _get_async_headers(auth_hostname, integration_api_key)
 
     response = await httpx_client.put(
@@ -1649,7 +1770,7 @@ def _update_user_email(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/email"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/email"
     json = {
         "new_email": new_email,
         "require_email_confirmation": require_email_confirmation,
@@ -1686,7 +1807,7 @@ async def _update_user_email_async(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/email"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/email"
     json_body = {
         "new_email": new_email,
         "require_email_confirmation": require_email_confirmation,
@@ -1716,7 +1837,7 @@ def _enable_user_can_create_orgs(auth_hostname, integration_api_key, user_id) ->
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/can_create_orgs/enable"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/can_create_orgs/enable"
 
     response = requests.put(
         url,
@@ -1744,7 +1865,7 @@ async def _enable_user_can_create_orgs_async(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/can_create_orgs/enable"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/can_create_orgs/enable"
     headers = _get_async_headers(auth_hostname, integration_api_key)
 
     response = await httpx_client.put(
@@ -1767,7 +1888,7 @@ def _disable_user_can_create_orgs(auth_hostname, integration_api_key, user_id) -
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/can_create_orgs/disable"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/can_create_orgs/disable"
 
     response = requests.put(
         url,
@@ -1795,7 +1916,7 @@ async def _disable_user_can_create_orgs_async(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}/can_create_orgs/disable"
+    url = f"{USER_ENDPOINT_URL}/{user_id}/can_create_orgs/disable"
     headers = _get_async_headers(auth_hostname, integration_api_key)
 
     response = await httpx_client.put(
@@ -1821,7 +1942,7 @@ def _delete_user(auth_hostname, integration_api_key, user_id) -> bool:
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}"
+    url = f"{USER_ENDPOINT_URL}/{user_id}"
 
     response = requests.delete(
         url,
@@ -1849,7 +1970,7 @@ async def _delete_user_async(
     if not _is_valid_id(user_id):
         return False
 
-    url = f"{ENDPOINT_URL}/{user_id}"
+    url = f"{USER_ENDPOINT_URL}/{user_id}"
     headers = _get_async_headers(auth_hostname, integration_api_key)
 
     response = await httpx_client.delete(
