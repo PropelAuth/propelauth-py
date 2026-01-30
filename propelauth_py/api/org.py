@@ -3,6 +3,7 @@ import requests
 import httpx
 from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id, _auth_hostname_header, BACKEND_API_BASE_URL, _get_async_headers
 from propelauth_py.api.end_user_api_keys import _validate_api_key, _validate_api_key_async
+from propelauth_py.types.reports import OrgReport, OrgReportType, OrgReportRecord
 from propelauth_py.types.user import Organization, OrgQueryResponse, Org, PendingInvite, PendingInvitesPage, CreatedOrg, OrgApiKeyValidation
 from propelauth_py.types.custom_role_mappings import CustomRoleMappings, CustomRoleMapping
 from propelauth_py.types.saml_types import SamlIdpMetadata, SpMetadata
@@ -488,6 +489,126 @@ async def _fetch_saml_sp_metadata_async(
         entity_id=json_response.get('entity_id'),
         acs_url=json_response.get('acs_url'),
         logout_url=json_response.get('logout_url'),
+    )
+
+def _fetch_org_report(
+        auth_hostname,
+        integration_api_key,
+        report_key: OrgReportType,
+        report_interval: str | None,
+        page_size: int | None,
+        page_number: int | None,
+    ) -> OrgReport:
+    url = BASE_ENDPOINT_URL + "/org_report/" + report_key.value
+    params = {
+        "page_size": page_size,
+        "page_number": page_number,
+        "report_interval": report_interval,
+    }
+    response = requests.get(
+        url,
+        params=_format_params(params),
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching org reports")
+
+    json_response = response.json()
+    
+    org_report_records = [
+        OrgReportRecord(
+            record_id=report_record.get("record_id"),
+            report_id=report_record.get("report_id"),
+            org_id=report_record.get("org_id"),
+            name=report_record.get("name"),
+            num_users=report_record.get("num_users"),
+            org_created_at=report_record.get("org_created_at"),
+            extra_properties=report_record.get("extra_properties"),
+        )
+        for report_record in json_response.get("org_reports")
+    ]
+    
+    return OrgReport(
+        org_reports=org_report_records,
+        current_page=json_response.get("current_page"),
+        page_size=json_response.get("page_size"),
+        has_more_results=json_response.get("has_more_results"),
+        total_count=json_response.get("total_count"),
+        report_time=json_response.get("report_time"),
+    )
+
+async def _fetch_org_report_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    report_key: OrgReportType,
+    report_interval: str | None,
+    page_size: int | None,
+    page_number: int | None,
+) -> OrgReport:
+    url = BASE_ENDPOINT_URL + "/org_report/" + report_key.value
+    params = {
+        "page_size": page_size,
+        "page_number": page_number,
+        "report_interval": report_interval,
+    }
+    response = await httpx_client.get(
+        url,
+        params=_format_params(params),
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 426:
+        raise RuntimeError(
+            "Cannot use organizations unless B2B support is enabled. Enable it in your PropelAuth "
+            "dashboard."
+        )
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching org reports")
+
+    response.raise_for_status()
+    json_response = response.json()
+    
+    org_report_records = [
+        OrgReportRecord(
+            record_id=report_record.get("record_id"),
+            report_id=report_record.get("report_id"),
+            org_id=report_record.get("org_id"),
+            name=report_record.get("name"),
+            num_users=report_record.get("num_users"),
+            org_created_at=report_record.get("org_created_at"),
+            extra_properties=report_record.get("extra_properties"),
+        )
+        for report_record in json_response.get("org_reports")
+    ]
+    
+    return OrgReport(
+        org_reports=org_report_records,
+        current_page=json_response.get("current_page"),
+        page_size=json_response.get("page_size"),
+        has_more_results=json_response.get("has_more_results"),
+        total_count=json_response.get("total_count"),
+        report_time=json_response.get("report_time"),
     )
 
 
