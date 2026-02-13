@@ -530,7 +530,7 @@ def _fetch_org_report(
     
     org_report_records = [
         OrgReportRecord(
-            record_id=report_record.get("record_id"),
+            id=report_record.get("id"),
             report_id=report_record.get("report_id"),
             org_id=report_record.get("org_id"),
             name=report_record.get("name"),
@@ -591,7 +591,7 @@ async def _fetch_org_report_async(
     
     org_report_records = [
         OrgReportRecord(
-            record_id=report_record.get("record_id"),
+            id=report_record.get("id"),
             report_id=report_record.get("report_id"),
             org_id=report_record.get("org_id"),
             name=report_record.get("name"),

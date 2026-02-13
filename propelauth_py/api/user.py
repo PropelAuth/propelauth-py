@@ -871,7 +871,7 @@ def _fetch_user_report(
     
     user_report_records = [
         UserReportRecord(
-            record_id=report_record.get("record_id"),
+            id=report_record.get("id"),
             report_id=report_record.get("report_id"),
             user_id=report_record.get("user_id"),
             email=report_record.get("email"),
@@ -931,7 +931,7 @@ async def _fetch_user_report_async(
     
     user_report_records = [
         UserReportRecord(
-            record_id=report_record.get("record_id"),
+            id=report_record.get("id"),
             report_id=report_record.get("report_id"),
             user_id=report_record.get("user_id"),
             email=report_record.get("email"),
