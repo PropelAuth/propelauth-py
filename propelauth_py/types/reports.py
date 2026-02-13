@@ -6,7 +6,7 @@ from enum import Enum
 
 @dataclass
 class OrgReportRecord:
-    record_id: str
+    id: str
     report_id: str
     org_id: str
     name: str
@@ -39,7 +39,7 @@ class UserOrgMembershipForReport:
 
 @dataclass
 class UserReportRecord:
-    record_id: str
+    id: str
     report_id: str
     user_id: str
     email: str
