@@ -1,7 +1,11 @@
 import asyncio
+from datetime import date
 import httpx
 from typing import Optional, Any, Dict, List
-from propelauth_py.types.reports import (
+from propelauth_py.types.user_insights import (
+    ChartMetric,
+    ChartMetricCadence,
+    ChartData,
     TopInviterReportInterval,
     ChampionReportInterval,
     ChurnReportInterval,
@@ -37,7 +41,6 @@ from propelauth_py.api.user import (
     _fetch_batch_user_metadata_by_emails_async,
     _fetch_batch_user_metadata_by_usernames,
     _fetch_batch_user_metadata_by_usernames_async,
-    _fetch_user_report,
     _fetch_user_signup_query_params_by_user_id,
     _fetch_user_signup_query_params_by_user_id_async,
     _fetch_users_by_query,
@@ -76,6 +79,14 @@ from propelauth_py.api.user import (
     _resend_email_confirmation_async,
     _fetch_user_mfa_methods,
     _fetch_user_mfa_methods_async
+)
+from propelauth_py.api.user_insights import (
+    _fetch_user_report,
+    _fetch_user_report_async,
+    _fetch_org_report,
+    _fetch_org_report_async,
+    _fetch_chart_metric_data,
+    _fetch_chart_metric_data_async,
 )
 from propelauth_py.api.access_token import _create_access_token, _create_access_token_async
 from propelauth_py.api.end_user_api_keys import (
@@ -141,7 +152,6 @@ from propelauth_py.api.org import (
     _fetch_org_async,
     _fetch_org_by_query,
     _fetch_org_by_query_async,
-    _fetch_org_report,
     _fetch_pending_invites,
     _fetch_pending_invites_async,
     _remove_user_from_org,
@@ -1107,6 +1117,22 @@ class Auth:
             report_interval,
             page_size,
             page_number
+        )
+    
+    def fetch_chart_metric_data(
+        self,
+        chart_metric: ChartMetric,
+        cadence: ChartMetricCadence | None,
+        start_date: date | None,
+        end_date: date | None,
+    ) -> ChartData:
+        return _fetch_chart_metric_data(
+            self.auth_hostname,
+            self.integration_api_key,
+            chart_metric,
+            cadence,
+            start_date,
+            end_date
         )
         
     # Employee APIs
@@ -2251,7 +2277,7 @@ class AsyncAuth(Auth):
         page_size: Optional[int] = None,
         page_number: Optional[int] = None,
     ) -> UserReport:
-        return await _fetch_user_report(
+        return await _fetch_user_report_async(
             self.httpx_client,
             self.auth_hostname,
             self.integration_api_key,
@@ -2267,7 +2293,7 @@ class AsyncAuth(Auth):
         page_size: Optional[int] = None,
         page_number: Optional[int] = None,
     ) -> UserReport:
-        return await _fetch_user_report(
+        return await _fetch_user_report_async(
             self.httpx_client,
             self.auth_hostname,
             self.integration_api_key,
@@ -2283,7 +2309,7 @@ class AsyncAuth(Auth):
         page_size: Optional[int] = None,
         page_number: Optional[int] = None,
     ) -> UserReport:
-        return await _fetch_user_report(
+        return await _fetch_user_report_async(
             self.httpx_client,
             self.auth_hostname,
             self.integration_api_key,
@@ -2300,7 +2326,7 @@ class AsyncAuth(Auth):
         page_size: Optional[int] = None,
         page_number: Optional[int] = None,
     ) -> UserReport:
-        return await _fetch_user_report(
+        return await _fetch_user_report_async(
             self.httpx_client,
             self.auth_hostname,
             self.integration_api_key,
@@ -2317,7 +2343,7 @@ class AsyncAuth(Auth):
         page_size: Optional[int] = None,
         page_number: Optional[int] = None,
     ) -> OrgReport:
-        return await _fetch_org_report(
+        return await _fetch_org_report_async(
             self.httpx_client,
             self.auth_hostname,
             self.integration_api_key,
@@ -2333,7 +2359,7 @@ class AsyncAuth(Auth):
         page_size: Optional[int] = None,
         page_number: Optional[int] = None,
     ) -> OrgReport:
-        return await _fetch_org_report(
+        return await _fetch_org_report_async(
             self.httpx_client,
             self.auth_hostname,
             self.integration_api_key,
@@ -2350,7 +2376,7 @@ class AsyncAuth(Auth):
         page_size: Optional[int] = None,
         page_number: Optional[int] = None,
     ) -> OrgReport:
-        return await _fetch_org_report(
+        return await _fetch_org_report_async(
             self.httpx_client,
             self.auth_hostname,
             self.integration_api_key,
@@ -2367,7 +2393,7 @@ class AsyncAuth(Auth):
         page_size: Optional[int] = None,
         page_number: Optional[int] = None,
     ) -> OrgReport:
-        return await _fetch_org_report(
+        return await _fetch_org_report_async(
             self.httpx_client,
             self.auth_hostname,
             self.integration_api_key,
@@ -2375,6 +2401,23 @@ class AsyncAuth(Auth):
             report_interval,
             page_size,
             page_number
+        )
+    
+    async def fetch_chart_metric_data(
+        self,
+        chart_metric: ChartMetric,
+        cadence: ChartMetricCadence | None,
+        start_date: date | None,
+        end_date: date | None,
+    ) -> ChartData:
+        return await _fetch_chart_metric_data_async(
+            self.httpx_client,
+            self.auth_hostname,
+            self.integration_api_key,
+            chart_metric,
+            cadence,
+            start_date,
+            end_date
         )
         
     # Employee APIs

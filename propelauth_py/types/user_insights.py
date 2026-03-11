@@ -97,3 +97,28 @@ class AttritionReportInterval(Enum):
     SIXTY_DAYS = "60"
     NINETY_DAYS = "90"
 
+# chart metrics types
+
+class ChartMetric(Enum):
+    SIGNUPS = "signups"
+    ORGS_CREATED = "orgs_created"
+    ACTIVE_USERS = "active_users"
+    ACTIVE_ORGS = "active_orgs"
+
+class ChartMetricCadence(Enum):
+    DAILY = "Daily"
+    WEEKLY = "Weekly"
+    MONTHLY = "Monthly"
+
+
+@dataclass
+class ChartDataPoint:
+    date: str # YYYY-MM-DD format date
+    result: int
+    cadence_completed: bool
+    
+@dataclass
+class ChartData:
+    chart_type: str
+    cadence: ChartMetricCadence
+    metrics: List[ChartDataPoint]
