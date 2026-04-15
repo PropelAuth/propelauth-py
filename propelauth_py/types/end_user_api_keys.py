@@ -1,3 +1,4 @@
+from pickletools import dis
 from typing import Any, Dict, Optional, List
 from propelauth_py.types.user import UserMetadata, OrgFromApiKey
 from propelauth_py.user import OrgMemberInfo
@@ -11,6 +12,7 @@ class ApiKeyFull:
     metadata: Optional[Dict[str, Any]]
     user_id: Optional[str]
     org_id: Optional[str]
+    display_name: Optional[str]
     
     def __getitem__(self, key):
         return getattr(self, key)

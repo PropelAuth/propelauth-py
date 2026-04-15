@@ -5,7 +5,7 @@ from propelauth_py.api import _ApiKeyAuth, _format_params, _is_valid_id, _auth_h
 from propelauth_py.api.end_user_api_keys import _validate_api_key, _validate_api_key_async
 from propelauth_py.types.user import Organization, OrgQueryResponse, Org, PendingInvite, PendingInvitesPage, CreatedOrg, OrgApiKeyValidation
 from propelauth_py.types.custom_role_mappings import CustomRoleMappings, CustomRoleMapping
-from propelauth_py.types.saml_types import SamlIdpMetadata, SpMetadata
+from propelauth_py.types.saml_types import SamlIdpMetadata, SpMetadata, SetOidcIdpMetadataRequest, SetGenericOidcMetadataRequest, SetOktaOidcMetadataRequest, SetAzureOidcMetadataRequest
 from propelauth_py.errors import (
     BadRequestException,
     EndUserApiKeyException,
@@ -61,7 +61,10 @@ def _fetch_org(auth_hostname, integration_api_key, org_id) -> Optional[Organizat
         domain_autojoin=json_response.get('domain_autojoin'),
         domain_restrict=json_response.get('domain_restrict'),
         custom_role_mapping_name=json_response.get('custom_role_mapping_name'),
-        legacy_org_id=json_response.get('legacy_org_id')
+        legacy_org_id=json_response.get('legacy_org_id'),
+        password_rotation_enabled=json_response.get('password_rotation_enabled'),
+        password_rotation_history_size=json_response.get('password_rotation_history_size'),
+        password_rotation_period=json_response.get('password_rotation_period'),
     )
     
 async def _fetch_org_async(
@@ -108,7 +111,10 @@ async def _fetch_org_async(
         domain_autojoin=json_response.get('domain_autojoin'),
         domain_restrict=json_response.get('domain_restrict'),
         custom_role_mapping_name=json_response.get('custom_role_mapping_name'),
-        legacy_org_id=json_response.get('legacy_org_id')
+        legacy_org_id=json_response.get('legacy_org_id'),
+        password_rotation_enabled=json_response.get('password_rotation_enabled'),
+        password_rotation_history_size=json_response.get('password_rotation_history_size'),
+        password_rotation_period=json_response.get('password_rotation_period'),
     )
 
 
@@ -155,7 +161,8 @@ def _fetch_org_by_query(
             is_saml_configured=key.get('is_saml_configured'),
             legacy_org_id=key.get('legacy_org_id'),
             metadata=key.get('metadata'),
-            custom_role_mapping_name=key.get('custom_role_mapping_name')
+            custom_role_mapping_name=key.get('custom_role_mapping_name'),
+            created_at=key.get('created_at'),
         )
         for key in json_response.get('orgs')
     ]
@@ -220,7 +227,8 @@ async def _fetch_org_by_query_async(
             is_saml_configured=key.get('is_saml_configured'),
             legacy_org_id=key.get('legacy_org_id'),
             metadata=key.get('metadata'),
-            custom_role_mapping_name=key.get('custom_role_mapping_name')
+            custom_role_mapping_name=key.get('custom_role_mapping_name'),
+            created_at=key.get('created_at'),
         )
         for key in json_response.get('orgs')
     ]
@@ -1020,6 +1028,92 @@ async def _set_saml_idp_metadata_async(
         
     response.raise_for_status()
     return True
+    
+def _set_oidc_idp_metadata(auth_hostname, integration_api_key, request: SetOidcIdpMetadataRequest) -> bool:
+    if not _is_valid_id(request.org_id):
+        return False
+
+    json: dict = {
+        "org_id": request.org_id,
+        "client_id": request.client_id,
+        "client_secret": request.client_secret,
+        "uses_pkce": request.uses_pkce,
+        "idp_type": request.idp_type,
+    }
+
+    if isinstance(request, SetGenericOidcMetadataRequest):
+        json["auth_url"] = request.auth_url
+        json["token_url"] = request.token_url
+        json["userinfo_url"] = request.userinfo_url
+    elif isinstance(request, SetOktaOidcMetadataRequest):
+        json["okta_sso_domain"] = request.okta_sso_domain
+    elif isinstance(request, SetAzureOidcMetadataRequest):
+        json["entra_tenant_id"] = request.entra_tenant_id
+
+    response = requests.post(
+        f"{BASE_ENDPOINT_URL}/oidc_idp_metadata",
+        json=json,
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 404:
+        return False
+    elif not response.ok:
+        raise RuntimeError("Unknown error when setting the OIDC IdP metadata for an org's OIDC connection")
+    return True
+    
+async def _set_oidc_idp_metadata_async(
+    httpx_client: httpx.AsyncClient,
+    auth_hostname,
+    integration_api_key,
+    request: SetOidcIdpMetadataRequest
+) -> bool:
+    if not _is_valid_id(request.org_id):
+        return False
+
+    url = f"{BASE_ENDPOINT_URL}/oidc_idp_metadata"
+
+    json: dict = {
+        "org_id": request.org_id,
+        "client_id": request.client_id,
+        "client_secret": request.client_secret,
+        "uses_pkce": request.uses_pkce,
+        "idp_type": request.idp_type,
+    }
+
+    if isinstance(request, SetGenericOidcMetadataRequest):
+        json["auth_url"] = request.auth_url
+        json["token_url"] = request.token_url
+        json["userinfo_url"] = request.userinfo_url
+    elif isinstance(request, SetOktaOidcMetadataRequest):
+        json["okta_sso_domain"] = request.okta_sso_domain
+    elif isinstance(request, SetAzureOidcMetadataRequest):
+        json["entra_tenant_id"] = request.entra_tenant_id
+        
+    response = await httpx_client.post(
+        url=url,
+        json=json,
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
+    )
+
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise BadRequestException(response.json())
+    elif response.status_code == 404:
+        return False
+        
+    response.raise_for_status()
+    return True
 
 def _saml_go_live(auth_hostname, integration_api_key, org_id) -> bool:
     if not _is_valid_id(org_id):
@@ -1091,6 +1185,9 @@ def _update_org_metadata(
     legacy_org_id=None,
     require_2fa_by=None,
     extra_domains=None,
+    password_rotation_enabled=None,
+    password_rotation_history_size=None,
+    password_rotation_period=None,
 ) -> bool:
     if not _is_valid_id(org_id):
         return False
@@ -1117,6 +1214,12 @@ def _update_org_metadata(
         json["require_2fa_by"] = require_2fa_by
     if extra_domains is not None:
         json["extra_domains"] = extra_domains
+    if password_rotation_enabled is not None:
+        json["password_rotation_enabled"] = password_rotation_enabled
+    if password_rotation_history_size is not None:
+        json["password_rotation_history_size"] = password_rotation_history_size
+    if password_rotation_period is not None:
+        json["password_rotation_period"] = password_rotation_period
 
     response = requests.put(
         url,
@@ -1153,6 +1256,9 @@ async def _update_org_metadata_async(
     legacy_org_id=None,
     require_2fa_by=None,
     extra_domains=None,
+    password_rotation_enabled=None,
+    password_rotation_history_size=None,
+    password_rotation_period=None,
 ) -> bool:
     if not _is_valid_id(org_id):
         return False
@@ -1179,6 +1285,12 @@ async def _update_org_metadata_async(
         json_body["require_2fa_by"] = require_2fa_by
     if extra_domains is not None:
         json_body["extra_domains"] = extra_domains
+    if password_rotation_enabled is not None:
+        json_body["password_rotation_enabled"] = password_rotation_enabled
+    if password_rotation_history_size is not None:
+        json_body["password_rotation_history_size"] = password_rotation_history_size
+    if password_rotation_period is not None:
+        json_body["password_rotation_period"] = password_rotation_period
 
     response = await httpx_client.put(
         url=url,

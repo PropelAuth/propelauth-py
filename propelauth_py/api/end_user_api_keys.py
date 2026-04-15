@@ -1,4 +1,5 @@
 import json
+from this import d
 import httpx
 import requests
 from propelauth_py.api import (
@@ -63,6 +64,7 @@ def _fetch_api_key(auth_hostname, integration_api_key, api_key_id) -> ApiKeyFull
         metadata=json_response.get("metadata"),
         user_id=json_response.get("user_id"),
         org_id=json_response.get("org_id"),
+        display_name=json_response.get("display_name"),
     )
     
     
@@ -93,6 +95,7 @@ async def _fetch_api_key_async(httpx_client: httpx.AsyncClient, auth_hostname, i
         metadata=json_response.get("metadata"),
         user_id=json_response.get("user_id"),
         org_id=json_response.get("org_id"),
+        display_name=json_response.get("display_name"),
     )
     
 def _get_paged_api_keys(json_response) -> ApiKeyResultPage:
@@ -104,6 +107,7 @@ def _get_paged_api_keys(json_response) -> ApiKeyResultPage:
             metadata=key.get("metadata"),
             user_id=key.get("user_id"),
             org_id=key.get("org_id"),
+            display_name=key.get("display_name"),
         )
         for key in json_response.get("api_keys")
     ]
@@ -388,7 +392,7 @@ async def _fetch_api_key_usage_async(
 #       POST       #
 ####################
 def _create_api_key(
-    auth_hostname, integration_api_key, org_id, user_id, expires_at_seconds, metadata
+    auth_hostname, integration_api_key, org_id, user_id, expires_at_seconds, metadata, display_name
 ) -> ApiKeyNew:
     url = ENDPOINT_URL
 
@@ -401,6 +405,8 @@ def _create_api_key(
         json["expires_at_seconds"] = expires_at_seconds
     if metadata:
         json["metadata"] = metadata
+    if display_name:
+        json["display_name"] = display_name
 
     response = requests.post(
         url,
@@ -431,7 +437,8 @@ async def _create_api_key_async(
     org_id, 
     user_id, 
     expires_at_seconds, 
-    metadata
+    metadata,
+    display_name,
 ) -> ApiKeyNew:
     
     json_body = {}
@@ -443,7 +450,9 @@ async def _create_api_key_async(
         json_body["expires_at_seconds"] = expires_at_seconds
     if metadata:
         json_body["metadata"] = metadata
-        
+    if display_name:
+        json_body["display_name"] = display_name
+
     response = await httpx_client.post(
         url=ENDPOINT_URL,
         json=json_body,
@@ -649,7 +658,7 @@ def _get_api_key_validation(json_response) -> ApiKeyValidation:
 
     
 def _import_api_key(
-    auth_hostname, integration_api_key, imported_api_key, org_id, user_id, expires_at_seconds, metadata
+    auth_hostname, integration_api_key, imported_api_key, org_id, user_id, expires_at_seconds, metadata, display_name,
 ) -> ImportedApiKeyNew:
     url = f"{ENDPOINT_URL}/import"
 
@@ -664,6 +673,8 @@ def _import_api_key(
         json["expires_at_seconds"] = expires_at_seconds
     if metadata:
         json["metadata"] = metadata
+    if display_name:
+        json["display_name"] = display_name
 
     response = requests.post(
         url,
@@ -694,7 +705,8 @@ async def _import_api_key_async(
     org_id, 
     user_id, 
     expires_at_seconds, 
-    metadata
+    metadata,
+    display_name
 ) -> ImportedApiKeyNew:
     
     json_body = {}
@@ -708,6 +720,8 @@ async def _import_api_key_async(
         json_body["expires_at_seconds"] = expires_at_seconds
     if metadata:
         json_body["metadata"] = metadata
+    if display_name:
+        json_body["display_name"] = display_name
         
     response = await httpx_client.post(
         url=f"{ENDPOINT_URL}/import",
