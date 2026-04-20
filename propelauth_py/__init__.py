@@ -9,6 +9,7 @@ from propelauth_py.api import (
     TokenVerificationMetadata,
     OrgQueryOrderBy,
     UserQueryOrderBy,
+    SsoTrustLevel,
 )
 from propelauth_py.api.user import (
     _clear_user_password,
@@ -148,6 +149,8 @@ from propelauth_py.api.org import (
     _saml_go_live_async,
     _delete_saml_connection,
     _delete_saml_connection_async,
+    _migrate_org_to_isolated,
+    _migrate_org_to_isolated_async
 )
 from propelauth_py.api.employee import (
     _fetch_employee_by_id,
@@ -260,16 +263,16 @@ class Auth:
             self.auth_hostname, self.integration_api_key, user_id, include_orgs
         )
 
-    def fetch_user_metadata_by_email(self, email: str, include_orgs: bool = False):
+    def fetch_user_metadata_by_email(self, email: str, include_orgs: bool = False, isolated_org_id: Optional[str] = None):
         return _fetch_user_metadata_by_email(
-            self.auth_hostname, self.integration_api_key, email, include_orgs
+            self.auth_hostname, self.integration_api_key, email, include_orgs, isolated_org_id
         )
 
     def fetch_user_metadata_by_username(
-        self, username: str, include_orgs: bool = False
+        self, username: str, include_orgs: bool = False, isolated_org_id: Optional[str] = None
     ):
         return _fetch_user_metadata_by_username(
-            self.auth_hostname, self.integration_api_key, username, include_orgs
+            self.auth_hostname, self.integration_api_key, username, include_orgs, include_orgs
         )
 
     def fetch_user_signup_query_params_by_user_id(self, user_id: str):
@@ -346,6 +349,7 @@ class Auth:
         email_or_username: Optional[str] = None,
         include_orgs: bool = False,
         legacy_user_id: Optional[str] = None,
+        isolated_org_id: Optional[str] = None
     ):
         return _fetch_users_by_query(
             self.auth_hostname,
@@ -356,6 +360,7 @@ class Auth:
             email_or_username,
             include_orgs,
             legacy_user_id,
+            isolated_org_id
         )
 
     def fetch_users_in_org(
@@ -374,6 +379,16 @@ class Auth:
             page_number,
             include_orgs,
             role,
+        )
+        
+    def migrate_org_to_isolated(
+        self,
+        org_id: str
+    ):
+        return _migrate_org_to_isolated(
+            self.auth_hostname,
+            self.integration_api_key,
+            org_id
         )
 
     def create_user(
@@ -614,6 +629,7 @@ class Auth:
         domain: Optional[str] = None,
         require_2fa_by: Optional[str] = None,
         extra_domains: Optional[List[str]] = None,
+        sso_trust_level: Optional[SsoTrustLevel] = None
     ):
         return _update_org_metadata(
             self.auth_hostname,
@@ -628,6 +644,7 @@ class Auth:
             domain=domain,
             require_2fa_by=require_2fa_by,
             extra_domains=extra_domains,
+            sso_trust_level=sso_trust_level
         )
 
     def subscribe_org_to_role_mapping(self, org_id: str, custom_role_mapping_name: str):
@@ -1579,6 +1596,7 @@ class AsyncAuth(Auth):
         domain: Optional[str] = None,
         require_2fa_by: Optional[str] = None,
         extra_domains: Optional[List[str]] = None,
+        sso_trust_level: Optional[SsoTrustLevel] = None,
     ):
         return await _update_org_metadata_async(
             self.httpx_client,
@@ -1594,6 +1612,7 @@ class AsyncAuth(Auth):
             domain=domain,
             require_2fa_by=require_2fa_by,
             extra_domains=extra_domains,
+            sso_trust_level=sso_trust_level
         )
         
     async def validate_org_api_key(
@@ -1681,27 +1700,31 @@ class AsyncAuth(Auth):
     async def fetch_user_metadata_by_email(
         self,
         email: str,
-        include_orgs: bool = False
+        include_orgs: bool = False,
+        isolated_org_id: Optional[str] = None
     ):
         return await _fetch_user_metadata_by_email_async(
             self.httpx_client,
             self.auth_hostname,
             self.integration_api_key,
             email,
-            include_orgs
+            include_orgs,
+            isolated_org_id
         )
         
     async def fetch_user_metadata_by_username(
         self, 
         username: str, 
-        include_orgs: bool = False
+        include_orgs: bool = False,
+        isolated_org_id: Optional[str] = None
     ):
         return await _fetch_user_metadata_by_username_async(
             self.httpx_client,
             self.auth_hostname,
             self.integration_api_key,
             username,
-            include_orgs
+            include_orgs,
+            isolated_org_id
         )
         
     async def fetch_batch_user_metadata_by_user_ids(
@@ -1759,6 +1782,7 @@ class AsyncAuth(Auth):
         email_or_username: Optional[str] = None,
         include_orgs: bool = False,
         legacy_user_id: Optional[str] = None,
+        isolated_org_id: Optional[str] = None
     ):
         return await _fetch_users_by_query_async(
             self.httpx_client,
@@ -1770,6 +1794,7 @@ class AsyncAuth(Auth):
             email_or_username,
             include_orgs,
             legacy_user_id,
+            isolated_org_id
         )
         
     async def fetch_users_in_org(
@@ -1789,6 +1814,17 @@ class AsyncAuth(Auth):
             page_number,
             include_orgs,
             role,
+        )
+        
+    async def migrate_org_to_isolated(
+        self,
+        org_id: str,
+    ):
+        return await _migrate_org_to_isolated_async(
+            self.httpx_client,
+            self.auth_hostname,
+            self.integration_api_key,
+            org_id
         )
         
     async def create_user(
