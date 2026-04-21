@@ -938,6 +938,7 @@ class Auth:
         user_id: Optional[str] = None,
         expires_at_seconds: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        display_name: Optional[str] = None,
     ):
         return _import_api_key(
             self.auth_hostname,
@@ -947,6 +948,7 @@ class Auth:
             user_id,
             expires_at_seconds,
             metadata,
+            display_name
         )
 
     def verify_step_up_totp_challenge(
@@ -1051,9 +1053,20 @@ class Auth:
         )
 
     # SCIM APIs
-    def fetch_scim_group(self, org_id: str, group_id: str) -> ScimGroup:
+    def fetch_scim_group(
+        self, 
+        org_id: str,
+        group_id: str,
+        members_page_size: int = 10,
+        members_page_number: int = 0,
+    ) -> ScimGroup:
         return _fetch_scim_group(
-            self.auth_hostname, self.integration_api_key, org_id, group_id
+            self.auth_hostname, 
+            self.integration_api_key,
+            org_id=org_id,
+            group_id=group_id,
+            members_page_size=members_page_size,
+            members_page_number=members_page_number,
         )
 
     def fetch_org_scim_groups(
@@ -2120,9 +2133,21 @@ class AsyncAuth(Auth):
         )
         
     # SCIM APIs
-    async def fetch_scim_group(self, org_id: str, group_id: str) -> ScimGroup:
+    async def fetch_scim_group(
+        self, 
+        org_id: str,
+        group_id: str,
+        members_page_size: int = 10,
+        members_page_number: int = 0,
+        ) -> ScimGroup:
         return await _fetch_scim_group_async(
-            self.httpx_client, self.auth_hostname, self.integration_api_key, org_id, group_id
+            self.httpx_client,
+            self.auth_hostname,
+            self.integration_api_key,
+            org_id=org_id,
+            group_id=group_id,
+            members_page_size=members_page_size,
+            members_page_number=members_page_number,
         )
 
     async def fetch_org_scim_groups(

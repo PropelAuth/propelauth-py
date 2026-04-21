@@ -25,7 +25,7 @@ class FetchScimGroupRequest:
 class ScimGroupResult:
     group_id: str
     display_name: str
-    externalIdFromIdp: Optional[str]
+    external_id_from_idp: Optional[str]
     
     def __getitem__(self, key):
         return getattr(self, key) 
@@ -51,7 +51,7 @@ class ScimGroupMember:
 class ScimGroup:
     group_id: str
     display_name: str
-    externalIdFromIdp: Optional[str]
+    external_id_from_idp: Optional[str]
     members: List[ScimGroupMember]
     
     def __getitem__(self, key):

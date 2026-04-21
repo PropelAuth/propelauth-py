@@ -1,5 +1,3 @@
-from typing import Optional
-
 import httpx
 import requests
 
@@ -9,20 +7,11 @@ from propelauth_py.api import (
     _auth_hostname_header,
     _format_params,
     _get_async_headers,
-    _is_valid_id,
-)
-from propelauth_py.api.end_user_api_keys import (
-    _validate_api_key,
-    _validate_api_key_async,
 )
 from propelauth_py.errors import (
-    BadRequestException,
-    EndUserApiKeyException,
     RateLimitedException,
-    UpdateUserMetadataException,
 )
 from propelauth_py.types.scim import (
-    FetchOrgScimGroupsRequest,
     ScimGroup,
     ScimGroupMember,
     ScimGroupResult,
@@ -68,7 +57,7 @@ def _fetch_org_scim_groups(
         ScimGroupResult(
             group_id=key.get("group_id"),
             display_name=key.get("display_name"),
-            externalIdFromIdp=key.get("external_id_from_idp"),
+            external_id_from_idp=key.get("external_id_from_idp"),
         )
         for key in json_response.get("groups")
     ]
@@ -122,7 +111,7 @@ async def _fetch_org_scim_groups_async(
         ScimGroupResult(
             group_id=key.get("group_id"),
             display_name=key.get("display_name"),
-            externalIdFromIdp=key.get("external_id_from_idp"),
+            external_id_from_idp=key.get("external_id_from_idp"),
         )
         for key in json_response.get("groups")
     ]
@@ -138,12 +127,21 @@ def _fetch_scim_group(
     auth_hostname,
     integration_api_key,
     org_id,
-    group_id
+    group_id,
+    members_page_size=10,
+    members_page_number=0,
 ) -> ScimGroup:
     url = f"{SCIM_ENDPOINT_URL}/{org_id}/groups/{group_id}"
+    
+    params = {
+        "members_page_size": members_page_size,
+        "members_page_number": members_page_number,
+    }
+    formatted_params = _format_params(params)
 
     response = requests.get(
         url,
+        params=formatted_params,
         auth=_ApiKeyAuth(integration_api_key),
         headers=_auth_hostname_header(auth_hostname),
     )
@@ -169,7 +167,7 @@ def _fetch_scim_group(
     return ScimGroup(
         members=members,
         display_name=json_response.get("display_name"),
-        externalIdFromIdp=json_response.get("external_id_from_idp"),
+        external_id_from_idp=json_response.get("external_id_from_idp"),
         group_id=json_response.get("group_id"),
     )
 
@@ -179,12 +177,21 @@ async def _fetch_scim_group_async(
     integration_api_key,
     org_id,
     group_id,
+    members_page_size=10,
+    members_page_number=0,
 ) -> ScimGroup:
 
     url = f"{SCIM_ENDPOINT_URL}/{org_id}/groups/{group_id}"
+    
+    params = {
+        "members_page_size": members_page_size,
+        "members_page_number": members_page_number,
+    }
+    formatted_params = _format_params(params)
 
     response = await httpx_client.get(
         url=url,
+        params=formatted_params,
         headers=_get_async_headers(
             auth_hostname=auth_hostname, integration_api_key=integration_api_key
         ),
@@ -210,6 +217,6 @@ async def _fetch_scim_group_async(
     return ScimGroup(
         members=members,
         display_name=json_response.get("display_name"),
-        externalIdFromIdp=json_response.get("external_id_from_idp"),
+        external_id_from_idp=json_response.get("external_id_from_idp"),
         group_id=json_response.get("group_id"),
     )
