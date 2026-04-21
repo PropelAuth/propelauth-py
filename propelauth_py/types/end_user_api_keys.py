@@ -11,6 +11,7 @@ class ApiKeyFull:
     metadata: Optional[Dict[str, Any]]
     user_id: Optional[str]
     org_id: Optional[str]
+    display_name: Optional[str]
     
     def __getitem__(self, key):
         return getattr(self, key)

@@ -15,6 +15,7 @@ class Org:
     legacy_org_id: Optional[str]
     metadata: Dict[str, Any]
     custom_role_mapping_name: Optional[str]
+    created_at: Optional[int]
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -50,6 +51,9 @@ class Organization:
     domain_restrict: bool
     custom_role_mapping_name: Optional[str]
     legacy_org_id: Optional[str]
+    password_rotation_enabled: bool
+    password_rotation_history_size: int
+    password_rotation_period: int
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -216,5 +220,34 @@ class FetchUserMfaMethodsResponse:
     
     def is_phone(self) -> bool:
         return isinstance(self.mfa_setup, MfaPhoneType)
-    
 
+
+SocialLoginTokenProvider = Literal[
+    "apple",
+    "google",
+    "github",
+    "microsoft",
+    "slack",
+    "salesforce",
+    "linkedin",
+    "outreach",
+    "quickbooks",
+    "xero",
+    "salesloft",
+    "atlassian",
+    "gitlab",
+]
+
+@dataclass
+class SocialLoginToken:
+    access_token: str
+    token_provider: SocialLoginTokenProvider
+    refresh_token: Optional[str] = None
+    token_expiration: Optional[int] = None
+    authorized_scopes: Optional[list[str]] = None
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+
+SocialLoginTokensResponse = dict[SocialLoginTokenProvider, SocialLoginToken]

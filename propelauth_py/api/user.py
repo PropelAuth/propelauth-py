@@ -1,3 +1,4 @@
+import json
 from typing import Any, Optional, Dict, Union
 from propelauth_py.user import _to_org_member_info
 import requests
@@ -21,7 +22,10 @@ from propelauth_py.types.user import (
     CreatedUser,
     PersonalApiKeyValidation,
     UserSignupQueryParams,
-    FetchUserMfaMethodsResponse
+    FetchUserMfaMethodsResponse,
+    SocialLoginTokensResponse,
+    SocialLoginToken,
+    SocialLoginTokenProvider
 )
 from propelauth_py.errors import (
     BadRequestException,
@@ -834,6 +838,126 @@ async def _fetch_user_mfa_methods_async(
     mfa_setup = _deserialize_mfa_setup(json_response.get("mfa_setup"))
 
     return FetchUserMfaMethodsResponse(mfa_setup=mfa_setup)
+    
+def _fetch_user_oauth_tokens(
+    auth_hostname, integration_api_key, user_id
+) -> Optional[SocialLoginTokensResponse]:
+    response = requests.get(
+        url=f"{USER_ENDPOINT_URL}/{user_id}/oauth_token",
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise ValueError("Bad request: " + response.text)
+    elif response.status_code == 404:
+        return None
+    elif not response.ok:
+        raise RuntimeError("Unknown error when fetching user OAuth tokens")
+
+    json_response = response.json()
+    return {
+        provider: SocialLoginToken(
+            access_token=token_data.get("access_token"),
+            token_provider=token_data.get("token_provider"),
+            refresh_token=token_data.get("refresh_token"),
+            token_expiration=token_data.get("token_expiration"),
+            authorized_scopes=token_data.get("authorized_scopes"),
+        )
+        for provider, token_data in json_response.items()
+    }
+    
+async def _fetch_user_oauth_tokens_async(
+    httpx_client: httpx.AsyncClient, auth_hostname, integration_api_key, user_id
+) -> Optional[SocialLoginTokensResponse]:
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.get(
+        url=f"{USER_ENDPOINT_URL}/{user_id}/oauth_token",
+        headers=headers,
+    )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise ValueError("Bad request: " + response.text)
+    elif response.status_code == 404:
+        return None
+        
+    response.raise_for_status()
+
+    json_response = response.json()
+    return {
+        provider: SocialLoginToken(
+            access_token=token_data.get("access_token"),
+            token_provider=token_data.get("token_provider"),
+            refresh_token=token_data.get("refresh_token"),
+            token_expiration=token_data.get("token_expiration"),
+            authorized_scopes=token_data.get("authorized_scopes"),
+        )
+        for provider, token_data in json_response.items()
+    }
+
+def _fetch_fresh_token_from_provider(
+    auth_hostname, integration_api_key, user_id, provider: SocialLoginTokenProvider
+) -> Optional[SocialLoginToken]:
+    response = requests.get(
+        url=f"{USER_ENDPOINT_URL}/{user_id}/{provider}/fresh_token",
+        auth=_ApiKeyAuth(integration_api_key),
+        headers=_auth_hostname_header(auth_hostname),
+    )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise ValueError("Bad request: " + response.text)
+    elif response.status_code == 404:
+        return None
+    elif not response.ok:
+        raise RuntimeError("Unknown error when refreshing user token")
+
+    json_response = response.json()
+    return SocialLoginToken(
+            access_token=json_response.get("access_token"),
+            token_provider=json_response.get("token_provider"),
+            refresh_token=json_response.get("refresh_token"),
+            token_expiration=json_response.get("token_expiration"),
+            authorized_scopes=json_response.get("authorized_scopes"),
+        )
+    
+async def _fetch_fresh_token_from_provider_async(
+    httpx_client: httpx.AsyncClient, auth_hostname, integration_api_key, user_id, provider: SocialLoginTokenProvider
+) -> Optional[SocialLoginToken]:
+    headers = _get_async_headers(auth_hostname, integration_api_key)
+
+    response = await httpx_client.get(
+        url=f"{USER_ENDPOINT_URL}/{user_id}/{provider}/fresh_token",
+        headers=headers,
+    )
+    if response.status_code == 401:
+        raise ValueError("integration_api_key is incorrect")
+    elif response.status_code == 429:
+        raise RateLimitedException(response.text)
+    elif response.status_code == 400:
+        raise ValueError("Bad request: " + response.text)
+    elif response.status_code == 404:
+        return None
+        
+    response.raise_for_status()
+
+    json_response = response.json()
+    return SocialLoginToken(
+            access_token=json_response.get("access_token"),
+            token_provider=json_response.get("token_provider"),
+            refresh_token=json_response.get("refresh_token"),
+            token_expiration=json_response.get("token_expiration"),
+            authorized_scopes=json_response.get("authorized_scopes"),
+        )
 
 ####################
 #       POST     #
