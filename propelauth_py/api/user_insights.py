@@ -8,6 +8,8 @@ from propelauth_py.types.user_insights import (
     ChartMetric,
     ChartMetricCadence,
     ChartDataPoint,
+    UserReportIntervalType,
+    OrgReportIntervalType,
     UserReportType,
     UserReportRecord,
     UserReport,
@@ -21,6 +23,7 @@ from propelauth_py.api import (
     _format_params,
     BACKEND_API_BASE_URL,
     _auth_hostname_header,
+    _get_async_headers
 )
 from propelauth_py.errors import (
     BadRequestException,
@@ -33,7 +36,7 @@ def _fetch_user_report(
         auth_hostname,
         integration_api_key,
         report_key: UserReportType,
-        report_interval: Optional[str],
+        report_interval: Optional[UserReportIntervalType],
         page_size: Optional[int],
         page_number: Optional[int],
     ) -> UserReport:
@@ -41,7 +44,7 @@ def _fetch_user_report(
     params = {
         "page_size": page_size,
         "page_number": page_number,
-        "report_interval": report_interval,
+        "report_interval": report_interval.value if report_interval else None,
     }
     response = requests.get(
         url,
@@ -92,7 +95,7 @@ async def _fetch_user_report_async(
     auth_hostname,
     integration_api_key,
     report_key: UserReportType,
-    report_interval: Optional[str],
+    report_interval: Optional[UserReportIntervalType],
     page_size: Optional[int],
     page_number: Optional[int],
 ) -> UserReport:
@@ -100,13 +103,12 @@ async def _fetch_user_report_async(
     params = {
         "page_size": page_size,
         "page_number": page_number,
-        "report_interval": report_interval,
+        "report_interval": report_interval.value if report_interval else None,
     }
     response = await httpx_client.get(
         url,
         params=_format_params(params),
-        auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_hostname),
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
     )
 
     if response.status_code == 401:
@@ -115,8 +117,6 @@ async def _fetch_user_report_async(
         raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
-    elif not response.ok:
-        raise RuntimeError("Unknown error when fetching user reports")
 
     response.raise_for_status()
     json_response = response.json()
@@ -151,15 +151,15 @@ def _fetch_org_report(
         auth_hostname,
         integration_api_key,
         report_key: OrgReportType,
-        report_interval: str | None,
-        page_size: int | None,
-        page_number: int | None,
+        report_interval: Optional[OrgReportIntervalType],
+        page_size: Optional[int],
+        page_number: Optional[int],
     ) -> OrgReport:
     url = BASE_ENDPOINT_URL + "/org_report/" + report_key.value
     params = {
         "page_size": page_size,
         "page_number": page_number,
-        "report_interval": report_interval,
+        "report_interval": report_interval.value if report_interval else None,
     }
     response = requests.get(
         url,
@@ -211,21 +211,20 @@ async def _fetch_org_report_async(
     auth_hostname,
     integration_api_key,
     report_key: OrgReportType,
-    report_interval: str | None,
-    page_size: int | None,
-    page_number: int | None,
+    report_interval: Optional[OrgReportIntervalType],
+    page_size: Optional[int],
+    page_number: Optional[int],
 ) -> OrgReport:
     url = BASE_ENDPOINT_URL + "/org_report/" + report_key.value
     params = {
         "page_size": page_size,
         "page_number": page_number,
-        "report_interval": report_interval,
+        "report_interval": report_interval.value if report_interval else None,
     }
     response = await httpx_client.get(
         url,
         params=_format_params(params),
-        auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_hostname),
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
     )
 
     if response.status_code == 401:
@@ -239,8 +238,6 @@ async def _fetch_org_report_async(
         )
     elif response.status_code == 400:
         raise BadRequestException(response.json())
-    elif not response.ok:
-        raise RuntimeError("Unknown error when fetching org reports")
 
     response.raise_for_status()
     json_response = response.json()
@@ -271,9 +268,9 @@ def _fetch_chart_metric_data(
     auth_hostname,
     integration_api_key,
     chart_metric: ChartMetric,
-    cadence: ChartMetricCadence | None,
-    start_date: date | None,
-    end_date: date | None,
+    cadence: Optional[ChartMetricCadence],
+    start_date: Optional[date],
+    end_date: Optional[date],
 ) -> ChartData:
     url = BASE_ENDPOINT_URL + "/chart_metrics/" + chart_metric.value
     params = {
@@ -318,9 +315,9 @@ async def _fetch_chart_metric_data_async(
     auth_hostname,
     integration_api_key,
     chart_metric: ChartMetric,
-    cadence: ChartMetricCadence | None,
-    start_date: date | None,
-    end_date: date | None,
+    cadence: Optional[ChartMetricCadence],
+    start_date: Optional[date],
+    end_date: Optional[date],
 ) -> ChartData:
     url = BASE_ENDPOINT_URL + "/chart_metrics/" + chart_metric.value
     params = {
@@ -331,8 +328,7 @@ async def _fetch_chart_metric_data_async(
     response = await httpx_client.get(
         url,
         params=_format_params(params),
-        auth=_ApiKeyAuth(integration_api_key),
-        headers=_auth_hostname_header(auth_hostname),
+        headers=_get_async_headers(auth_hostname=auth_hostname, integration_api_key=integration_api_key)
     )
 
     if response.status_code == 401:
@@ -341,8 +337,6 @@ async def _fetch_chart_metric_data_async(
         raise RateLimitedException(response.text)
     elif response.status_code == 400:
         raise BadRequestException(response.json())
-    elif not response.ok:
-        raise RuntimeError("Unknown error when fetching chart metric data")
 
     response.raise_for_status()
     json_response = response.json()

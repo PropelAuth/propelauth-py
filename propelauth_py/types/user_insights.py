@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Union
 from enum import Enum
 
 # org report types
@@ -110,6 +110,19 @@ class ChartMetricCadence(Enum):
     WEEKLY = "Weekly"
     MONTHLY = "Monthly"
 
+UserReportIntervalType = Union[
+  TopInviterReportInterval,
+  ChampionReportInterval,
+  ReengagementReportInterval,
+  ChurnReportInterval,
+]
+
+OrgReportIntervalType = Union[
+  ReengagementReportInterval,
+  ChurnReportInterval,
+  GrowthReportInterval,
+  AttritionReportInterval
+]
 
 @dataclass
 class ChartDataPoint:

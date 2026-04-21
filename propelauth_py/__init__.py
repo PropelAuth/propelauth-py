@@ -1122,9 +1122,9 @@ class Auth:
     def fetch_chart_metric_data(
         self,
         chart_metric: ChartMetric,
-        cadence: ChartMetricCadence | None,
-        start_date: date | None,
-        end_date: date | None,
+        cadence: Optional[ChartMetricCadence] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
     ) -> ChartData:
         return _fetch_chart_metric_data(
             self.auth_hostname,
@@ -2406,9 +2406,9 @@ class AsyncAuth(Auth):
     async def fetch_chart_metric_data(
         self,
         chart_metric: ChartMetric,
-        cadence: ChartMetricCadence | None,
-        start_date: date | None,
-        end_date: date | None,
+        cadence: Optional[ChartMetricCadence] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
     ) -> ChartData:
         return await _fetch_chart_metric_data_async(
             self.httpx_client,
