@@ -1,0 +1,32 @@
+[project]
+name = "propelauth-py"
+version = "4.3.2"
+description = "A python authentication library"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "PropelAuth", email = "support@propelauth.com" }]
+dependencies = [
+    "pyjwt[crypto]>=2,<3",
+    "requests",
+    "httpx>=0.28.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/propelauth/propelauth-py"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "requests-mock",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+no-build = false
+
+[tool.hatch.build.targets.wheel]
+packages = ["propelauth_py"]
