@@ -498,7 +498,6 @@ async def _fetch_saml_sp_metadata_async(
         logout_url=json_response.get('logout_url'),
     )
 
-
 ####################
 #       POST       #
 ####################
