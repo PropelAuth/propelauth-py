@@ -15,7 +15,7 @@ jobs:
       - uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
-      - run: uv sync --locked
+      - run: uv sync --frozen
       - run: uv run pytest
       - run: uv build
       - uses: actions/upload-artifact@v7.0.1
