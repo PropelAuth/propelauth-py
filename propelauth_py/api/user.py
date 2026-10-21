@@ -181,6 +181,30 @@ async def _fetch_user_metadata_by_username_async(
     )
 
 
+def _to_user_metadata(json_response) -> UserMetadata:
+    return UserMetadata(
+        user_id=json_response.get("user_id"),
+        email=json_response.get("email"),
+        email_confirmed=json_response.get("email_confirmed"),
+        has_password=json_response.get("has_password"),
+        username=json_response.get("username"),
+        first_name=json_response.get("first_name"),
+        last_name=json_response.get("last_name"),
+        picture_url=json_response.get("picture_url"),
+        locked=json_response.get("locked"),
+        enabled=json_response.get("enabled"),
+        mfa_enabled=json_response.get("mfa_enabled"),
+        can_create_orgs=json_response.get("can_create_orgs"),
+        created_at=json_response.get("created_at"),
+        last_active_at=json_response.get("last_active_at"),
+        org_id_to_org_info=_to_org_member_info(json_response.get("org_id_to_org_info")),
+        legacy_user_id=json_response.get("legacy_user_id"),
+        impersonator_user_id=json_response.get("impersonator_user_id"),
+        metadata=json_response.get("metadata"),
+        properties=json_response.get("properties"),
+    )
+
+
 def _fetch_user_metadata_by_query(
     integration_api_key, user_info_url, query, auth_hostname
 ) -> Optional[UserMetadata]:
@@ -203,27 +227,7 @@ def _fetch_user_metadata_by_query(
 
     json_response = response.json()
 
-    return UserMetadata(
-        user_id=json_response.get("user_id"),
-        email=json_response.get("email"),
-        email_confirmed=json_response.get("email_confirmed"),
-        has_password=json_response.get("has_password"),
-        username=json_response.get("username"),
-        first_name=json_response.get("first_name"),
-        last_name=json_response.get("last_name"),
-        picture_url=json_response.get("picture_url"),
-        locked=json_response.get("locked"),
-        enabled=json_response.get("enabled"),
-        mfa_enabled=json_response.get("mfa_enabled"),
-        can_create_orgs=json_response.get("can_create_orgs"),
-        created_at=json_response.get("created_at"),
-        last_active_at=json_response.get("last_active_at"),
-        org_id_to_org_info=_to_org_member_info(json_response.get("org_id_to_org_info")),
-        legacy_user_id=json_response.get("legacy_user_id"),
-        impersonator_user_id=json_response.get("impersonator_user_id"),
-        metadata=json_response.get("metadata"),
-        properties=json_response.get("properties"),
-    )
+    return _to_user_metadata(json_response)
     
 async def _fetch_user_metadata_by_query_async(
     httpx_client: httpx.AsyncClient,
@@ -254,27 +258,7 @@ async def _fetch_user_metadata_by_query_async(
 
     json_response = response.json()
         
-    return UserMetadata(
-        user_id=json_response.get("user_id"),
-        email=json_response.get("email"),
-        email_confirmed=json_response.get("email_confirmed"),
-        has_password=json_response.get("has_password"),
-        username=json_response.get("username"),
-        first_name=json_response.get("first_name"),
-        last_name=json_response.get("last_name"),
-        picture_url=json_response.get("picture_url"),
-        locked=json_response.get("locked"),
-        enabled=json_response.get("enabled"),
-        mfa_enabled=json_response.get("mfa_enabled"),
-        can_create_orgs=json_response.get("can_create_orgs"),
-        created_at=json_response.get("created_at"),
-        last_active_at=json_response.get("last_active_at"),
-        org_id_to_org_info=_to_org_member_info(json_response.get("org_id_to_org_info")),
-        legacy_user_id=json_response.get("legacy_user_id"),
-        impersonator_user_id=json_response.get("impersonator_user_id"),
-        metadata=json_response.get("metadata"),
-        properties=json_response.get("properties"),
-    )
+    return _to_user_metadata(json_response)
 
 
 def _fetch_batch_user_metadata_by_user_ids(
@@ -407,7 +391,7 @@ def _fetch_batch_user_metadata_by_query(
     json_response = response.json()
     return_value = {}
     for single_item in json_response:
-        return_value[key_fn(single_item)] = single_item
+        return_value[key_fn(single_item)] = _to_user_metadata(single_item)
 
     return return_value
 
@@ -442,7 +426,7 @@ async def _fetch_batch_user_metadata_by_query_async(
     json_response = response.json()
     return_value = {}
     for single_item in json_response:
-        return_value[key_fn(single_item)] = single_item
+        return_value[key_fn(single_item)] = _to_user_metadata(single_item)
 
     return return_value
 
